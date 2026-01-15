@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primaryColor">#6F8C19</color>
+    <color name="secondaryColor">#5D7B04</color>
+    <color name="green">#387A04</color>
+    <color name="text_green">#232E00</color>
+    <color name="butten_green"> #5A7800</color>
+    <color name="light_green">#F9FFE8</color>
+    <color name="greenlight">#D8FF64</color>
+    <color name="greenlighttext">#BAF800</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="smokey_white">#FFE9DC</color>
+    <color name="creamy_white">#FFF6EC</color>
+    <color name="light_grey">#979696</color>
+    <color name="black">#000000</color>
+    <color name="text_grey">#979696</color>
+    <color name="red">#FF0000</color>
+    <color name="light_bg">#FFE9DC</color>
+    <color name="pressed_button">#FF9B55</color>
+    <color name="radio_grey">#B3B3B3</color>
+
+</resources>

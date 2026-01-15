@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home">होम</string>
+
+    //Popup_Screen
+    <string name="amount_10_000">राशि  Rs. 10,000 /-</string>
+    <string name="scan_this_code_to_pay">इस कोड को स्कैन करें और भुगतान करें</string>
+    <string name="expire">क्यूआर समाप्त होगा :</string>
+
+    //payment_Screen
+    <string name="thank_you">धन्यवाद!</string>
+    <string name="your_payment_was_successful">आपका भुगतान सफल रहा!</string>
+    <string name="amount">राशि : </string>
+    <string name="txt_amount">राशि</string>
+    <string name="transcation_id">लेनदेन आईडी : </string>
+    <string name="star">सितारा</string>
+    <string name="pay_name">नाम :</string>
+    <string name="payment_failed">भुगतान विफल</string>
+    <string name="it_seems_we_have_not_received_money">ऐसा लगता है कि हमें पैसे प्राप्त नहीं हुए हैं</string>
+    <string name="do_you_want_to_do_close_this_page">क्या आप इस पृष्ठ को बंद करना चाहते हैं?</string>
+    <string name="cancel">रद्द करें</string>
+    <string name="yes">हाँ</string>
+    <string name="no">नहीं</string>
+    <string name="no_internet_connection">इंटरनेट कनेक्शन नहीं है</string>
+    <string name="retry">पुनः प्रयास करें</string>
+    <string name="you_have_been_inactive_for_a_while_please_touch_the_screen_to_continue">आप कुछ समय से निष्क्रिय हैं। कृपया जारी रखने के लिए स्क्रीन को स्पर्श करें।</string>
+    <string name="qr_expire">क्यूआर समाप्त होने में :</string>
+    <string name="aadhaar_no">आधार संख्या</string>
+    <string name="vazhipadu">वाजिपाडु</string>
+    <string name="donation">दान</string>
+    <string name="darshan">दर्शन</string>
+    <string name="pooja_item">पूजा की वस्तु</string>
+    <string name="annadana">अन्नदान</string>
+    <string name="welcome">स्वागत है!</string>
+    <string name="choose_your_darshan_tickets">अपने दर्शन टिकट चुनें</string>
+
+    <string name="transaction">लेन-देन</string>
+    <string name="summary">सारांश</string>
+    <string name="report">प्रतिवेदन</string>
+    <string name="report_generated_time">रिपोर्ट तैयार होने का समय</string>
+    <string name="total_amount">कुल राशि</string>
+
+    <string name="do_you_want_to_logout">क्या आप लॉगआउट करना चाहते हैं?</string>
+    <string name="choose_item">आइटम चुनें</string>
+    <string name="done">हो गया</string>
+    <string name="capture">कब्जा</string>
+    <string name="image_upload">छवि अपलोड</string>
+    <string name="sub_temple">उप मंदिर</string>
+    <string name="my_cart">मेरी गाड़ी</string>
+    <string name="birth_star_of_devotees">भक्तों का जन्म नक्षत्र</string>
+    <string name="edit">संशोधन</string>
+    <string name="fill_devotee_details">भक्त विवरण भरें</string>
+    <string name="upi" />
+    <string name="item" >वस्तु</string>
+    <string name="price">कीमत</string>
+    <string name="qty">मात्रा</string>
+    <string name="total">कुल</string>
+
+    <string name="language_settings">भाषा</string>
+    <string name="profile">प्रोफ़ाइल</string>
+    <string name="delete_account">खाता हटाएं</string>
+    <string name="logout">लॉगआउट</string>
+    <string name="dashboard">डैशबोर्ड</string>
+    <string name="settings">सेटिंग्स</string>
+    <string name="reports">रिपोर्टों</string>
+    <string name="detailed_report">चिट्ठाट</string>
+    <string name="summary_report">सारांश रिपोर्ट</string>
+
+    <string name="select_device_printer" >प्रिंटर डिवाइस का चयन करेंं</string>
+    <string name="save" >बचाना</string>
+    <string name="item_summary_report">विस्तृत रिपोर्ट</string>
+    <string name="item_name">आइटम का नाम</string>
+    <string name="pancard_number">पैन कार्ड नंबर</string>
+
+
+</resources>

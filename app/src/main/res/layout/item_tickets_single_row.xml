@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <RelativeLayout
+        android:id="@+id/relNoneCardItem"
+        android:visibility="gone"
+        android:layout_width="180dp"
+        android:layout_height="200dp"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="5dp"
+        android:layout_marginTop="15dp"
+        android:layout_marginEnd="5dp"
+        android:layout_marginBottom="15dp"
+        android:background="@drawable/darshan_second_bg">
+
+        <RelativeLayout
+            android:id="@+id/relTop_1"
+            android:layout_width="200dp"
+            android:layout_height="match_parent">
+            <TextView
+                android:id="@+id/txt_darshan_name_1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
+                android:layout_marginTop="30dp"
+                android:fontFamily="@font/poppins_medium"
+                android:textAlignment="center"
+                android:textColor="@color/secondaryColor"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/txt_darshan_price_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/txt_darshan_name_1"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="20dp"
+                android:fontFamily="@font/roboto"
+                android:textColor="@color/black"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+        </RelativeLayout>
+
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/relCardItem"
+        android:visibility="gone"
+        android:layout_width="180dp"
+        android:layout_height="200dp"
+        android:layout_marginStart="5dp"
+        android:layout_marginTop="15dp"
+        android:layout_marginEnd="5dp"
+        android:layout_marginBottom="15dp"
+        android:background="@drawable/darshan_cart_bg">
+
+        <RelativeLayout
+            android:id="@+id/relTop_2"
+            android:layout_width="200dp"
+            android:layout_height="120dp"
+            android:background="@drawable/darshan_third_bg">
+
+            <ImageView
+                android:id="@+id/imgClearCart"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:src="@drawable/close_butten"
+                android:layout_alignParentEnd="true"
+                android:layout_marginEnd="10dp"
+                android:layout_marginTop="10dp"
+                android:contentDescription="@string/todo"/>
+
+            <TextView
+                android:id="@+id/txt_darshan_name_2"
+                android:layout_width="133dp"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_marginStart="20dp"
+                android:layout_below="@+id/imgClearCart"
+                android:layout_marginEnd="20dp"
+                android:fontFamily="@font/poppins_medium"
+                android:maxLines="2"
+                android:textAlignment="center"
+                android:textColor="@color/white"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/txt_darshan_price_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/txt_darshan_name_2"
+                android:layout_centerHorizontal="true"
+                android:fontFamily="@font/roboto"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+        </RelativeLayout>
+
+        <TextView
+            android:id="@+id/txtQty"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/relTop_2"
+            android:textColor="@color/black"
+            android:fontFamily="@font/roboto"
+            android:textSize="14sp"
+            android:layout_marginTop="10dp"
+            android:layout_marginStart="10dp"/>
+
+        <TextView
+            android:id="@+id/totalAmount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginEnd="10dp"
+            android:layout_below="@id/txtQty"
+            android:layout_alignParentEnd="true"
+            android:textColor="@color/black"
+            android:fontFamily="@font/roboto"
+            android:layout_marginTop="10dp"
+            android:textStyle="bold"
+            android:textSize="20sp" />
+
+
+
+
+    </RelativeLayout>
+
+</RelativeLayout>

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">Ticket Kiosk</string>
+    <string name="make_a_donation">ਦਾਨ ਕਰੋ</string>
+    <string name="todo">ਕੰਮ ਕਰਨੇ ਹਨ</string>
+    <string name="p_o_w_e_r_e_d_b_y">ਪਾਵਰਡ ਬਾਈ</string>
+    <string name="b_a_n_k_i_n_g_p_a_r_t_n_e_r">ਬੈਂਕਿੰਗ ਸਾਥੀ</string>
+    <string name="login_as_a_admin_user">ਐਡਮਿਨ ਉਪਭੋਗਤਾ ਵਜੋਂ ਲੌਗਇਨ ਕਰੋ</string>
+    <string name="user_id">ਉਪਭੋਗਤਾ ਆਈ.ਡੀ.</string>
+    <string name="password">ਪਾਸਵਰਡ</string>
+    <string name="log_in">ਲੌਗ ਇਨ</string>
+
+    <string name="home">ਮੁੱਖ ਪੰਨਾ</string>
+    <string name="sync">ਸਮਨ੍ਵਯ</string>
+
+
+
+    <!-- Popup_Screen -->
+    <string name="amount_10_000">ਰਕਮ Rs. 10,000 /-</string>
+    <string name="scan_this_code_to_pay">ਭੁਗਤਾਨ ਕਰਨ ਲਈ ਇਹ ਕੋਡ ਸਕੈਨ ਕਰੋ</string>
+    <string name="expire">ਇਹ ਕੋਡ ਸਕੈਨ ਕਰੋ</string>
+    <string name="proceed">ਅੱਗੇ ਵਧੋ</string>
+
+    <!-- payment_Screen -->
+    <string name="thank_you">ਧੰਨਵਾਦ!</string>
+    <string name="your_payment_was_successful">ਤੁਹਾਡਾ ਭੁਗਤਾਨ ਸਫਲ ਰਹਿਆ!</string>
+    <string name="amount">ਰਕਮ :</string>
+    <string name="txt_amount">ਰਕਮ</string>
+    <string name="transcation_id">ਲੈਣ-ਦੇਣ ਆਈ.ਡੀ. :</string>
+    <string name="star">ਨਕਸ਼ਤਰ</string>
+    <string name="pay_name">ਨਾਮ :</string>
+    <string name="payment_failed">ਭੁਗਤਾਨ ਅਸਫਲ ਰਹਿਆ</string>
+    <string name="it_seems_we_have_not_received_money">ਲੱਗਦਾ ਹੈ ਕਿ ਸਾਨੂੰ ਪੈਸੇ ਨਹੀਂ ਮਿਲੇ</string>
+    <string name="do_you_want_to_do_close_this_page">ਕੀ ਤੁਸੀਂ ਇਹ ਪੰਨਾ ਬੰਦ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?</string>
+    <string name="cancel">ਰੱਦ ਕਰੋ</string>
+    <string name="yes">ਹਾਂ</string>
+    <string name="no">ਨਹੀਂ</string>
+    <string name="no_internet_connection">ਇੰਟਰਨੈੱਟ ਕਨੈਕਸ਼ਨ ਨਹੀਂ ਹੈ</string>
+    <string name="retry">ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ</string>
+    <string name="you_have_been_inactive_for_a_while_please_touch_the_screen_to_continue">ਕੀ ਤੁਸੀਂ ਜਾਰੀ ਰੱਖਣਾ ਚਾਹੁੰਦੇ ਹੋ?</string>
+    <string name="qr_expire">QR ਸਮਾਪਤ ਹੋਣ ਦਾ ਸਮਾਂ :</string>
+    <string name="aadhaar_no">ਆਧਾਰ ਨੰਬਰ</string>
+
+
+
+    <string name="transaction">ਲੈਣ-ਦੇਣ</string>
+    <string name="summary">ਸੰਖੇਪ</string>
+    <string name="report">ਰਿਪੋਰਟ</string>
+    <string name="report_generated_time">ਰਿਪੋਰਟ ਤਿਆਰ ਸਮਾਂ</string>
+    <string name="total_amount">ਕੁੱਲ ਮਾਤਰਾ</string>
+
+    <string name="choose_your_darshan_tickets">ਆਪਣੇ ਦਰਸ਼ਨ ਟਿਕਟਾਂ ਚੁਣੋ</string>
+    <string name="no_of_tickets">ਟਿਕਟਾਂ ਦੀ ਸੰਖਿਆ</string>
+    <string name="id_no">ਆਈ.ਡੀ. ਨੰਬਰ</string>
+    <string name="_2018xxxx989">2018XXXX989</string>
+    <string name="pay_phone_number">ਫੋਨ ਨੰਬਰ :</string>
+    <string name="pay_id_no">ਆਈ.ਡੀ. ਨੰਬਰ :</string>
+    <string name="click_here_to_take_photo">ਫੋਟੋ ਖਿੱਚਣ ਲਈ ਇੱਥੇ ਕਲਿੱਕ ਕਰੋ</string>
+    <string name="_0">0</string>
+    <string name="select_payment_option">ਭੁਗਤਾਨ ਵਿਕਲਪ ਚੁਣੋ</string>
+    <string name="initailing_payment_option">ਕਿਰਪਾ ਕਰਕੇ ਆਪਣੇ ਲੈਣ-ਦੇਣ ਨੂੰ ਪੂਰਾ ਕਰਨ ਲਈ ਭੁਗਤਾਨ ਟਰਮੀਨਲ ਦੀ ਵਰਤੋਂ ਕਰੋ।</string>
+
+    <string name="do_you_want_to_logout">ਕੀ ਤੁਸੀਂ ਲੌਗ ਆਉਟ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?</string>
+    <string name="choose_item">ਆਈਟਮ ਚੁਣੋ</string>
+    <string name="done">ਮੁਕੰਮਲ</string>
+    <string name="sub_temple">ਉਪ ਮੰਦਰ</string>
+    <string name="my_cart">ਮੇਰਾ ਕਾਰਟ</string>
+    <string name="capture">ਕੈਪਚਰ</string>
+    <string name="image_upload">ਚਿੱਤਰ ਅੱਪਲੋਡ</string>
+    <string name="birth_star_of_devotees">ਭਗਤਾਂ ਦਾ ਜਨਮ ਨਕਸ਼ਤਰ</string>
+    <string name="edit">ਸੋਧੋ</string>
+    <string name="fill_devotee_details">ਭਗਤ ਦੀ ਜਾਣਕਾਰੀ ਭਰੋ</string>
+    <string name="upi">UPI</string>
+    <string name="item">ਆਈਟਮ</string>
+    <string name="price">ਕੀਮਤ</string>
+    <string name="qty">ਮਾਤਰਾ</string>
+    <string name="total">ਕੁੱਲ</string>
+    <string name="marathi">ਮਰਾਠੀ</string>
+
+    <string name="language_settings">ਭਾਸ਼ਾ</string>
+    <string name="profile">ਪ੍ਰੋਫ਼ਾਈਲ</string>
+    <string name="delete_account">ਖਾਤਾ ਹਟਾਓ</string>
+    <string name="logout">ਲਾਗ ਆਉਟ</string>
+    <string name="dashboard">ਡੈਸ਼ਬੋਰਡ</string>
+    <string name="settings">ਸੈਟਿੰਗਾਂ</string>
+    <string name="reports">ਰਿਪੋਰਟਾਂ</string>
+    <string name="detailed_report">ਵਿਸਤ੍ਰਿਤ ਰਿਪੋਰਟ</string>
+    <string name="summary_report">ਸੰਖੇਪ ਰਿਪੋਰਟ</string>
+
+
+    <string name="select_device_printer">ਪ੍ਰਿੰਟਰ ਡਿਵਾਈਸ ਚੁਣੋ</string>
+    <string name="save">ਬਚਾਓ</string>
+    <string name="item_summary_report">ਵੇਰਵੇਦਾਰ ਰਿਪੋਰਟ</string>
+    <string name="item_name">ਆਈਟਮ ਦਾ ਨਾਮ</string>
+    <string name="pancard_number">ਪੈਨ ਕਾਰਡ ਨੰਬਰ</string>
+
+
+</resources>

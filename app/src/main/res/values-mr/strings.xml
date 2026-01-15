@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">Ticket Kiosk</string>
+    <string name="make_a_donation">देणगी द्या</string>
+    <string name="todo">करायची कामं</string>
+    <string name="p_o_w_e_r_e_d_b_y">पावर्ड बाय</string>
+    <string name="b_a_n_k_i_n_g_p_a_r_t_n_e_r">बँकिंग भागीदार</string>
+    <string name="login_as_a_admin_user">प्रशासक वापरकर्ता म्हणून लॉगिन करा</string>
+    <string name="user_id">वापरकर्ता आयडी</string>
+    <string name="password">पासवर्ड</string>
+    <string name="log_in">लॉग इन</string>
+
+    <string name="home">मुख्यपृष्ठ</string>
+    <string name="sync">समन्वय</string>
+
+    <!-- home_screen -->
+    <string name="kanika">ई-कणिका</string>
+    <string name="melkavu_devi">मेल्कावू\nदेवी</string>
+    <string name="keezhkavu_devi">कीळ्कावू\nदेवी</string>
+    <string name="ayyappa">अय्यप्पा\n</string>
+    <string name="shiva">शिव\n</string>
+    <string name="nagam">नागम्\n</string>
+
+    <!-- donation_screen -->
+    <string name="fill_out_your_details">तपशील भरा</string>
+    <string name="donation_amount">ई-हंडी रक्कम</string>
+    <string name="annadana_amount">अन्नदान रक्कम</string>
+    <string name="_10_000">Rs.</string>
+    <string name="pay">पे करा</string>
+    <string name="phone_number">फोन नंबर</string>
+    <string name="_91">+91</string>
+    <string name="name">नाव</string>
+    <string name="select_your_janma_nakshatra">आपले जन्म नक्षत्र निवडा</string>
+
+    <!-- Popup_Screen -->
+    <string name="amount_10_000">रक्कम Rs. 10,000 /-</string>
+    <string name="scan_this_code_to_pay">पेमेंटसाठी कोड स्कॅन करा</string>
+    <string name="expire">पेमेंटसाठी कोड स्कॅन करा</string>
+    <string name="proceed">पुढे जा</string>
+
+    <!-- payment_Screen -->
+    <string name="thank_you">धन्यवाद!</string>
+    <string name="your_payment_was_successful">तुमचे पेमेंट यशस्वी झाले!</string>
+    <string name="amount">रक्कम :</string>
+    <string name="txt_amount">रक्कम</string>
+    <string name="transcation_id">व्यवहार आयडी :</string>
+    <string name="star">नक्षत्र</string>
+    <string name="pay_name">नाव :</string>
+    <string name="payment_failed">पेमेंट अयशस्वी</string>
+    <string name="it_seems_we_have_not_received_money">असे वाटते की पैसे मिळाले नाहीत</string>
+    <string name="do_you_want_to_do_close_this_page">तुम्हाला हे पृष्ठ बंद करायचे आहे का?</string>
+    <string name="cancel">रद्द करा</string>
+    <string name="yes">होय</string>
+    <string name="no">नाही</string>
+    <string name="no_internet_connection">इंटरनेट कनेक्शन नाही</string>
+    <string name="retry">पुन्हा प्रयत्न करा</string>
+    <string name="you_have_been_inactive_for_a_while_please_touch_the_screen_to_continue">तुम्हाला चालू ठेवायचे आहे का?</string>
+    <string name="qr_expire">QR कालबाह्य होतो :</string>
+    <string name="aadhaar_no">आधार क्रमांक</string>
+
+    <string name="vazhipadu">सेवा तपशील</string>
+    <string name="donation">ई-हंडी</string>
+    <string name="darshan">दर्शन</string>
+    <string name="pooja_item">पूजा साहित्य</string>
+    <string name="annadana">अन्नदान</string>
+    <string name="welcome">स्वागत आहे!</string>
+    <string name="more_people">अधिक लोक</string>
+    <string name="pay_vazhipadu">Rs.%1$s भरा</string>
+
+    <string name="transaction">व्यवहार</string>
+    <string name="summary">सारांश</string>
+    <string name="report">अहवाल</string>
+    <string name="report_generated_time">अहवाल व्युत्पन्न वेळ</string>
+    <string name="total_amount">एकूण रक्कम</string>
+
+    <string name="choose_your_darshan_tickets">तुमच्या दर्शनाच्या तिकिटांची निवड करा</string>
+    <string name="no_of_tickets">तिकिटांची संख्या</string>
+    <string name="id_no">ओळख क्रमांक</string>
+    <string name="_2018xxxx989">2018XXXX989</string>
+    <string name="pay_phone_number">फोन नंबर :</string>
+    <string name="pay_id_no">ओळख क्रमांक :</string>
+    <string name="click_here_to_take_photo">फोटो घेण्यासाठी येथे क्लिक करा</string>
+    <string name="_0">0</string>
+    <string name="select_payment_option">पेमेंट पर्याय निवडा</string>
+    <string name="initailing_payment_option">तुमचा व्यवहार पूर्ण करण्यासाठी पेमेंट टर्मिनल वापरा.</string>
+
+    <string name="do_you_want_to_logout">तुम्हाला लॉगआउट करायचे आहे का?</string>
+    <string name="choose_item">घटक निवडा</string>
+    <string name="done">पूर्ण</string>
+    <string name="sub_temple">उप मंदिर</string>
+    <string name="capture">कॅप्चर</string>
+    <string name="my_cart">माझी कार्ट</string>
+    <string name="image_upload">प्रतिमा अपलोड</string>
+    <string name="birth_star_of_devotees">भक्तांचे जन्म नक्षत्र</string>
+    <string name="edit">संपादित करा</string>
+    <string name="fill_devotee_details">भक्ताची माहिती भरा</string>
+    <string name="upi">UPI</string>
+    <string name="item">घटक</string>
+    <string name="price">किंमत</string>
+    <string name="qty">प्रमाण</string>
+    <string name="total">एकूण</string>
+    <string name="marathi">मराठी</string>
+
+    <string name="language_settings">भाषा</string>
+    <string name="profile">प्रोफाईल</string>
+    <string name="delete_account">खाते हटवा</string>
+    <string name="logout">बाहेर पडा</string>
+    <string name="dashboard">डॅशबोर्ड</string>
+    <string name="settings">सेटिंग्ज</string>
+    <string name="reports">अहवाल</string>
+    <string name="detailed_report">सविस्तर अहवाल</string>
+    <string name="summary_report">सारांश अहवाल</string>
+
+    <string name="select_device_printer">प्रिंटर डिव्हाइस निवडा</string>
+    <string name="save" >जतन करा</string>
+    <string name="remember_me">मला लक्षात ठेवा</string>
+    <string name="pancard_number">पॅन कार्ड क्रमांक</string>
+    <string name="item_summary_report">सविस्तर अहवाल</string>
+
+
+
+    <string-array name="nakshatras">
+        <item>अश्विनी</item>
+        <item>भरणी</item>
+        <item>कृत्तिका</item>
+        <item>रोहिणी</item>
+        <item>मृगशिरा</item>
+        <item>आर्द्रा</item>
+        <item>पुनर्वसू</item>
+        <item>पुष्य</item>
+        <item>आश्लेषा</item>
+        <item>मघा</item>
+        <item>पूर्वा फाल्गुनी</item>
+        <item>उत्तर फाल्गुनी</item>
+        <item>हस्त</item>
+        <item>चित्रा</item>
+        <item>स्वाती</item>
+        <item>विशाखा</item>
+        <item>अनुराधा</item>
+        <item>ज्येष्ठा</item>
+        <item>मूळ</item>
+        <item>पूर्वाषाढा</item>
+        <item>उत्तराषाढा</item>
+        <item>श्रवण</item>
+        <item>धनिष्ठा</item>
+        <item>शततारका</item>
+        <item>पूर्वा भाद्रपदा</item>
+        <item>उत्तर भाद्रपदा</item>
+        <item>रेवती</item>
+    </string-array>
+</resources>

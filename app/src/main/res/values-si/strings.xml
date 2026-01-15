@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="home">මුල් පිටුව</string>
+
+    <!-- home_screen -->
+    <string name="kanika">ඊ-දානය</string>
+    <string name="melkavu_devi">මෙල්කාවු\nභගවති</string>
+    <string name="keezhkavu_devi">කීල්කාවු\nභගවති</string>
+    <string name="ayyappa">අය්යප්පන්\n</string>
+    <string name="shiva">ශිවන්\n</string>
+    <string name="nagam">නාගම්\n</string>
+
+    <!-- donation_screen -->
+    <string name="fill_out_your_details">ඔබගේ විස්තර පුරවන්න</string>
+    <string name="donation_amount">දාන මුදල*</string>
+    <string name="annadana_amount">අන්නදාන මුදල</string>
+    <string name="_10_000">Rs..</string>
+    <string name="pay">ගෙවන්න</string>
+    <string name="phone_number">දුරකථන අංකය</string>
+    <string name="_91">+94</string>
+    <string name="name">නම</string>
+    <string name="select_your_janma_nakshatra">ඔබගේ ජනම නක්ෂත්‍රය තෝරන්න</string>
+
+    <!-- Popup_Screen -->
+    <string name="amount_10_000">මුදලරු.. 10,000 /-</string>
+    <string name="scan_this_code_to_pay">ගෙවීමට මෙම කේතය ස්කෑන් කරන්න</string>
+    <string name="expire">QR අවසන් වන්නේ :</string>
+
+    <!-- payment_Screen -->
+    <string name="thank_you">ස්තුතියි!</string>
+    <string name="your_payment_was_successful">ඔබගේ ගෙවීම සාර්ථකයි!</string>
+    <string name="amount">මුදල :</string>
+    <string name="txt_amount">මුදල</string>
+    <string name="transcation_id">ගනුදෙනු හැඳුනුම් අංකය :</string>
+    <string name="star">ජනම නක්ෂත්‍රය</string>
+    <string name="pay_name">නම :</string>
+    <string name="payment_failed">ගෙවීම අසාර්ථකයි</string>
+    <string name="it_seems_we_have_not_received_money">මුදල අප වෙත ලැබී නොමැති බව පෙනේ</string>
+    <string name="do_you_want_to_do_close_this_page">මෙම පිටුව වසා දමන්න කැමතිද?</string>
+    <string name="cancel">අවලංගු කරන්න</string>
+    <string name="yes">ඔව්</string>
+    <string name="no">නැහැ</string>
+    <string name="no_internet_connection">අන්තර්ජාල සම්බන්ධතාවය නොමැත</string>
+    <string name="retry">නැවත උත්සාහ කරන්න</string>
+    <string name="you_have_been_inactive_for_a_while_please_touch_the_screen_to_continue">ඉදිරියට යාමට තිරය ස්පර්ශ කරන්න</string>
+    <string name="qr_expire">QR අවසන් වන්නේ :</string>
+
+    <string name="vazhipadu">වාජිපාඩු</string>
+    <string name="donation">පරිත්යාග කිරීම</string>
+    <string name="darshan">දර්ශන්</string>
+    <string name="pooja_item">පූජා_අයිතමය</string>
+    <string name="welcome">සාදරයෙන් පිළිගනිමු</string>
+    <string name="annadana">අන්නදාන</string>
+    <string name="choose_your_darshan_tickets">ඔබේ දර්ශන ටිකට්පත් තෝරගන්න</string>
+    <string name="aadhaar_no">ආධාර_නැහැ</string>
+
+    <string name="transaction">ගනුදෙනු</string>
+    <string name="summary">සාරාංශය</string>
+    <string name="report">වාර්තාව</string>
+    <string name="report_generated_time">වාර්තාව සකස් කළ වේලාව</string>
+    <string name="total_amount">මුළු මුදල</string>
+
+    <string name="more_people">තවත් පුද්ගලයන්</string>
+    <string name="pay_vazhipadu">මුදල:රු..%1$s</string>
+    <string name="id_no">හැඳුනුම් අංකය</string>
+    <string name="_2018xxxx989">2018XXXX989</string>
+    <string name="pay_phone_number">දුරකථන අංකය :</string>
+    <string name="pay_id_no">හැඳුනුම් අංකය :</string>
+    <string name="proceed">ඉදිරියට</string>
+    <string name="no_of_tickets">ටිකට් ගණන</string>
+    <string name="click_here_to_take_photo">ඡායාරූපයක් ගැනීමට මෙහි ඔබන්න</string>
+
+    <string name="do_you_want_to_logout">ඔබට ලොග්අවුට් වීමට අවශ්‍යද?</string>
+    <string name="choose_item">අයිතමය තෝරන්න</string>
+    <string name="done">සම්පූර්ණයි</string>
+    <string name="capture">ගන්න</string>
+    <string name="image_upload">රූපය උඩුගත කරන්න</string>
+    <string name="sub_temple">උප දේවස්ථානය</string>
+    <string name="my_cart">මගේ කාට්</string>
+    <string name="birth_star_of_devotees">භක්තයින්ගේ ජනම නක්ෂත්‍රය</string>
+    <string name="edit">සංස්කරණය</string>
+    <string name="fill_devotee_details">භක්ත විස්තර පුරවන්න</string>
+    <string name="upi">UPI</string>
+    <string name="item">අයිතමය</string>
+    <string name="price">මිල</string>
+    <string name="qty">ප්‍රමාණය</string>
+    <string name="total">මුළු එකතුව</string>
+
+    <string name="language_settings">භාෂාව</string>
+    <string name="profile">පැතිකඩ</string>
+    <string name="delete_account">ගිණුම මකන්න</string>
+    <string name="logout">ලොග්අවුට්</string>
+    <string name="dashboard">ඩැෂ්බෝඩ්</string>
+    <string name="settings">සැකසුම්</string>
+    <string name="reports">වාර්තා</string>
+    <string name="detailed_report">විස්තරාත්මක වාර්තාව</string>
+    <string name="summary_report">සාරාංශ වාර්තාව</string>
+
+    <string name="select_device_printer">මුද්‍රණ උපකරණය තෝරන්න</string>
+    <string name="save">සුරකින්න</string>
+    <string name="item_summary_report">අයිතම වාර්තාව</string>
+    <string name="item_name">අයිතම නාමය</string>
+
+    <string name="pancard_number">PAN කාඩ් අංකය</string>
+
+    <string-array name="nakshatras">
+        <item>අශ්විනී</item>
+        <item>භරණී</item>
+        <item>කෘත්තිකා</item>
+        <item>රෝහිනී</item>
+        <item>මෘගශීර්ෂ</item>
+        <item>ආර්ද්‍රා</item>
+        <item>පුනර්වසු</item>
+        <item>පුෂ්‍ය</item>
+        <item>ආශ්ලේෂා</item>
+        <item>මඝා</item>
+        <item>පූර්ව ඵල්ගුණී</item>
+        <item>උත්තර ඵල්ගුණී</item>
+        <item>හස්ථා</item>
+        <item>චිත්‍රා</item>
+        <item>ස්වාති</item>
+        <item>විශාඛා</item>
+        <item>අනුරාධා</item>
+        <item>ජ්‍යේෂ්ඨා</item>
+        <item>මූල</item>
+        <item>පූර්ව ආෂාඪා</item>
+        <item>උත්තර ආෂාඪා</item>
+        <item>ශ්‍රවණ</item>
+        <item>ධනಿಷ್ಠා</item>
+        <item>ශතභිෂා</item>
+        <item>පූර්ව භද්‍රපදා</item>
+        <item>උත්තර භද්‍රපදා</item>
+        <item>රේවතී</item>
+    </string-array>
+
+</resources>

@@ -1,0 +1,169 @@
+<resources>
+    <string name="app_name" translatable="false">Ticket Kiosk</string>
+    <string name="make_a_donation" translatable="false">MAKE A DONATION</string>
+    <string name="english" translatable="false">English</string>
+    <string name="malayalam" translatable="false">മലയാളം</string>
+    <string name="tamil" translatable="false">தமிழ்</string>
+    <string name="sinhala" translatable="false">සිංහල</string>
+    <string name="kannada" translatable="false">ಕನ್ನಡ</string>
+    <string name="telugu" translatable="false">తెలుగు</string>
+    <string name="punjabi" translatable="false">ਪੰਜਾਬੀ</string>
+    <string name="hindi" translatable="false">हिन्दी</string>
+    <string name="todo" translatable="false">TODO</string>
+    <string name="choose_your_language" translatable="false">Choose your language</string>
+    <string name="p_o_w_e_r_e_d_b_y" translatable="false">p o w e r e d b y</string>
+    <string name="b_a_n_k_i_n_g_p_a_r_t_n_e_r" translatable="false">b a n k i n g p a r t n e r</string>
+    <string name="login_as_a_admin_user" translatable="false">Login as a Admin User</string>
+    <string name="user_id" translatable="false">Username</string>
+    <string name="password" translatable="false">Password</string>
+    <string name="log_in" translatable="false">LOG IN</string>
+    <string name="show_hide_password" translatable="false">Password</string>
+    <string name="select_device_printer">Select the Printer Device </string>
+    <string name="save">Save</string>
+    <string name="sync">Sync</string>
+    <string name="loading_syncing_data">Syncing data...</string>
+    <string name="amount_zero">0.00</string>
+
+    <string name="home">Home</string>
+
+
+    //home_screen
+    <string name="kanika">E-Kanikka</string>
+    <string name="melkavu_devi">MELKAVU\nBHAGAVATI</string>
+    <string name="keezhkavu_devi">KEEZHKAVU\nBHAGAVATI</string>
+    <string name="ayyappa">AYYAPPAN\n</string>
+    <string name="shiva">SHIVAN\n</string>
+    <string name="nagam">NAGAM\n</string>
+
+
+    //donation_screen
+    <string name="fill_out_your_details">Fill out your details</string>
+    <string name="donation_amount">E Hundi Amount</string>
+    <string name="annadana_amount">Annadana Amount</string>
+    <string name="_10_000">Rs.</string>
+    <string name="pay">PAY</string>
+    <string name="phone_number">Phone Number</string>
+    <string name="_91">+91</string>
+    <string name="name">Name</string>
+    <string name="select_your_janma_nakshatra">Select Your Janma Nakshatra</string>
+
+
+    //Popup_Screen
+    <string name="amount_10_000">Rs.</string>
+    <string name="scan_this_code_to_pay">Scan this code to Pay</string>
+    <string name="expire">Scan this code to Pay</string>
+    <string name="proceed">Proceed</string>
+
+
+    //payment_Screen
+    <string name="thank_you">Thank You!</string>
+    <string name="your_payment_was_successful">Your payment was successful!</string>
+    <string name="amount">Amount : </string>
+    <string name="txt_amount">Amount </string>
+    <string name="transcation_id">Transaction ID : </string>
+    <string name="star">Star</string>
+    <string name="pay_name">Name  :</string>
+    <string name="payment_failed">Payment Failed</string>
+    <string name="it_seems_we_have_not_received_money">It seems we have not received money</string>
+    <string name="do_you_want_to_do_close_this_page">Do you want to do close this page?</string>
+    <string name="cancel">Cancel</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="no_internet_connection">No Internet Connection</string>
+    <string name="retry">Retry</string>
+    <string name="you_have_been_inactive_for_a_while_please_touch_the_screen_to_continue">Do you want to continue?</string>
+    <string name="qr_expire">QR expires in :</string>
+
+    <string name="vazhipadu">Seva Particulars</string>
+    <string name="donation">E Hundi</string>
+    <string name="darshan">Darshan</string>
+    <string name="pooja_item">Pooja Item</string>
+    <string name="welcome">Welcome!</string>
+    <string name="more_people">More people</string>
+    <string name="pay_vazhipadu">PAY Rs.%1$s</string>
+    <string name="annadana">Annadana</string>
+
+
+    <string name="transaction">Transaction</string>
+    <string name="summary">Summary</string>
+    <string name="report">Report</string>
+    <string name="report_generated_time">Report Generated Time</string>
+    <string name="total_amount">Total Amount</string>
+
+    <string name="choose_your_darshan_tickets">Choose your Darshan Tickets</string>
+    <string name="no_of_tickets">No : of tickets</string>
+    <string name="id_no">Id No</string>
+    <string name="_2018xxxx989">2018XXXX989</string>
+    <string name="pay_phone_number">Phone Number :</string>
+    <string name="pay_id_no">Id No :</string>
+    <string name="click_here_to_take_photo">Click here to take photo</string>
+    <string name="_0">0</string>
+    <string name="select_payment_option">Select payment option</string>
+    <string name="initailing_payment_option">Please use the payment terminal to finish your transaction.</string>
+
+    <string name="language_settings">Language</string>
+    <string name="profile">Profile</string>
+    <string name="delete_account">Delete Account</string>
+    <string name="logout">Logout</string>
+    <string name="aadhaar_no">Aadhaar No</string>
+    <string name="remember_me">Remember Me</string>
+
+
+    <string name="do_you_want_to_logout">Do you want to logout?</string>
+    <string name="choose_item">Choose Item</string>
+    <string name="done">Done</string>
+    <string name="capture">Capture</string>
+    <string name="image_upload"> Image Upload</string>
+    <string name="sub_temple">Sub Temple</string>
+    <string name="my_cart">My cart</string>
+    <string name="birth_star_of_devotees">Birth Star of Devotees</string>
+    <string name="edit">Edit</string>
+    <string name="fill_devotee_details">Fill Devotee Details</string>
+    <string name="upi">UPI</string>
+    <string name="item">Item</string>
+    <string name="price">Price</string>
+    <string name="qty">Qty</string>
+    <string name="total">Total</string>
+    <string name="marathi">ગુજરાતી</string>
+    <string name="dashboard">Dashboard</string>
+    <string name="settings">Settings</string>
+    <string name="reports">Reports</string>
+    <string name="detailed_report">Detailed Report</string>
+    <string name="summary_report">Summary Report</string>
+    <string name="item_summary_report">Detailed Report</string>
+    <string name="item_name">Item Name</string>
+    <string name="pancard_number">PanCard Number</string>
+
+
+    <string-array name="nakshatras">
+        <item>Ashwini</item>
+        <item>Bharani</item>
+        <item>Krittika</item>
+        <item>Rohini</item>
+        <item>Mrigashirsha</item>
+        <item>Ardra</item>
+        <item>Punarvasu</item>
+        <item>Pushya</item>
+        <item>Ashlesha</item>
+        <item>Magha</item>
+        <item>Purva Phalguni</item>
+        <item>Uttara Phalguni</item>
+        <item>Hasta</item>
+        <item>Chitra</item>
+        <item>Swati</item>
+        <item>Vishaka</item>
+        <item>Anuradha</item>
+        <item>Jyeshta</item>
+        <item>Moola</item>
+        <item>Purva Ashadha</item>
+        <item>Uttara Ashada</item>
+        <item>Shravana</item>
+        <item>Dhanistha</item>
+        <item>Shatabhisaa</item>
+        <item>Purva Bhadrapada</item>
+        <item>Uttara Bhadrapada</item>
+        <item>Revati</item>
+    </string-array>
+
+
+</resources>

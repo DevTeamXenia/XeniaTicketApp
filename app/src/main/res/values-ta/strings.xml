@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home">ஹோம்</string>
+
+
+    //home_screen
+    <string name="kanika">ஏ கனிகா</string>
+    <string name="melkavu_devi">மேல்காவில்\nபகவதி</string>
+    <string name="keezhkavu_devi">கீழ்காவில்\nபகவதி</string>
+    <string name="ayyappa">அய்யப்பன்\n</string>
+    <string name="shiva">சிவன்\n</string>
+    <string name="nagam">நாகம்\n</string>
+    <string name="sync">ஒத்திசைவு</string>
+
+
+    donation_screen
+    <string name="fill_out_your_details">உங்கள் விவரங்களை நிரப்பவும்</string>
+    <string name="donation_amount">கண்ணிகா தொகை*</string>
+    <string name="annadana_amount">அன்னதான தொகை</string>
+    <string name="_10_000">Rs.</string>
+    <string name="pay">செலுத்து</string>
+    <string name="phone_number">தொலை எண்</string>
+    <string name="_91">+91</string>
+    <string name="name">பெயர்</string>
+    <string name="select_your_janma_nakshatra">உங்கள் பிறந்த நக்ஷத்திரத்தை தேர்ந்தெடுக்கவும்</string>
+
+    //Popup_Screen
+    <string name="amount_10_000">தொகை  Rs. 10,000 /-</string>
+    <string name="scan_this_code_to_pay">இந்த கோடு ஸ்கேன் செய்து\nபணம் செலுத்துங்கள்</string>
+    <string name="expire">QR காலாவதி ஆகும் :</string>
+
+    //payment_Screen
+    <string name="thank_you">நன்றி!</string>
+    <string name="your_payment_was_successful">உங்கள் பணப்பலம் வெற்றிகரமாக முடிந்தது! </string>
+    <string name="amount">தொகை : </string>
+    <string name="txt_amount">தொகை</string>
+    <string name="transcation_id">பரிவர்த்தனை ஐடி : </string>
+    <string name="star">தாரா</string>
+    <string name="pay_name">பெயர் :</string>
+    <string name="payment_failed">பணம் செலுத்துதல் தோல்வியுற்றது</string>
+    <string name="it_seems_we_have_not_received_money">எங்களுக்கு பணம் கிடைக்கவில்லை போல தெரிகிறது</string>
+    <string name="do_you_want_to_do_close_this_page">இந்த பக்கத்தை மூட விரும்புகிறீர்களா?</string>
+    <string name="cancel">ரத்துசெய்</string>
+    <string name="yes">ஆம்</string>
+    <string name="no">இல்லை</string>
+    <string name="no_internet_connection">இணையத் தொடர்பு இல்லை</string>
+    <string name="retry">மீண்டும் முயற்சிக்கவும்</string>
+    <string name="you_have_been_inactive_for_a_while_please_touch_the_screen_to_continue">நீங்கள் ஒரு காலமாக செயலற்றுள்ளீர்கள். தொடரவேண்டுமானால், திரையை தொடவும்.</string>
+    <string name="qr_expire">QR முடிவடையும் நேரம் :</string>
+
+    <string name="vazhipadu">வழிபாடு</string>
+    <string name="donation">தானம்</string>
+    <string name="darshan">தரிசனம்</string>
+    <string name="pooja_item">பூ.பொ.</string>
+    <string name="welcome">வரவேற்கிறோம்!</string>
+    <string name="annadana">அன்னதானம்</string>
+    <string name="choose_your_darshan_tickets">உங்கள் தரிசன டிக்கெட்டுகளை தேர்வு செய்யுங்கள்</string>
+
+    <string name="transaction">அறிக்கை</string>
+    <string name="summary">சுருக்கம்</string>
+    <string name="report">அறிக்கை</string>
+    <string name="report_generated_time">அறிக்கை உருவாக்கப்பட்ட நேரம்</string>
+    <string name="total_amount">மொத்த தொகை</string>
+
+
+    <string name="more_people">மேலும் மக்கள்</string>
+    <string name="pay_vazhipadu">செலுத்த: Rs.%1$s</string>
+    <string name="id_no">அடையாள எண்</string>
+    <string name="_2018xxxx989">2018XXXX989</string>
+    <string name="pay_phone_number">தொலைபேசி எண் :</string>
+    <string name="pay_id_no">அடையாள எண் :</string>
+    <string name="proceed">కதொடர</string>
+    <string name="no_of_tickets">டிக்கெட் எண்ணிக்கை</string>
+    <string name="click_here_to_take_photo">புகைப்படம் எடுக்க இங்கே கிளிக் செய்யவும்</string>
+
+    <string name="do_you_want_to_logout">நீங்கள் வெளியேற விரும்புகிறீர்களா?</string>
+    <string name="choose_item">உருப்படியைத் தேர்ந்தெடுக்கவும்</string>
+    <string name="done">முடிந்தது</string>
+    <string name="sub_temple">துணை கோவில்</string>
+    <string name="capture">பிடிப்பு</string>
+    <string name="image_upload">படத்தை பதிவேற்றம்</string>
+    <string name="my_cart">என் வண்டி</string>
+    <string name="birth_star_of_devotees">பக்தர்களின் பிறந்த நட்சத்திரம்</string>
+    <string name="edit">திருத்தவும்</string>
+    <string name="fill_devotee_details">பக்தர் விவரங்களை நிரப்பவும்</string>
+    <string name="upi" />
+    <string name="item" >பொருள்</string>
+    <string name="price">விலை</string>
+    <string name="qty">அளவு</string>
+    <string name="total">மொத்தம்</string>
+    <string name="aadhaar_no">ஆதார் எண்</string>
+
+    <string name="language_settings">மொழி</string>
+    <string name="profile">சுயவிவரம்</string>
+    <string name="delete_account">கணக்கை நீக்கவும்</string>
+    <string name="logout">வெளியேறு</string>
+    <string name="dashboard">டாஷ்போர்டு</string>
+    <string name="settings">அமைப்புகள்</string>
+    <string name="reports">அறிக்கைகள்</string>
+    <string name="detailed_report">விரிவான அறிக்கை</string>
+    <string name="summary_report">சுருக்க அறிக்கை</string>
+
+    <string name="select_device_printer">அச்சுப்பொறி சாதனத்தைத் தேர்ந்தெடுக்கவும்</string>
+    <string name="save" >சேமிக்க</string>
+    <string name="item_summary_report">விரிவான அறிக்கை</string>
+    <string name="item_name">உருப்படியின் பெயர்</string>
+    <string name="pancard_number">பான் கார்ட் எண்</string>
+
+
+    <string-array name="nakshatras">
+        <item>அஸ்வினி</item>
+        <item>பரணி</item>
+        <item>கார்த்திகை</item>
+        <item>ரோகிணி</item>
+        <item>மிருகசீரிடம்</item>
+        <item>திருவாதிரை</item>
+        <item>புனர்பூசம்</item>
+        <item>பூசம்</item>
+        <item>ஆயில்யம்</item>
+        <item>மகம்</item>
+        <item>பூரம்</item>
+        <item>உத்திரம்</item>
+        <item>அஸ்தம்</item>
+        <item>சித்திரை</item>
+        <item>சுவாதி</item>
+        <item>விசாகம்</item>
+        <item>அனுஷம்</item>
+        <item>கேட்டை</item>
+        <item>மூலம்</item>
+        <item>பூராடம்</item>
+        <item>உத்திராடம்</item>
+        <item>திருவோணம்</item>
+        <item>அவிட்டம்</item>
+        <item>சதயம்</item>
+        <item>பூரட்டாதி</item>
+        <item>உத்திரட்டாதி</item>
+        <item>ரேவதி</item>
+    </string-array>
+
+</resources>
+
+
