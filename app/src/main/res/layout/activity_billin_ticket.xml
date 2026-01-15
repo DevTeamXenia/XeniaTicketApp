@@ -26,7 +26,7 @@
 
         <TextView
             android:layout_marginTop="24dp"
-            android:text="Thrissur Zoological Park"
+            android:text="Thrissur ZoologicalPark"
             android:textSize="22sp"
             android:textStyle="bold"
             android:textColor="#FFFFFF"

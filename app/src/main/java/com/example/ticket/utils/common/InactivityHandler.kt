@@ -5,7 +5,7 @@ import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentManager
-import com.xenia.templekiosk.ui.dialogue.CustomInactivityDialog
+import com.example.ticket.ui.dialog.CustomInactivityDialog
 import kotlin.collections.any
 import kotlin.let
 

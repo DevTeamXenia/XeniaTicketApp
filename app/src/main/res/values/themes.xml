@@ -6,7 +6,6 @@
     </style>
 
     <style name="Theme.Ticket" parent="Base.Theme.Ticket" />
-
     <style name="TransparentAlertDialog" parent="Theme.AppCompat.Light.Dialog.Alert">
         <item name="android:windowBackground">@android:color/transparent</item>
     </style>

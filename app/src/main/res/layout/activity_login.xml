@@ -5,8 +5,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="horizontal"
-    android:weightSum="100">
+    android:weightSum="100"
+>
 
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:contentDescription="@string/todo"
+       />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -18,14 +25,14 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="40"
-            android:background="">
+    >
 
             <ImageView
                 android:layout_width="200dp"
                 android:layout_height="200dp"
                 android:layout_centerInParent="true"
                 android:contentDescription="@string/todo"
-                 />
+        />
 
             <ImageView
                 android:layout_width="match_parent"
@@ -34,19 +41,21 @@
                 android:alpha="0.1"
                 android:contentDescription="@string/todo"
                 android:scaleType="fitEnd"
-                android:src="@color/green" />
+                />
 
             <ImageView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:contentDescription="@string/todo"
                 android:scaleType="fitEnd"
-                android:src="@color/green" />
+                />
         </RelativeLayout>
+
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="60">
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
@@ -56,9 +65,9 @@
                 <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="50dp"
-                    android:layout_marginTop="30dp"
-                    android:layout_marginEnd="50dp"
+                    android:layout_marginStart="30dp"
+                    android:layout_marginTop="20dp"
+                    android:layout_marginEnd="30dp"
                     android:layout_marginBottom="40dp"
                     tools:ignore="UselessParent">
 
@@ -66,13 +75,13 @@
                         android:id="@+id/tvLoginTitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_centerHorizontal="true"
                         android:layout_marginStart="24dp"
                         android:layout_marginBottom="40dp"
-                        android:layout_centerHorizontal="true"
                         android:fontFamily="@font/segoe_ui_bold"
                         android:text="@string/login_as_a_admin_user"
                         android:textColor="@color/primaryColor"
-                        android:textSize="32sp" />
+                        android:textSize="20sp" />
 
                     <LinearLayout
                         android:id="@+id/lin_userId"
@@ -81,11 +90,11 @@
                         android:layout_below="@+id/tvLoginTitle"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
-                        android:padding="15dp">
+                        android:padding="10dp">
 
                         <LinearLayout
-                            android:layout_width="60dp"
-                            android:layout_height="60dp"
+                            android:layout_width="50dp"
+                            android:layout_height="50dp"
                             android:background="@drawable/ic_gradient_background"
                             android:gravity="center">
 
@@ -105,7 +114,7 @@
                             android:background="@drawable/rounded_background"
                             android:hint="@string/user_id"
                             android:inputType="text"
-                            android:padding="20dp"
+                            android:padding="15dp"
                             android:textColor="#999"
                             android:textSize="16sp" />
                     </LinearLayout>
@@ -117,11 +126,12 @@
                         android:layout_below="@+id/lin_userId"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
-                        android:padding="15dp">
+                        android:padding="10dp">
 
+                        <!-- Password icon container -->
                         <LinearLayout
-                            android:layout_width="60dp"
-                            android:layout_height="60dp"
+                            android:layout_width="50dp"
+                            android:layout_height="50dp"
                             android:background="@drawable/ic_gradient_background"
                             android:gravity="center">
 
@@ -162,16 +172,45 @@
                                 android:padding="8dp"
                                 android:src="@drawable/ic_eye" />
                         </LinearLayout>
+
+
+                    </LinearLayout>
+
+                    <!-- Remember Me -->
+                    <LinearLayout
+                        android:id="@+id/lin_remember_me"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/lin_pass"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginEnd="10dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <CheckBox
+                            android:id="@+id/chkRememberMe"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:paddingStart="8dp"
+                            android:text="@string/remember_me"
+                            android:visibility="invisible"
+                            android:textColor="@color/black"
+                            android:textSize="16sp" />
+
+
                     </LinearLayout>
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_login"
-                        android:layout_width="match_parent"
-                        android:layout_height="70dp"
-                        android:layout_below="@+id/lin_pass"
-                        android:layout_marginStart="100dp"
+                        android:layout_width="200dp"
+                        android:layout_height="50dp"
+                        android:layout_below="@+id/lin_remember_me"
+                        android:layout_centerHorizontal="true"
+                        android:layout_marginStart="85dp"
                         android:layout_marginTop="20dp"
-                        android:layout_marginEnd="100dp"
+                        android:layout_marginEnd="85dp"
                         android:backgroundTint="@color/primaryColor"
                         android:fontFamily="@font/montserrat_semibold"
                         android:text="@string/log_in"

@@ -9,6 +9,7 @@ import android.view.View
 import android.view.inputmethod.InputMethodManager
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.edit
 import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import com.example.ticket.R
@@ -31,6 +32,7 @@ import retrofit2.HttpException
 import kotlin.getValue
 
 
+
 class LoginActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLoginBinding
     private val sessionManager: SessionManager by inject()
@@ -44,6 +46,8 @@ class LoginActivity : AppCompatActivity() {
         setContentView(binding.root)
         setupPasswordToggle()
         requestOverlayPermission()
+
+
         if (sessionManager.isLoggedIn()) {
 
             val userTypeString = sessionManager.getUserType()
@@ -66,6 +70,15 @@ class LoginActivity : AppCompatActivity() {
             return
         }
         val sharedPref = getSharedPreferences("LoginPrefs", MODE_PRIVATE)
+        val remembered = sharedPref.getBoolean("rememberMe", false)
+        if (remembered) {
+            binding.chkRememberMe?.let { checkBox ->
+                checkBox.isChecked = true
+            }
+            binding.edtUserId.setText(sharedPref.getString("userId", ""))
+            binding.edtPassword.setText(sharedPref.getString("password", ""))
+
+        }
 
         binding.btnLogin.setOnClickListener {
             val userId = binding.edtUserId.text.toString()
@@ -75,9 +88,6 @@ class LoginActivity : AppCompatActivity() {
             }
         }
     }
-
-
-
 
     private fun setupPasswordToggle() {
         val toggleIcon = binding.imgTogglePassword ?: return
@@ -129,6 +139,7 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
     ) {
 
 
+
         if (!isInternetAvailable(applicationContext)) {
             hideKeyboard()
             dismissLoader()
@@ -144,6 +155,15 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
                 sessionManager.saveToken( "Bearer $token")
                 sessionManager.savePassword(password)
 
+                sharedPref.edit {
+                    if (binding.chkRememberMe?.isChecked == true) {
+                        putBoolean("rememberMe", true)
+                        putString("userId", userId)
+                        putString("password", password)
+                    } else {
+                        clear()
+                    }
+                }
 
                 val config = resources.configuration
                 val screenSizeMask = config.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK
@@ -152,6 +172,8 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
                 val jwtPayload = JwtUtils.decodeJwt(token)
                 val userTypeValue = jwtPayload.getString("UserType")
                 val userType = UserType.fromValue(userTypeValue)
+
+
 
                 when (userType) {
 
@@ -194,18 +216,27 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
                 }
 
             } catch (e: HttpException) {
+
+                val errorBody = e.response()?.errorBody()?.string()
+
                 val msg = when (e.code()) {
                     404 -> "Incorrect Username!"
                     401 -> "Incorrect Password!"
-                    else -> "Something went wrong!"
+                    else -> errorBody ?: e.message() ?: "Something went wrong!"
                 }
+
+                Log.e("LOGIN_ERROR", "Code: ${e.code()}, Body: $errorBody", e)
                 showSnackbar(binding.root, msg)
-            } catch (_: Exception) {
-                showSnackbar(binding.root, "Something went wrong! Please try again.")
-            } finally {
-                hideKeyboard()
-                dismissLoader()
+
+            } catch (e: Exception) {
+
+                Log.e("LOGIN_ERROR", "Unexpected error", e)
+                showSnackbar(
+                    binding.root,
+                    e.localizedMessage ?: "Something went wrong! Please try again."
+                )
             }
+
         }
     }
 

@@ -13,7 +13,14 @@ import android.view.Window
 import android.widget.Button
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
+import com.example.ticket.R
+import com.example.ticket.data.repository.CompanyRepository
+import com.example.ticket.ui.sreens.screen.LanguageActivity
+import com.example.ticket.utils.common.CommonMethod.setLocale
+import com.example.ticket.utils.common.CompanyKey
+import com.example.ticket.utils.common.Constants.LANGUAGE_ENGLISH
 import com.example.ticket.utils.common.SessionManager
+import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
 
@@ -91,25 +98,16 @@ class CustomInactivityDialog(private val callback: InactivityCallback) : DialogF
         countdownTimer?.cancel()
 
         viewLifecycleOwner.lifecycleScope.launch {
-            val loadScreen = companyRepository
-                .getString(CompanyKey.LOADSCREEN)
-                ?.trim()
+            sessionManager.saveSelectedLanguage(LANGUAGE_ENGLISH)
+            setLocale(requireContext(), LANGUAGE_ENGLISH)
 
-            val targetIntent =
-                if (loadScreen == "LANGUAGE") {
-                    Intent(requireContext(), LanguageActivity::class.java)
-                } else {
-                    sessionManager.saveSelectedLanguage(LANGUAGE_ENGLISH)
-                    setLocale(requireContext(), LANGUAGE_ENGLISH)
-                    Intent(requireContext(), SelectionActivity::class.java)
-                }.apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                }
+            val intent = Intent(requireContext(), LanguageActivity::class.java)
+            startActivity(intent)
 
-            startActivity(targetIntent)
             dismissAllowingStateLoss()
         }
     }
+
 
     override fun onStart() {
         super.onStart()

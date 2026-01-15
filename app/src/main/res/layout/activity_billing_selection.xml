@@ -21,7 +21,7 @@
         <Button
             android:layout_width="wrap_content"
             android:layout_height="40dp"
-            android:text="Home"
+            android:text="@string/home"
             android:textAllCaps="false"
             android:backgroundTint="#FFFFFF"
             android:textColor="#6E8B2A"/>
@@ -30,10 +30,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
-            android:text="Thrissur Zoological Park"
+            android:text="@string/darshan"
             android:textColor="#FFFFFF"
             android:textSize="22sp"
-            android:drawableTop="20dp"
             android:layout_gravity="center"
             android:textStyle="bold" />
     </LinearLayout>
@@ -42,7 +41,7 @@
         android:id="@+id/subTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Choose your Tickets"
+        android:text="@string/choose_your_darshan_tickets"
         android:textSize="16sp"
         android:textColor="#333333"
         android:layout_marginTop="24dp"

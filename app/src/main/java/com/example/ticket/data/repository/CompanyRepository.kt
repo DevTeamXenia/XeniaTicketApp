@@ -1,11 +1,12 @@
 package com.example.ticket.data.repository
 
 import androidx.room.Transaction
-import com.xenia.templekiosk.data.network.model.CompanyResponse
-import com.xenia.templekiosk.data.network.service.ApiClient
-import com.xenia.templekiosk.data.room.dao.CompanyDao
-import com.xenia.templekiosk.data.room.entity.Company
-import com.xenia.templekiosk.utils.common.CompanyKey
+import com.example.ticket.data.network.model.CompanyResponse
+import com.example.ticket.data.network.service.ApiClient
+import com.example.ticket.data.room.dao.CompanyDao
+import com.example.ticket.data.room.entity.Company
+import com.example.ticket.utils.common.CompanyKey
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -58,9 +59,6 @@ class CompanyRepository(
         return companyDao.getByKeyCode(key.code)?.value
     }
 
-    suspend fun getGateway(): String? {
-        return getString(CompanyKey.COMPANY_GATEWAY)
-    }
 
     suspend fun getDefaultLanguage(): String? {
         return getString(CompanyKey.DEFAULT_LANGUAGE)

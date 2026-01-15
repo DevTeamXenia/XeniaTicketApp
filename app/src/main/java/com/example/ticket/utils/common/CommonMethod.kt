@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.ticket.R
 import com.google.android.material.snackbar.Snackbar
 import java.security.SecureRandom
+import java.util.Locale
 
 object CommonMethod {
     private var loader: AlertDialog? = null
@@ -55,7 +56,18 @@ object CommonMethod {
 
         return numberStringBuilder.toString()
     }
+    fun setLocale(context: Context, languageCode: String?): Context {
+        val locale = Locale(languageCode ?: "en")
+        Locale.setDefault(locale)
 
+        val config = Configuration(context.resources.configuration)
+        config.setLocale(locale)
+
+        val newContext = context.createConfigurationContext(config)
+        context.resources.updateConfiguration(config, context.resources.displayMetrics)
+
+        return newContext
+    }
 
     @SuppressLint("ObsoleteSdkInt")
     fun isInternetAvailable(context: Context): Boolean {
