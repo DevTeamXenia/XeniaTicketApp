@@ -1,6 +1,7 @@
 package com.example.ticket.di
 
 import androidx.room.Room
+import com.example.ticket.data.repository.CompanyRepository
 import com.example.ticket.data.repository.LoginRepository
 import com.example.ticket.data.room.AppDatabase
 import com.example.ticket.utils.common.SessionManager
@@ -19,7 +20,9 @@ val roomModule = module {
             .fallbackToDestructiveMigration(true)
             .build()
     }
+    single { get<AppDatabase>().companyDao() }
 
     single { SessionManager(androidContext()) }
     single { LoginRepository() }
+    single { CompanyRepository(get()) }
 }

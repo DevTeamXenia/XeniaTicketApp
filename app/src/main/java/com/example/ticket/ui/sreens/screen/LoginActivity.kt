@@ -50,25 +50,39 @@ class LoginActivity : AppCompatActivity() {
 
         if (sessionManager.isLoggedIn()) {
 
-            val userTypeString = sessionManager.getUserType()
+            val userType = UserType.fromValue(sessionManager.getUserType())
             val selectedLanguage = sessionManager.getSelectedLanguage()
 
             lifecycleScope.launch {
 
+                when (userType) {
 
-                val userType = UserType.fromValue(userTypeString)
+                    UserType.COUNTER_USER -> {
+                        if (selectedLanguage.isNotEmpty()) {
+                            startActivity(
+                                Intent(this@LoginActivity, Billing_selection_Activity::class.java)
+                            )
+                        } else {
+                            startActivity(
+                                Intent(this@LoginActivity, LanguageActivity::class.java)
+                            )
+                        }
+                    }
 
-                if (userType == UserType.COUNTER_USER) {
-                    if (selectedLanguage.isNotEmpty()) {
-                        startActivity(Intent(applicationContext, Billing_selection_Activity::class.java))
-                    } else {
-                        startActivity(Intent(applicationContext, LanguageActivity::class.java))
+                    else -> {
+                        startActivity(
+                            Intent(this@LoginActivity, LanguageActivity::class.java)
+                        )
                     }
                 }
+
                 finish()
             }
+
             return
         }
+
+
         val sharedPref = getSharedPreferences("LoginPrefs", MODE_PRIVATE)
         val remembered = sharedPref.getBoolean("rememberMe", false)
         if (remembered) {

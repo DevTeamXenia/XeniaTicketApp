@@ -3,7 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="horizontal">
+    android:orientation="horizontal"
+    tools:context=".ui.sreens.screen.LanguageActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -16,7 +17,7 @@
             android:id="@+id/layoutTop"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="45">
+            android:layout_weight="50">
 
             <ImageView
                 android:id="@+id/img_background"
@@ -27,50 +28,21 @@
                 android:contentDescription="@string/todo"
                 android:scaleType="fitXY" />
 
-            <!-- Sub Heading -->
-            <TextView
-                android:id="@+id/tvHeading"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:layout_centerHorizontal="true"
-                android:layout_marginEnd="16dp"
-                android:layout_marginBottom="50dp"
-                android:text="Heading"
-                android:textStyle="bold"
-                android:textSize="30sp"
-                android:textColor="@android:color/white" />
-
-            <!-- Heading -->
-            <TextView
-                android:id="@+id/tvSubHeading"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
-                android:layout_alignParentBottom="true"
-                android:layout_marginEnd="16dp"
-                android:layout_marginBottom="20dp"
-                android:text="Sub Heading"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:textColor="@color/greenlighttext" />
-
         </RelativeLayout>
-
 
         <LinearLayout
             android:id="@+id/layoutMiddle"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_marginStart="10dp"
-            android:layout_marginEnd="10dp"
-            android:layout_weight="45"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_weight="43"
             android:orientation="vertical">
 
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="20dp"
                 android:layout_marginBottom="20dp"
                 android:gravity="center_horizontal">
 
@@ -91,7 +63,7 @@
                     android:fontFamily="@font/poppins_regular"
                     android:text="@string/choose_your_language"
                     android:textColor="@color/secondaryColor"
-                    android:textSize="18sp" />
+                    android:textSize="20sp" />
 
             </RelativeLayout>
 
@@ -99,8 +71,8 @@
                 android:id="@+id/languageCardContainer"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_marginStart="25dp"
-                android:layout_marginEnd="25dp"
+                android:layout_marginStart="80dp"
+                android:layout_marginEnd="80dp"
                 android:layout_weight="1"
                 android:orientation="vertical">
 
@@ -137,13 +109,13 @@
                                 android:layout_gravity="center_horizontal"
                                 android:fontFamily="@font/montserrat_semibold"
                                 android:text="@string/english"
-                                android:textColor="@color/text_green" />
+                                android:textColor="@color/secondaryColor" />
 
                         </LinearLayout>
                     </RelativeLayout>
 
                     <RelativeLayout
-                        android:id="@+id/card_Sinhala"
+                        android:id="@+id/card_punjabi"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="1"
@@ -159,7 +131,7 @@
                                 android:layout_width="30dp"
                                 android:layout_height="30dp"
                                 android:layout_gravity="center_horizontal"
-                                android:src="@drawable/ic_mal"
+                                android:src="@drawable/ic_pa"
                                 android:contentDescription="@string/punjabi" />
 
                             <TextView
@@ -167,8 +139,8 @@
                                 android:layout_height="wrap_content"
                                 android:layout_gravity="center_horizontal"
                                 android:fontFamily="@font/montserrat_semibold"
-                                android:text="@string/sinhala"
-                                android:textColor="@color/text_green" />
+                                android:text="@string/punjabi"
+                                android:textColor="@color/secondaryColor" />
 
                         </LinearLayout>
                     </RelativeLayout>
@@ -208,7 +180,7 @@
                                 android:layout_gravity="center_horizontal"
                                 android:fontFamily="@font/montserrat_semibold"
                                 android:text="@string/tamil"
-                                android:textColor="@color/text_green" />
+                                android:textColor="@color/secondaryColor" />
 
                         </LinearLayout>
                     </RelativeLayout>
@@ -239,7 +211,7 @@
                                 android:layout_gravity="center_horizontal"
                                 android:fontFamily="@font/montserrat_semibold"
                                 android:text="@string/kannada"
-                                android:textColor="@color/text_green" />
+                                android:textColor="@color/secondaryColor" />
 
                         </LinearLayout>
                     </RelativeLayout>
@@ -279,7 +251,7 @@
                                 android:layout_gravity="center_horizontal"
                                 android:fontFamily="@font/montserrat_semibold"
                                 android:text="@string/telugu"
-                                android:textColor="@color/text_green" />
+                                android:textColor="@color/secondaryColor" />
 
                         </LinearLayout>
                     </RelativeLayout>
@@ -310,7 +282,7 @@
                                 android:layout_gravity="center_horizontal"
                                 android:fontFamily="@font/montserrat_semibold"
                                 android:text="@string/hindi"
-                                android:textColor="@color/text_green" />
+                                android:textColor="@color/secondaryColor" />
 
                         </LinearLayout>
                     </RelativeLayout>
@@ -341,7 +313,7 @@
                                 android:layout_width="30dp"
                                 android:layout_height="30dp"
                                 android:layout_gravity="center_horizontal"
-                                android:src="@drawable/ic_pa"
+                                android:src="@drawable/ic_ml"
                                 android:contentDescription="@string/malayalam" />
 
                             <TextView
@@ -349,8 +321,8 @@
                                 android:layout_height="wrap_content"
                                 android:layout_gravity="center_horizontal"
                                 android:fontFamily="@font/montserrat_semibold"
-                                android:text="@string/punjabi"
-                                android:textColor="@color/text_green" />
+                                android:text="@string/malayalam"
+                                android:textColor="@color/secondaryColor" />
 
                         </LinearLayout>
                     </RelativeLayout>
@@ -381,13 +353,14 @@
                                 android:layout_gravity="center_horizontal"
                                 android:fontFamily="@font/montserrat_semibold"
                                 android:text="@string/marathi"
-                                android:textColor="@color/text_green" />
+                                android:textColor="@color/secondaryColor" />
 
 
                         </LinearLayout>
                     </RelativeLayout>
 
                 </LinearLayout>
+
 
             </LinearLayout>
 
