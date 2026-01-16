@@ -2,16 +2,17 @@ package com.example.ticket.ui.sreens.screen
 
 import android.annotation.SuppressLint
 import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
-import com.example.ticket.R
-import com.example.ticket.data.repository.CategoryRepository
+import com.example.ticket.data.listeners.InactivityHandlerActivity
+import com.example.ticket.data.listeners.OnTicketClickListener
+import com.example.ticket.data.repository.ActiveTicketRepository
 import com.example.ticket.data.repository.TicketRepository
-import com.example.ticket.databinding.ActivitySelectionBinding
+import com.example.ticket.data.room.entity.ActiveTicket
 import com.example.ticket.databinding.ActivityTicketBinding
 import com.example.ticket.ui.adapter.TicketAdapter
+import com.example.ticket.ui.dialog.CustomInactivityDialog
 import com.example.ticket.utils.common.CommonMethod.setLocale
 import com.example.ticket.utils.common.CommonMethod.showSnackbar
 import com.example.ticket.utils.common.SessionManager
@@ -20,11 +21,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import kotlin.getValue
-import kotlin.io.root
 
-class TicketActivity : AppCompatActivity() {
+class TicketActivity : AppCompatActivity(), OnTicketClickListener,
+CustomInactivityDialog.InactivityCallback,
+    InactivityHandlerActivity {
+
     private lateinit var binding: ActivityTicketBinding
     private val ticketRepository: TicketRepository by inject()
+    private val activeTicketRepository: ActiveTicketRepository by inject()
     private lateinit var ticketAdapter: TicketAdapter
     private var categoryId: Int = 0
     private var selectedLanguage: String? = ""
@@ -52,7 +56,7 @@ class TicketActivity : AppCompatActivity() {
         CoroutineScope(Dispatchers.Main).launch {
             try {
 
-                val tickets = ticketRepository.getAllTickets()
+                val tickets = activeTicketRepository.getAllTickets()
 
                 if (tickets.isEmpty()) {
                     showSnackbar(binding.root, "No Tickets found.")
@@ -75,6 +79,22 @@ class TicketActivity : AppCompatActivity() {
                 showSnackbar(binding.root, "Error: ${e.localizedMessage}")
             }
         }
+    }
+
+    override fun onTicketClick(darshanItem: ActiveTicket) {
+
+    }
+
+    override fun onTicketClear(darshanItem: ActiveTicket) {
+
+    }
+
+    override fun onTicketAdded() {
+
+    }
+
+    override fun resetInactivityTimer() {
+       
     }
 
 }

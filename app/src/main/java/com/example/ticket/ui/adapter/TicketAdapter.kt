@@ -13,7 +13,9 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.ticket.R
 import com.example.ticket.data.listeners.OnTicketClickListener
+import com.example.ticket.data.repository.ActiveTicketRepository
 import com.example.ticket.data.repository.TicketRepository
+import com.example.ticket.data.room.entity.ActiveTicket
 import com.example.ticket.data.room.entity.Ticket
 import com.example.ticket.utils.common.Constants.LANGUAGE_ENGLISH
 import com.example.ticket.utils.common.Constants.LANGUAGE_HINDI
@@ -37,13 +39,13 @@ class TicketAdapter(
     private val onTicketClickListener: OnTicketClickListener
 ) : RecyclerView.Adapter<TicketAdapter.ViewHolder>() {
 
-    private var ticketItems: List<Ticket> = listOf()
+    private var ticketItems: List<ActiveTicket> = listOf()
     private var dbItemsMap: Map<Int, Ticket> = emptyMap()
     private var selectedItemPosition = 0
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(context)
-            .inflate(R.layout.item_tickets_single_row, parent, false) // reuse layout or create ticket_item_row
+            .inflate(R.layout.item_tickets_single_row, parent, false)
         return ViewHolder(view)
     }
 
@@ -65,7 +67,7 @@ class TicketAdapter(
         private val txtTotalAmount: TextView = itemView.findViewById(R.id.totalAmount)
 
         @SuppressLint("SetTextI18n", "DefaultLocale")
-        fun bind(ticketItem: Ticket) {
+        fun bind(ticketItem: ActiveTicket) {
             itemView.post {
                 coroutineScope.launch {
                     try {
@@ -90,7 +92,7 @@ class TicketAdapter(
                                     else -> ticketItem.ticketName
                                 }
                                 txtTicketPrice2.text = "Rs. ${ticketItem.ticketAmount}"
-                                val formattedTotal = String.format("%.2f", cartItem.totalAmount)
+                                val formattedTotal = String.format("%.2f", cartItem.ticketTotalAmount)
                                 txtTotalAmount.text = "Rs. $formattedTotal/-"
                             } else {
                                 relNoneCardItem.visibility = View.VISIBLE
@@ -137,7 +139,7 @@ class TicketAdapter(
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    fun updateTickets(newTickets: List<Ticket>) {
+    fun updateTickets(newTickets: List<ActiveTicket>) {
         ticketItems = newTickets
         notifyDataSetChanged()
     }

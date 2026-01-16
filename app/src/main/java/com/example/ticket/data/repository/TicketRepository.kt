@@ -72,11 +72,6 @@ class TicketRepository(private val ticketDao: TicketDao) {
     suspend fun getAllTicketsInCart(): List<Ticket> {
         return ticketDao.getAllCart()
     }
-    suspend fun generateDarshanTicket(userId: Int, companyId: Int, categoryId: Int) = withContext(
-        Dispatchers.IO
-    ) {
-        ApiClient.apiService.generateDarshanTicket(userId, companyId, categoryId)
-    }
 
     suspend fun updateCartItemsInfo(
         newName: String,

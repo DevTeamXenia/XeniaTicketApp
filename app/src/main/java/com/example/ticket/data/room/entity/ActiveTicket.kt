@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 
-@Entity(tableName = "tickets")
+@Entity(tableName = "ActiveTickets")
 data class ActiveTicket(
     @PrimaryKey
     val ticketId: Int,

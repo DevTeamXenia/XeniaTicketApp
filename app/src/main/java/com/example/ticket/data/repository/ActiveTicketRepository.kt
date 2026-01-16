@@ -1,20 +1,19 @@
 package com.example.ticket.data.repository
 
 import androidx.room.Transaction
+import com.example.ticket.data.network.model.TicketDto
+
 import com.example.ticket.data.network.service.ApiClient
-import com.example.ticket.data.room.dao.ActiveTicket
+import com.example.ticket.data.room.dao.ActiveTicketDao
+import com.example.ticket.data.room.entity.ActiveTicket
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class ActiveTicketRepository {
-}
+class ActiveTicketRepository(
+    private val ticketDao: ActiveTicketDao
 
-
-class TicketRepository(
-    private val ticketDao: ActiveTicket
 ) {
 
-    // Load tickets from API and save in local DB
     suspend fun loadTickets(bearerToken: String): Boolean {
         return try {
             val apiResponse = fetchTickets(bearerToken)
@@ -29,28 +28,29 @@ class TicketRepository(
         }
     }
 
-    // Fetch tickets from API
-    private suspend fun fetchTickets(bearerToken: String): List<ActiveTicket> = withContext(
-        Dispatchers.IO) {
+    private suspend fun fetchTickets(
+        bearerToken: String
+    ): List<TicketDto> = withContext(Dispatchers.IO) {
         ApiClient.apiService
-            .getTicketList(bearerToken) // Make sure API method returns TicketResponse
+            .getTicket(bearerToken)
             .data
     }
 
-    // Replace all tickets in local DB
+
     @Transaction
-    private suspend fun refreshTickets(items: List<ActiveTicket>) = withContext(Dispatchers.IO) {
-        ticketDao.truncateTable()
+    private suspend fun refreshTickets(
+        items: List<ActiveTicket>
+    ) = withContext(Dispatchers.IO) {
+        ticketDao.clearAll()
         ticketDao.insertAll(items)
     }
 
-    // Get all tickets from local DB
-    suspend fun getAllTickets(): List<ActiveTicket> = withContext(Dispatchers.IO) {
-        ticketDao.getAllCart()
-    }
+    suspend fun getAllTickets(): List<ActiveTicket> =
+        withContext(Dispatchers.IO) {
+            ticketDao.getAllTickets()
+        }
 
-    // Map API DTO to Room entity
-    private fun ActiveTicket.toEntity(): ActiveTicket =
+    private fun TicketDto.toEntity(): ActiveTicket =
         ActiveTicket(
             ticketId = ticketId,
             ticketName = ticketName,
@@ -67,14 +67,6 @@ class TicketRepository(
             ticketAmount = ticketAmount,
             ticketCreatedDate = ticketCreatedDate,
             ticketCreatedBy = ticketCreatedBy,
-            ticketActive = ticketActive,
-            // Cart fields default to 0 / empty
-            cartQty = 0,
-            cartTotalAmount = 0.0,
-            cartUserName = "",
-            cartUserPhone = "",
-            cartUserIdNo = "",
-            cartUserProof = "",
-            cartUserImg = null
+            ticketActive = ticketActive
         )
 }

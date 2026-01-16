@@ -21,6 +21,7 @@ data class Ticket(
     val ticketCategoryId: Int,
     val ticketCompanyId: Int,
     val ticketAmount: Double,
+    val ticketTotalAmount: Double,
     val ticketCreatedDate: String,
     val ticketCreatedBy: Int,
     val ticketActive: Boolean,
