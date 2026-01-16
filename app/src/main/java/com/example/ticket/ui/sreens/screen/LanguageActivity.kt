@@ -8,7 +8,6 @@ import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
-
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
@@ -20,8 +19,11 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.example.ticket.R
 import com.example.ticket.data.enum.UserType
+import com.example.ticket.data.listeners.InactivityHandlerActivity
 import com.example.ticket.data.repository.CompanyRepository
 import com.example.ticket.databinding.ActivityMainBinding
+import com.example.ticket.ui.dialog.CustomInactivityDialog
+import com.example.ticket.ui.dialog.CustomInternetAvailabilityDialog
 import com.example.ticket.ui.sreens.billing.Billing_selection_Activity
 import com.example.ticket.utils.common.CommonMethod.dismissLoader
 import com.example.ticket.utils.common.CommonMethod.getScreenSize
@@ -36,6 +38,7 @@ import com.example.ticket.utils.common.Constants.LANGUAGE_MARATHI
 import com.example.ticket.utils.common.Constants.LANGUAGE_PUNJABI
 import com.example.ticket.utils.common.Constants.LANGUAGE_TAMIL
 import com.example.ticket.utils.common.Constants.LANGUAGE_TELUGU
+import com.example.ticket.utils.common.InactivityHandler
 
 import com.example.ticket.utils.common.SessionManager
 import kotlinx.coroutines.Dispatchers
@@ -45,12 +48,17 @@ import org.koin.android.ext.android.inject
 import java.io.File
 import java.io.FileOutputStream
 
-class LanguageActivity : AppCompatActivity(){
+class LanguageActivity : AppCompatActivity(),
+    CustomInternetAvailabilityDialog.InternetAvailabilityListener,
+    CustomInactivityDialog.InactivityCallback,
+    InactivityHandlerActivity {
     private lateinit var binding: ActivityMainBinding
     private val sessionManager: SessionManager by inject()
     private val companyRepository: CompanyRepository by inject()
     private var screen: String? = null
 
+    private lateinit var inactivityHandler: InactivityHandler
+    private lateinit var inactivityDialog: CustomInactivityDialog
 
     private var enabledLanguages: List<String> = emptyList()
 
@@ -58,18 +66,31 @@ class LanguageActivity : AppCompatActivity(){
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
         getScreenInfo(applicationContext)
         screen = intent.getStringExtra("screen")
+
+        // ✅ PASS CALLBACK HERE
+        inactivityDialog = CustomInactivityDialog(this)
+
+        inactivityHandler = InactivityHandler(
+            this@LanguageActivity,
+            supportFragmentManager,
+            inactivityDialog
+        )
+
         requestOverlayPermission()
+        loadCompanyDetails()
     }
 
     private fun setupBackgroundImage() {
         lifecycleScope.launch {
-            val fileName = if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                companyRepository.getString(CompanyKey.COMPANYLOGO_L)
-            } else {
-                companyRepository.getString(CompanyKey.COMPANYLOGO_P)
-            }
+            val fileName =
+                if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                    companyRepository.getString(CompanyKey.COMPANYLOGO_L)
+                } else {
+                    companyRepository.getString(CompanyKey.COMPANYLOGO_P)
+                }
 
             if (fileName.isNullOrEmpty()) return@launch
 
@@ -80,6 +101,7 @@ class LanguageActivity : AppCompatActivity(){
                 .into(binding.imgBackground)
         }
     }
+
     private fun getScreenInfo(context: Context) {
         val screenSize = getScreenSize(context)
         if (screenSize == "Large" || screenSize == "Normal" || screenSize == "Small" && !isLandscapeScreen(
@@ -98,6 +120,7 @@ class LanguageActivity : AppCompatActivity(){
             bottomParams.weight = 7F
         }
     }
+
     private fun getLanguageCardMap(): Map<String, View> {
         return mapOf(
             LANGUAGE_ENGLISH to binding.cardEnglish,
@@ -144,13 +167,13 @@ class LanguageActivity : AppCompatActivity(){
             }
         }
     }
+
     private suspend fun setupCardPosition(enabledLanguages: List<String>) {
 
         val languageCardMap = getLanguageCardMap()
         val defaultLanguage = companyRepository.getDefaultLanguage()
 
         val orderedCards = mutableListOf<View>()
-
         orderedCards.add(binding.cardEnglish)
 
         if (defaultLanguage != LANGUAGE_ENGLISH) {
@@ -166,33 +189,27 @@ class LanguageActivity : AppCompatActivity(){
                 }
             }
         }
-        val rows = listOf(
-            binding.languageCardContainer.getChildAt(0) as LinearLayout,
-            binding.languageCardContainer.getChildAt(1) as LinearLayout,
-            binding.languageCardContainer.getChildAt(2) as LinearLayout,
-            binding.languageCardContainer.getChildAt(3) as LinearLayout,
-            binding.languageCardContainer.getChildAt(4) as LinearLayout
-        )
+
+        val container = binding.languageCardContainer
+        val rowCount = container.childCount
+
+        if (rowCount == 0) return
+
+        val rows = (0 until rowCount).mapNotNull {
+            container.getChildAt(it) as? LinearLayout
+        }
+
         rows.forEach { it.removeAllViews() }
 
         orderedCards.forEachIndexed { index, card ->
-            (card.parent as? LinearLayout)?.removeView(card)
-            rows[index / 2].addView(card)
-        }
-
-        rows.forEach { row ->
-            if (row.childCount == 1) {
-                val spacer = View(this).apply {
-                    layoutParams = LinearLayout.LayoutParams(
-                        0,
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        1f
-                    )
-                }
-                row.addView(spacer)
+            val rowIndex = index / 2
+            if (rowIndex < rows.size) {
+                (card.parent as? LinearLayout)?.removeView(card)
+                rows[rowIndex].addView(card)
             }
         }
     }
+
 
     private fun loadCompanyDetails() {
         lifecycleScope.launch {
@@ -214,7 +231,16 @@ class LanguageActivity : AppCompatActivity(){
                     showSnackbar(binding.root, "Company details not found!")
                     return@launch
                 }
+                val company = withContext(Dispatchers.IO) {
+                    companyRepository.getCompany()
+                }
+                if (company == null) {
+                    dismissLoader()
+                    showSnackbar(binding.root, "Company data missing in database!")
+                    return@launch
+                }
 
+                // 3️⃣ USE DATA
                 enabledLanguages = companyRepository
                     .getString(CompanyKey.COMPANY_LANGUAGES)
                     ?.split(",")
@@ -224,6 +250,8 @@ class LanguageActivity : AppCompatActivity(){
                 setupBackgroundImage()
                 setupLanguageButtons(enabledLanguages)
                 setupCardPosition(enabledLanguages)
+
+                dismissLoader()
 
                 val bgImageUrl =
                     companyRepository.getString(CompanyKey.COMPANYLOGO_L)
@@ -259,6 +287,7 @@ class LanguageActivity : AppCompatActivity(){
         }
         return file
     }
+
     private suspend fun loadBitmapSafely(context: Context, url: String): Bitmap? =
         withContext(Dispatchers.IO) {
             try {
@@ -273,6 +302,7 @@ class LanguageActivity : AppCompatActivity(){
                 null
             }
         }
+
     private fun selectLanguage(language: String) {
         lifecycleScope.launch {
 
@@ -290,7 +320,10 @@ class LanguageActivity : AppCompatActivity(){
 
                 val categoryValue = companyRepository.getString(CompanyKey.CATEGORY_ENABLE)
                 val isCategoryEnabled = categoryValue?.let {
-                    it.equals("true", ignoreCase = true) || it == "1" || it.equals("yes", ignoreCase = true)
+                    it.equals("true", ignoreCase = true) || it == "1" || it.equals(
+                        "yes",
+                        ignoreCase = true
+                    )
                 } ?: false
 
                 if (isCategoryEnabled) {
@@ -307,21 +340,24 @@ class LanguageActivity : AppCompatActivity(){
         }
     }
 
-
     override fun onResume() {
-        loadCompanyDetails()
         super.onResume()
+        inactivityHandler.resumeInactivityCheck()
+
+
     }
+
+    override fun onPause() {
+        super.onPause()
+        inactivityHandler.pauseInactivityCheck()
+    }
+
 
     override fun onDestroy() {
-        Glide.with(this).clear(binding.imgBackground)
         super.onDestroy()
+            inactivityHandler.cleanup()
+
     }
-
-
-
-
-
 
     private fun requestOverlayPermission() {
         if (!Settings.canDrawOverlays(this)) {
@@ -338,7 +374,20 @@ class LanguageActivity : AppCompatActivity(){
         ActivityResultContracts.StartActivityForResult()
     ) { /* No action needed after permission request */ }
 
+    override fun onRetryClicked() {
+        loadCompanyDetails()
+    }
 
+    override fun onDialogInactive() {
+        TODO("Not yet implemented")
+    }
+
+    override fun resetInactivityTimer() {
+        lifecycleScope.launch {
+            inactivityHandler.cleanup()
+
+        }
+    }
 
 
 }

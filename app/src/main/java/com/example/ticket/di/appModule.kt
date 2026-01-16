@@ -1,6 +1,7 @@
 package com.example.ticket.di
 
 import androidx.room.Room
+import com.example.ticket.data.repository.CategoryRepository
 import com.example.ticket.data.repository.CompanyRepository
 import com.example.ticket.data.repository.LoginRepository
 import com.example.ticket.data.room.AppDatabase
@@ -21,8 +22,10 @@ val roomModule = module {
             .build()
     }
     single { get<AppDatabase>().companyDao() }
+    single { get<AppDatabase>().categoryDao() }
 
     single { SessionManager(androidContext()) }
     single { LoginRepository() }
     single { CompanyRepository(get()) }
+    single { CategoryRepository(get()) }
 }

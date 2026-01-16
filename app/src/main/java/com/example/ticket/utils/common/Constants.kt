@@ -9,6 +9,7 @@ object Constants {
     const val LANGUAGE_HINDI = "hi"
     const val LANGUAGE_PUNJABI = "pa"
     const val LANGUAGE_MARATHI = "mr"
+    const val LANGUAGE_SINHALA ="si"
     const val CARD = "CARD"
     const val UPI = "UPI"
     const val CASH = "CASH"

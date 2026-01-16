@@ -109,7 +109,7 @@
                                 android:layout_gravity="center_horizontal"
                                 android:fontFamily="@font/montserrat_semibold"
                                 android:text="@string/english"
-                                android:textColor="@color/secondaryColor" />
+                                android:textColor="@color/text_green" />
 
                         </LinearLayout>
                     </RelativeLayout>
@@ -140,7 +140,7 @@
                                 android:layout_gravity="center_horizontal"
                                 android:fontFamily="@font/montserrat_semibold"
                                 android:text="@string/punjabi"
-                                android:textColor="@color/secondaryColor" />
+                                android:textColor="@color/text_green" />
 
                         </LinearLayout>
                     </RelativeLayout>
@@ -180,7 +180,7 @@
                                 android:layout_gravity="center_horizontal"
                                 android:fontFamily="@font/montserrat_semibold"
                                 android:text="@string/tamil"
-                                android:textColor="@color/secondaryColor" />
+                                android:textColor="@color/text_green" />
 
                         </LinearLayout>
                     </RelativeLayout>
@@ -211,7 +211,7 @@
                                 android:layout_gravity="center_horizontal"
                                 android:fontFamily="@font/montserrat_semibold"
                                 android:text="@string/kannada"
-                                android:textColor="@color/secondaryColor" />
+                                android:textColor="@color/text_green" />
 
                         </LinearLayout>
                     </RelativeLayout>
@@ -251,7 +251,7 @@
                                 android:layout_gravity="center_horizontal"
                                 android:fontFamily="@font/montserrat_semibold"
                                 android:text="@string/telugu"
-                                android:textColor="@color/secondaryColor" />
+                                android:textColor="@color/text_green" />
 
                         </LinearLayout>
                     </RelativeLayout>
@@ -282,7 +282,7 @@
                                 android:layout_gravity="center_horizontal"
                                 android:fontFamily="@font/montserrat_semibold"
                                 android:text="@string/hindi"
-                                android:textColor="@color/secondaryColor" />
+                                android:textColor="@color/text_green" />
 
                         </LinearLayout>
                     </RelativeLayout>
@@ -322,7 +322,7 @@
                                 android:layout_gravity="center_horizontal"
                                 android:fontFamily="@font/montserrat_semibold"
                                 android:text="@string/malayalam"
-                                android:textColor="@color/secondaryColor" />
+                                android:textColor="@color/text_green" />
 
                         </LinearLayout>
                     </RelativeLayout>
@@ -353,7 +353,7 @@
                                 android:layout_gravity="center_horizontal"
                                 android:fontFamily="@font/montserrat_semibold"
                                 android:text="@string/marathi"
-                                android:textColor="@color/secondaryColor" />
+                                android:textColor="@color/text_green" />
 
 
                         </LinearLayout>
