@@ -240,7 +240,6 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
         }
     }
 
-
     private fun hideKeyboard() {
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         val view = currentFocus ?: View(this)
