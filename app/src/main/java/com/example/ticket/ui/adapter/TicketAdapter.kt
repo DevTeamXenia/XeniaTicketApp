@@ -61,7 +61,7 @@ class TicketAdapter(
         private val relCardItem: RelativeLayout = itemView.findViewById(R.id.relCardItem)
         private val txtTicketName1: TextView = itemView.findViewById(R.id.txt_darshan_name_1)
         private val txtTicketPrice1: TextView = itemView.findViewById(R.id.txt_darshan_price_1)
-        private val txtTicketName2: TextView = itemView.findViewById(R.id.txt_darshan_name_2)
+        private val txtTicketName2: TextView = itemView.findViewById(R.id.txtQty)
         private val txtTicketPrice2: TextView = itemView.findViewById(R.id.txt_darshan_price_2)
         private val imgClearCart: ImageView = itemView.findViewById(R.id.imgClearCart)
         private val txtTotalAmount: TextView = itemView.findViewById(R.id.totalAmount)

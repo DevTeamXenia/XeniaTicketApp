@@ -1,4 +1,96 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+
+    <string name="home">ഹോം</string>
+
+
+    <string name="_10_000">Rs.</string>
+    <string name="pay">അടയ്ക്കുക</string>
+    <string name="phone_number">ഫോൺ നമ്പർ</string>
+    <string name="_91">+91</string>
+    <string name="name">പേര്</string>
+    <string name="select_your_janma_nakshatra">നിങ്ങളുടെ ജന്മ നക്ഷത്രം തിരഞ്ഞെടുക്കുക</string>
+
+    //Popup_Screen
+    <string name="amount_10_000"> തുക Rs. 10,000 /-</string>
+    <string name="scan_this_code_to_pay">ഈ കോഡ് സ്കാൻ ചെയ്ത് പണം നൽകുക</string>
+    <string name="expire">QR അവസാനിക്കും :</string>
+
+    //payment_Screen
+    <string name="thank_you">നന്ദി!</string>
+    <string name="your_payment_was_successful">നിങ്ങളുടെ പണമടക്കം വിജയകരമായിരിക്കുന്നു! </string>
+    <string name="amount">തുക :</string>
+    <string name="txt_amount">തുക</string>
+    <string name="transcation_id">ഇടപാട് ഐഡി :</string>
+    <string name="star">ജന്മ നക്ഷത്രം</string>
+    <string name="pay_name">പേര് :</string>
+    <string name="payment_failed">പെയ്മെന്റ് പരാജയപ്പെട്ടു</string>
+    <string name="it_seems_we_have_not_received_money">ഞങ്ങൾ പണം ലഭിച്ചിട്ടില്ല എന്നു തോന്നുന്നു</string>
+    <string name="do_you_want_to_do_close_this_page">നിങ്ങൾ ഈ പേജ് അടയ്ക്കാൻ ആഗ്രഹിക്കുന്നുണ്ടോ?</string>
+    <string name="cancel">റദ്ദാക്കുക</string>
+    <string name="yes">അതെ</string>
+    <string name="no">ഇല്ല</string>
+    <string name="no_internet_connection"> ഇന്റര്‍നെറ്റ് ബന്ധം ഇല്ല</string>
+    <string name="retry">വീണ്ടും ശ്രമിക്കുക</string>
+    <string name="you_have_been_inactive_for_a_while_please_touch_the_screen_to_continue">തുടരാൻ ആഗ്രഹിക്കുന്നുണ്ടോ?</string>
+    <string name="qr_expire">ക്യുആർ കാലാവധി അവസാനിക്കും :</string>
+
+
+    <string name="welcome">സ്വാഗതം!</string>
+    <string name="choose_your_tickets">നിങ്ങളുടെ ടിക്കറ്റുകൾ തിരഞ്ഞെടുക്കുക</string>
+    <string name="aadhaar_no">ആധാർ നമ്പർ</string>
+
+    <string name="transaction">ഇടപാട്</string>
+    <string name="summary">സംഗ്രഹം</string>
+    <string name="report">റിപ്പോർട്ട്</string>
+    <string name="report_generated_time">റിപ്പോർട്ട് സൃഷ്ടിച്ച സമയം</string>
+    <string name="total_amount">ആകെ തുക</string>
+
+    <string name="more_people">കൂടുതൽ ആളുകൾ</string>
+    <string name="pay_vazhipadu">തുക: Rs.%1$s</string>
+    <string name="id_no">ഐഡി നമ്പർ</string>
+    <string name="_2018xxxx989">2018XXXX989</string>
+    <string name="pay_phone_number">ഫോൺ നമ്പർ :</string>
+    <string name="pay_id_no">ഐഡി നമ്പർ :</string>
+    <string name="proceed">മുന്നോട്ട്</string>
+    <string name="no_of_tickets">ടിക്കറ്റുകളുടെ എണ്ണം</string>
+    <string name="click_here_to_take_photo">ഫോട്ടോ എടുക്കാൻ ഇവിടെ ക്ലിക്ക് ചെയ്യൂ</string>
+
+
+    <string name="do_you_want_to_logout">നിങ്ങൾക്ക് ലോഗ്ഔട്ട് ചെയ്യണോ?</string>
+    <string name="choose_item">ഇനം തിരഞ്ഞെടുക്കുക</string>
+    <string name="done">ചെയ്തു</string>
+    <string name="capture">ക്യാപ്ചർ</string>
+    <string name="image_upload">ചിത്രം അപ്‌ലോഡ്</string>
+    <string name="sub_temple">ഉപക്ഷേത്രം</string>
+    <string name="my_cart">കാർട്ട്</string>
+    <string name="birth_star_of_devotees">ഭക്തരുടെ ജന്മനക്ഷത്രം</string>
+    <string name="edit">എഡിറ്റ്</string>
+    <string name="fill_devotee_details">ഭക്തരുടെ വിവരങ്ങൾ പൂരിപ്പിക്കുക</string>
+    <string name="upi" />
+    <string name="item" >ഇനം</string>
+    <string name="price">വില</string>
+    <string name="qty">അളവ്</string>
+    <string name="total">ആകെ</string>
+
+    <string name="language_settings">ഭാഷ</string>
+    <string name="profile">പ്രൊഫൈൽ</string>
+    <string name="delete_account">അക്കൗണ്ട് ഇല്ലാതാക്കുക</string>
+    <string name="logout">ലോഗ് ഔട്ട്</string>
+    <string name="dashboard">ഡാഷ്ബോർഡ്</string>
+    <string name="settings">ക്രമീകരണങ്ങൾ</string>
+    <string name="reports">റിപ്പോർട്ടുകൾ</string>
+    <string name="detailed_report">വിശദമായ റിപ്പോർട്ട്</string>
+    <string name="summary_report">സംഗ്രഹ റിപ്പോർട്ട്</string>
+
+
+    <string name="select_device_printer">പ്രിൻ്റർ ഉപകരണം തിരഞ്ഞെടുക്കുക</string>
+    <string name="save" >സംരക്ഷിക്കുക</string>
+    <string name="item_summary_report">വിശദമായ റിപ്പോർട്ട്</string>
+    <string name="item_name">ഇനത്തിന്റെ പേര്</string>
+
+    <string name="pancard_number">പാൻ കാർഡ് നമ്പർ</string>
+
+
 </resources>

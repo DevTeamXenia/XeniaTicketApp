@@ -2,9 +2,11 @@ package com.example.ticket.ui.sreens.screen
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
+import com.example.ticket.R
 import com.example.ticket.data.listeners.InactivityHandlerActivity
 import com.example.ticket.data.listeners.OnTicketClickListener
 import com.example.ticket.data.repository.ActiveTicketRepository
@@ -41,8 +43,15 @@ CustomInactivityDialog.InactivityCallback,
         selectedLanguage = sessionManager.getSelectedLanguage()
         categoryId = intent.getIntExtra("CATEGORY_ID", 0)
 
+        setupUI()
         setContentView(binding.root)
         setupRecyclerViews()
+        getTickets()
+    }
+    private fun setupUI() {
+        binding.txtHome?.text = getString(R.string.more_people)
+        binding.txtselectTicket.text = getString(R.string.choose_your_tickets)
+
     }
     @SuppressLint("NotifyDataSetChanged")
     private fun setupRecyclerViews() {
@@ -56,30 +65,46 @@ CustomInactivityDialog.InactivityCallback,
         CoroutineScope(Dispatchers.Main).launch {
             try {
 
+                val token = sessionManager.getToken()
+
+                if (token.isNullOrEmpty()) {
+                    binding.ticketRecycler.visibility = View.GONE
+                    return@launch
+                }
+                val isLoaded = activeTicketRepository.loadTickets(token)
+
+                if (!isLoaded) {
+                    showSnackbar(binding.root, "No Tickets found.")
+                    return@launch
+                }
+
                 val tickets = activeTicketRepository.getAllTickets()
 
                 if (tickets.isEmpty()) {
                     showSnackbar(binding.root, "No Tickets found.")
-                } else {
-
-                    val activeTickets = tickets.filter { it.ticketActive }
-
-                    if (activeTickets.isNotEmpty()) {
-
-                        ticketAdapter.updateTickets(activeTickets)
-
-
-                        val updatedMap = ticketRepository.getTicketsMapByIds()
-                        ticketAdapter.updateDbItemsMap(updatedMap)
-                    } else {
-                        showSnackbar(binding.root, "No active tickets found.")
-                    }
+                    return@launch
                 }
+
+
+                val activeTickets = tickets.filter { it.ticketActive }
+
+                if (activeTickets.isNotEmpty()) {
+
+                    ticketAdapter.updateTickets(activeTickets)
+
+                    val updatedMap = ticketRepository.getTicketsMapByIds()
+                    ticketAdapter.updateDbItemsMap(updatedMap)
+
+                } else {
+                    showSnackbar(binding.root, "No active tickets found.")
+                }
+
             } catch (e: Exception) {
                 showSnackbar(binding.root, "Error: ${e.localizedMessage}")
             }
         }
     }
+
 
     override fun onTicketClick(darshanItem: ActiveTicket) {
 

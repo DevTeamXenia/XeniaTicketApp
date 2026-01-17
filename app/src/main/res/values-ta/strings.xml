@@ -54,7 +54,8 @@
     <string name="pooja_item">பூ.பொ.</string>
     <string name="welcome">வரவேற்கிறோம்!</string>
     <string name="annadana">அன்னதானம்</string>
-    <string name="choose_your_darshan_tickets">உங்கள் தரிசன டிக்கெட்டுகளை தேர்வு செய்யுங்கள்</string>
+    <string name="choose_your_tickets">உங்கள் டிக்கெட்டுகளை தேர்வு செய்யுங்கள்</string>
+
 
     <string name="transaction">அறிக்கை</string>
     <string name="summary">சுருக்கம்</string>

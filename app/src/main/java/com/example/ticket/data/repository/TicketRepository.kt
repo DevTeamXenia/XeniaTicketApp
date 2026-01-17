@@ -1,8 +1,5 @@
 package com.example.ticket.data.repository
 
-import androidx.room.Transaction
-import com.example.ticket.data.network.model.TicketDto
-import com.example.ticket.data.network.service.ApiClient
 import com.example.ticket.data.room.dao.TicketDao
 import com.example.ticket.data.room.entity.Ticket
 import kotlinx.coroutines.Dispatchers

@@ -41,7 +41,8 @@
     <string name="pooja_item">ಪೂಜಾ ಐಟಂ</string>
     <string name="welcome">ಸ್ವಾಗತ!</string>
     <string name="annadana">ಅನ್ನದಾನ</string>
-    <string name="choose_your_darshan_tickets">ನಿಮ್ಮ ದರ್ಶನ ಟಿಕೆಟ್‌ಗಳನ್ನು ಆಯ್ಕೆಮಾಡಿ</string>
+    <string name="choose_your_tickets">ನಿಮ್ಮ ಟಿಕೆಟ್‌ಗಳನ್ನು ಆಯ್ಕೆಮಾಡಿ</string>
+
 
     <string name="transaction">ವಹಿವಾಟು</string>
     <string name="summary">ಸಾರಾಂಶ</string>

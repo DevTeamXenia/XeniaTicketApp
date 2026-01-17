@@ -32,13 +32,13 @@
     <string name="pooja_item">पूजा की वस्तु</string>
     <string name="annadana">अन्नदान</string>
     <string name="welcome">स्वागत है!</string>
-    <string name="choose_your_darshan_tickets">अपने दर्शन टिकट चुनें</string>
 
     <string name="transaction">लेन-देन</string>
     <string name="summary">सारांश</string>
     <string name="report">प्रतिवेदन</string>
     <string name="report_generated_time">रिपोर्ट तैयार होने का समय</string>
     <string name="total_amount">कुल राशि</string>
+    <string name="choose_your_tickets">अपने टिकट चुनें</string>
 
     <string name="do_you_want_to_logout">क्या आप लॉगआउट करना चाहते हैं?</string>
     <string name="choose_item">आइटम चुनें</string>

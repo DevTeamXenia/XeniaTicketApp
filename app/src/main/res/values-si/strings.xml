@@ -52,7 +52,6 @@
     <string name="pooja_item">පූජා_අයිතමය</string>
     <string name="welcome">සාදරයෙන් පිළිගනිමු</string>
     <string name="annadana">අන්නදාන</string>
-    <string name="choose_your_darshan_tickets">ඔබේ දර්ශන ටිකට්පත් තෝරගන්න</string>
     <string name="aadhaar_no">ආධාර_නැහැ</string>
 
     <string name="transaction">ගනුදෙනු</string>
@@ -86,6 +85,7 @@
     <string name="price">මිල</string>
     <string name="qty">ප්‍රමාණය</string>
     <string name="total">මුළු එකතුව</string>
+    <string name="choose_your_tickets">ඔබගේ ටිකට් තෝරන්න</string>
 
     <string name="language_settings">භාෂාව</string>
     <string name="profile">පැතිකඩ</string>

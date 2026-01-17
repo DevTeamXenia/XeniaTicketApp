@@ -73,7 +73,7 @@
     <string name="report_generated_time">अहवाल व्युत्पन्न वेळ</string>
     <string name="total_amount">एकूण रक्कम</string>
 
-    <string name="choose_your_darshan_tickets">तुमच्या दर्शनाच्या तिकिटांची निवड करा</string>
+
     <string name="no_of_tickets">तिकिटांची संख्या</string>
     <string name="id_no">ओळख क्रमांक</string>
     <string name="_2018xxxx989">2018XXXX989</string>
@@ -83,6 +83,7 @@
     <string name="_0">0</string>
     <string name="select_payment_option">पेमेंट पर्याय निवडा</string>
     <string name="initailing_payment_option">तुमचा व्यवहार पूर्ण करण्यासाठी पेमेंट टर्मिनल वापरा.</string>
+    <string name="choose_your_tickets">आपली तिकिटे निवडा</string>
 
     <string name="do_you_want_to_logout">तुम्हाला लॉगआउट करायचे आहे का?</string>
     <string name="choose_item">घटक निवडा</string>

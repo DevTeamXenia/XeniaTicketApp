@@ -49,7 +49,8 @@
     <string name="report_generated_time">ਰਿਪੋਰਟ ਤਿਆਰ ਸਮਾਂ</string>
     <string name="total_amount">ਕੁੱਲ ਮਾਤਰਾ</string>
 
-    <string name="choose_your_darshan_tickets">ਆਪਣੇ ਦਰਸ਼ਨ ਟਿਕਟਾਂ ਚੁਣੋ</string>
+    <string name="choose_your_tickets">ਆਪਣੀਆਂ ਟਿਕਟਾਂ ਚੁਣੋ</string>
+
     <string name="no_of_tickets">ਟਿਕਟਾਂ ਦੀ ਸੰਖਿਆ</string>
     <string name="id_no">ਆਈ.ਡੀ. ਨੰਬਰ</string>
     <string name="_2018xxxx989">2018XXXX989</string>

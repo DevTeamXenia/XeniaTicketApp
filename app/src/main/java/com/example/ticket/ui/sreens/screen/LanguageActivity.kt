@@ -24,7 +24,7 @@ import com.example.ticket.data.repository.CompanyRepository
 import com.example.ticket.databinding.ActivityMainBinding
 import com.example.ticket.ui.dialog.CustomInactivityDialog
 import com.example.ticket.ui.dialog.CustomInternetAvailabilityDialog
-import com.example.ticket.ui.sreens.billing.Billing_selection_Activity
+import com.example.ticket.ui.sreens.billing.Billing_Selection_Activity
 import com.example.ticket.utils.common.CommonMethod.dismissLoader
 import com.example.ticket.utils.common.CommonMethod.getScreenSize
 import com.example.ticket.utils.common.CommonMethod.isLandscapeScreen
@@ -70,7 +70,7 @@ class LanguageActivity : AppCompatActivity(),
         getScreenInfo(applicationContext)
         screen = intent.getStringExtra("screen")
 
-        // ✅ PASS CALLBACK HERE
+
         inactivityDialog = CustomInactivityDialog(this)
 
         inactivityHandler = InactivityHandler(
@@ -129,7 +129,7 @@ class LanguageActivity : AppCompatActivity(),
             LANGUAGE_KANNADA to binding.cardKannada,
             LANGUAGE_TELUGU to binding.cardTelugu,
             LANGUAGE_HINDI to binding.cardHindi,
-            LANGUAGE_PUNJABI to binding.cardPunjabi,
+            LANGUAGE_PUNJABI to binding.cardP,
             LANGUAGE_MARATHI to binding.cardMarathi,
         ).filterValues { it != null }
             .mapValues { it.value!! }
@@ -310,7 +310,7 @@ class LanguageActivity : AppCompatActivity(),
 
                 sessionManager.saveBillingSelectedLanguage(language)
                 startActivity(
-                    Intent(this@LanguageActivity, Billing_selection_Activity::class.java)
+                    Intent(this@LanguageActivity, Billing_Selection_Activity::class.java)
                 )
                 finish()
 

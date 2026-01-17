@@ -51,7 +51,8 @@
     <string name="pooja_item">పూజా వస్తువు</string>
     <string name="annadana">అన్నదానం</string>
     <string name="welcome">స్వాగతం!</string>
-    <string name="choose_your_darshan_tickets">మీ దర్శనం టిక్కెట్లు ఎంచుకోండి</string>
+    <string name="choose_your_tickets">మీ టికెట్లను ఎంచుకోండి</string>
+
 
 
     <string name="transaction">లావాదేవీ</string>
@@ -103,34 +104,6 @@
     <string name="item_name">అంశం పేరు</string>
     <string name="pancard_number">పాన్ కార్డు నంబర్</string>
 
-    <string-array name="nakshatras">
-        <item>అశ్విని</item>
-        <item>భరణి</item>
-        <item>కృత్తిక</item>
-        <item>రోహిణి</item>
-        <item>మృగశిర</item>
-        <item>ఆర్ద్ర</item>
-        <item>పునర్వసు</item>
-        <item>పపుష్యమి</item>
-        <item>ఆశ్లేష</item>
-        <item>మాఘ</item>
-        <item>పూర్వ ఫల్గుని</item>
-        <item>ఉత్తర ఫల్గుని</item>
-        <item>హస్త</item>
-        <item>చిత్త</item>
-        <item>స్వాతి</item>
-        <item>విశాఖ</item>
-        <item>అనురాధ</item>
-        <item>జ్యేష్ట</item>
-        <item>మూల</item>
-        <item>పపూర్వాషాడ</item>
-        <item>ఉత్తరాషాడ</item>
-        <item>శ్రావణ</item>
-        <item>ధనిష్ఠ</item>
-        <item>శతభిష</item>
-        <item>పూర్వాభాద్ర</item>
-        <item>ఉత్తరాభాద్ర</item>
-        <item>రేవతి</item>
-    </string-array>
+
 
 </resources>

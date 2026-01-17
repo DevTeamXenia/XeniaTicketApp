@@ -1,9 +1,11 @@
 package com.example.ticket.di
 
 import androidx.room.Room
+import com.example.ticket.data.repository.ActiveTicketRepository
 import com.example.ticket.data.repository.CategoryRepository
 import com.example.ticket.data.repository.CompanyRepository
 import com.example.ticket.data.repository.LoginRepository
+import com.example.ticket.data.repository.TicketRepository
 import com.example.ticket.data.room.AppDatabase
 import com.example.ticket.utils.common.SessionManager
 import org.koin.android.ext.koin.androidApplication
@@ -23,9 +25,13 @@ val roomModule = module {
     }
     single { get<AppDatabase>().companyDao() }
     single { get<AppDatabase>().categoryDao() }
+    single { get<AppDatabase>().activeTicketDao() }
+    single { get<AppDatabase>().ticketDao() }
 
     single { SessionManager(androidContext()) }
     single { LoginRepository() }
     single { CompanyRepository(get()) }
     single { CategoryRepository(get()) }
+    single { ActiveTicketRepository(get()) }
+    single { TicketRepository(get()) }
 }

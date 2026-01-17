@@ -35,7 +35,7 @@
             android:name=".ui.sreens.billing.Billing_Cart_Activity"
             android:exported="false" />
         <activity
-            android:name=".ui.sreens.billing.Billing_selection_Activity"
+            android:name=".ui.sreens.billing.Billing_Selection_Activity"
             android:exported="false" />
         <activity
             android:name=".ui.sreens.billing.Billin_Ticket_Activity"

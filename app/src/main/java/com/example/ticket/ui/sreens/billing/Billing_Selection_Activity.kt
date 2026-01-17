@@ -1,20 +1,14 @@
-package com.example.ticket.ui.sreens.screen
+package com.example.ticket.ui.sreens.billing
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
-import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
-import android.view.MotionEvent
 import android.view.View
 import android.widget.Toast
-import androidx.activity.addCallback
-import androidx.activity.enableEdgeToEdge
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -22,10 +16,11 @@ import com.example.ticket.R
 import com.example.ticket.data.repository.CategoryRepository
 import com.example.ticket.data.repository.CompanyRepository
 import com.example.ticket.data.room.entity.Category
-import com.example.ticket.databinding.ActivityMainBinding
+import com.example.ticket.databinding.ActivityBillingSelectionBinding
 import com.example.ticket.databinding.ActivitySelectionBinding
 import com.example.ticket.ui.adapter.CategoryAdapter
 import com.example.ticket.ui.dialog.CustomInactivityDialog
+import com.example.ticket.ui.sreens.screen.TicketActivity
 import com.example.ticket.utils.common.CommonMethod.setLocale
 import com.example.ticket.utils.common.CompanyKey
 import com.example.ticket.utils.common.InactivityHandler
@@ -34,45 +29,51 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
-import java.util.Locale
 import kotlin.getValue
 
-class SelectionActivity : AppCompatActivity(),
-    CategoryAdapter.OnCategoryClickListener, CustomInactivityDialog.InactivityCallback {
-    private lateinit var binding: ActivitySelectionBinding
+class Billing_Selection_Activity : AppCompatActivity() ,
+
+    CategoryAdapter.OnCategoryClickListener {
+    private lateinit var binding: ActivityBillingSelectionBinding
 
     private lateinit var inactivityHandler: InactivityHandler
     private lateinit var inactivityDialog: CustomInactivityDialog
     private val categoryRepository: CategoryRepository by inject()
     private val companyRepository: CompanyRepository by inject()
-    private val sessionManager: SessionManager by inject()
     private var selectedCategoryId: Int = 0
     private var selectedLanguage: String? = ""
-
-
+    private var backPressedTime: Long = 0
+    private val sessionManager: SessionManager by inject()
     private lateinit var categoryAdapter: CategoryAdapter
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        binding = ActivitySelectionBinding.inflate(layoutInflater)
+    private var toast: Toast? = null
 
-
-        setContentView(binding.root)
-
-        selectedLanguage = sessionManager.getSelectedLanguage()
-
-        inactivityDialog = CustomInactivityDialog(this)
-
-        inactivityHandler = InactivityHandler(
-            this@SelectionActivity,
-            supportFragmentManager,
-            inactivityDialog
-        )
-
-        onBackPressedDispatcher.addCallback(this) {
-            lifecycleScope.launch {
-                finish()
+    private val callback = object : OnBackPressedCallback(true) {
+        override fun handleOnBackPressed() {
+            val currentTime = System.currentTimeMillis()
+            if (currentTime - backPressedTime < 2000) {
+                toast?.cancel()
+                finishAffinity()
+            } else {
+                backPressedTime = currentTime
+                toast = Toast.makeText(
+                    this@Billing_Selection_Activity,
+                    "Press back again to exit",
+                    Toast.LENGTH_SHORT
+                )
+                toast?.show()
             }
         }
+    }
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityBillingSelectionBinding.inflate(layoutInflater)
+        if (intent.getBooleanExtra("forceLandscape", false)) {
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        }
+        setContentView(binding.root)
+
+        selectedLanguage = sessionManager.getBillingSelectedLanguage()
+        setLocale(this, selectedLanguage)
         setupUI()
         setupRecyclerViews()
         getCategory()
@@ -173,44 +174,8 @@ class SelectionActivity : AppCompatActivity(),
         intent.putExtra("CATEGORY_ID", categoryId)
         startActivity(intent)
     }
-
-    override fun resetInactivityTimer() {
-        inactivityHandler.resetTimer()
-    }
-
-    override fun onRestart() {
+    override fun onResume() {
+        super.onResume()
         getCategory()
-        super.onRestart()
     }
-
-    override fun onPause() {
-        super.onPause()
-        inactivityHandler.pauseInactivityCheck()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-
-        inactivityHandler.cleanup()
-    }
-
-    override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
-        inactivityHandler.resetTimer()
-        return super.dispatchTouchEvent(ev)
-    }
-    override fun attachBaseContext(newBase: Context) {
-        val sessionManager = SessionManager(newBase)
-        val lang = sessionManager.getSelectedLanguage()
-
-        val locale = Locale.forLanguageTag(lang)
-        Locale.setDefault(locale)
-
-
-        val config = Configuration(newBase.resources.configuration)
-        config.setLocale(locale)
-
-        val context = newBase.createConfigurationContext(config)
-        super.attachBaseContext(context)
-    }
-
 }

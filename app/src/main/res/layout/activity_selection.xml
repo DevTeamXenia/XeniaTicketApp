@@ -71,12 +71,13 @@
         android:orientation="vertical">
 
         <TextView
+            android:id="@+id/txtselect_ticket"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="30dp"
             android:layout_marginBottom="60dp"
             android:fontFamily="@font/poppins_regular"
-            android:text="@string/choose_your_darshan_tickets"
+            android:text="@string/choose_your_tickets"
             android:textAlignment="center"
             android:textColor="@color/black"
             android:textSize="30sp"
