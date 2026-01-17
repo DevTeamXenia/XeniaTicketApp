@@ -1,11 +1,13 @@
 package com.example.ticket.data.repository
 
+import androidx.lifecycle.liveData
 import androidx.room.Transaction
 import com.example.ticket.data.network.model.TicketDto
 
 import com.example.ticket.data.network.service.ApiClient
 import com.example.ticket.data.room.dao.ActiveTicketDao
 import com.example.ticket.data.room.entity.ActiveTicket
+import com.example.ticket.data.room.entity.Ticket
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -49,6 +51,11 @@ class ActiveTicketRepository(
         withContext(Dispatchers.IO) {
             ticketDao.getAllTickets()
         }
+    suspend fun getTicketsByCategory(categoryId: Int): List<ActiveTicket> =
+        withContext(Dispatchers.IO) {
+            ticketDao.getTicketsByCategory(categoryId)
+        }
+
 
     private fun TicketDto.toEntity(): ActiveTicket =
         ActiveTicket(

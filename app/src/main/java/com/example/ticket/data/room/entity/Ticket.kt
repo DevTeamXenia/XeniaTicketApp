@@ -25,15 +25,25 @@ data class Ticket(
     val ticketCreatedDate: String,
     val ticketCreatedBy: Int,
     val ticketActive: Boolean,
-
-    // Optional cart fields for in-app cart functionality
-    var cartQty: Int = 0,
-    var cartTotalAmount: Double = 0.0,
-    var cartUserName: String = "",
-    var cartUserPhone: String = "",
-    var cartUserIdNo: String = "",
-    var cartUserProof: String = "",
-    var cartUserImg: ByteArray? = null
+    val daName: String,
+    val daRate: Double,
+    val daQty: Int,
+    val daTotalAmount: Double,
+    val daPhoneNumber: String,
+    val daCustRefNo: String,
+    val daNpciTransId: String,
+    val daProofId: String,
+    val daProof: String,
+    val daImg: ByteArray
+//
+//    // Optional cart fields for in-app cart functionality
+//    var cartQty: Int = 0,
+//    var cartTotalAmount: Double = 0.0,
+//    var cartUserName: String = "",
+//    var cartUserPhone: String = "",
+//    var cartUserIdNo: String = "",
+//    var cartUserProof: String = "",
+//    var cartUserImg: ByteArray? = null
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -56,13 +66,14 @@ data class Ticket(
                 ticketCreatedDate == other.ticketCreatedDate &&
                 ticketCreatedBy == other.ticketCreatedBy &&
                 ticketActive == other.ticketActive &&
-                cartQty == other.cartQty &&
-                cartTotalAmount == other.cartTotalAmount &&
-                cartUserName == other.cartUserName &&
-                cartUserPhone == other.cartUserPhone &&
-                cartUserIdNo == other.cartUserIdNo &&
-                cartUserProof == other.cartUserProof &&
-                (cartUserImg?.contentEquals(other.cartUserImg ?: ByteArray(0)) ?: (other.cartUserImg == null))
+                daName == other.daName &&
+                daRate == other.daRate &&
+                daQty == other.daQty &&
+                daTotalAmount == other.daTotalAmount &&
+                daPhoneNumber == other.daPhoneNumber &&
+                daProofId == other.daProofId &&
+                daProof == other.daProof &&
+                daImg.contentEquals(other.daImg)
     }
 
     override fun hashCode(): Int {
@@ -83,13 +94,14 @@ data class Ticket(
         result = 31 * result + ticketCreatedDate.hashCode()
         result = 31 * result + ticketCreatedBy
         result = 31 * result + ticketActive.hashCode()
-        result = 31 * result + cartQty
-        result = 31 * result + cartTotalAmount.hashCode()
-        result = 31 * result + cartUserName.hashCode()
-        result = 31 * result + cartUserPhone.hashCode()
-        result = 31 * result + cartUserIdNo.hashCode()
-        result = 31 * result + cartUserProof.hashCode()
-        result = 31 * result + (cartUserImg?.contentHashCode() ?: 0)
+        result = 31 * result + daName.hashCode()
+        result = 31 * result + daRate.hashCode()
+        result = 31 * result + daQty
+        result = 31 * result + daTotalAmount.hashCode()
+        result = 31 * result + daPhoneNumber.hashCode()
+        result = 31 * result + daProofId.hashCode()
+        result = 31 * result + daProof.hashCode()
+        result = 31 * result + daImg.contentHashCode() // Hash array contents
         return result
     }
 }

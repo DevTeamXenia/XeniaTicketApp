@@ -89,7 +89,7 @@ class SelectionActivity : AppCompatActivity(),
 
         binding.ticketCat.layoutManager = LinearLayoutManager(this)
         binding.ticketCat.adapter = categoryAdapter
-        val layoutManager = GridLayoutManager(this, 4)
+        val layoutManager = GridLayoutManager(this, 3)
         binding.ticketCat.layoutManager = layoutManager
 
     }
@@ -173,6 +173,7 @@ class SelectionActivity : AppCompatActivity(),
         intent.putExtra("CATEGORY_ID", categoryId)
         startActivity(intent)
     }
+
 
     override fun resetInactivityTimer() {
         inactivityHandler.resetTimer()

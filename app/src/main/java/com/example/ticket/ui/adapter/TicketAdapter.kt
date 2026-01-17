@@ -13,6 +13,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.ticket.R
 import com.example.ticket.data.listeners.OnTicketClickListener
+import com.example.ticket.data.network.model.TicketDto
 import com.example.ticket.data.repository.ActiveTicketRepository
 import com.example.ticket.data.repository.TicketRepository
 import com.example.ticket.data.room.entity.ActiveTicket
@@ -39,7 +40,7 @@ class TicketAdapter(
     private val onTicketClickListener: OnTicketClickListener
 ) : RecyclerView.Adapter<TicketAdapter.ViewHolder>() {
 
-    private var ticketItems: List<ActiveTicket> = listOf()
+    private var ticketItems: List<TicketDto> = listOf()
     private var dbItemsMap: Map<Int, Ticket> = emptyMap()
     private var selectedItemPosition = 0
 
@@ -59,19 +60,18 @@ class TicketAdapter(
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val relNoneCardItem: RelativeLayout = itemView.findViewById(R.id.relNoneCardItem)
         private val relCardItem: RelativeLayout = itemView.findViewById(R.id.relCardItem)
-        private val txtTicketName1: TextView = itemView.findViewById(R.id.txt_darshan_name_1)
-        private val txtTicketPrice1: TextView = itemView.findViewById(R.id.txt_darshan_price_1)
+        private val txtTicketName1: TextView = itemView.findViewById(R.id.txt_ticket_name_1)
+        private val txtTicketPrice1: TextView = itemView.findViewById(R.id.txt_ticket_price_1)
         private val txtTicketName2: TextView = itemView.findViewById(R.id.txtQty)
-        private val txtTicketPrice2: TextView = itemView.findViewById(R.id.txt_darshan_price_2)
+        private val txtTicketPrice2: TextView = itemView.findViewById(R.id.txt_ticket_price_2)
         private val imgClearCart: ImageView = itemView.findViewById(R.id.imgClearCart)
-        private val txtTotalAmount: TextView = itemView.findViewById(R.id.totalAmount)
+        private val txtTotalAmount: TextView = itemView.findViewById(R.id.txt_ticket_total_price_2)
 
         @SuppressLint("SetTextI18n", "DefaultLocale")
-        fun bind(ticketItem: ActiveTicket) {
+        fun bind(ticketItem: TicketDto) {
             itemView.post {
                 coroutineScope.launch {
                     try {
-                        // Replace cart logic if needed; using ticketId
                         val cartItem =
                             ticketRepository.getCartItemByTicketId(ticketItem.ticketId)
 
@@ -139,7 +139,7 @@ class TicketAdapter(
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    fun updateTickets(newTickets: List<ActiveTicket>) {
+    fun updateTickets(newTickets: List<TicketDto>) {
         ticketItems = newTickets
         notifyDataSetChanged()
     }

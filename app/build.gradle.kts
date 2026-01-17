@@ -63,7 +63,14 @@ dependencies {
     implementation ("com.squareup.retrofit2:converter-gson:3.0.0")
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
-
+    androidTestImplementation("androidx.test.ext:junit:1.3.0")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
+    implementation("com.journeyapps:zxing-android-embedded:4.3.0")
+    implementation ("com.github.bumptech.glide:glide:5.0.5")
+    implementation ("com.squareup.retrofit2:retrofit:3.0.0")
+    implementation ("com.squareup.retrofit2:converter-gson:3.0.0")
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
 
     //di
     implementation ("io.insert-koin:koin-android:4.1.1")

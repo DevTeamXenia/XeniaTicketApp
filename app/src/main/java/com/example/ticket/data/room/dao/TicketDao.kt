@@ -21,13 +21,13 @@ interface TicketDao {
     @Query("SELECT EXISTS(SELECT 1 FROM tickets WHERE ticketId = :ticketId)")
     suspend fun doesTicketExist(ticketId: Int): Boolean
 
-    @Query("UPDATE tickets SET cartQty = :newQty, cartTotalAmount = :additionalAmount WHERE ticketId = :ticketId")
+    @Query("UPDATE tickets SET daQty = :newQty, daTotalAmount = :additionalAmount WHERE ticketId = :ticketId")
     suspend fun updateExistingTicket(ticketId: Int, newQty: Int, additionalAmount: Double)
 
     @Query("SELECT * FROM tickets WHERE ticketId = :ticketId")
     suspend fun getCartItemByTicketId(ticketId: Int): Ticket?
 
-    @Query("SELECT SUM(cartTotalAmount) FROM tickets")
+    @Query("SELECT SUM(daTotalAmount) FROM tickets")
     suspend fun getCartTotalAmount(): Double?
 
     @Query("DELETE FROM tickets WHERE ticketId = :ticketId")
@@ -35,11 +35,11 @@ interface TicketDao {
 
     @Query(
         """UPDATE tickets 
-           SET cartUserName = :newName, 
-               cartUserPhone = :newPhoneNumber,
-               cartUserIdNo = :newIdno,
-               cartUserProof = :newIdProof,
-               cartUserImg = :newImg"""
+           SET daName = :newName, 
+               daPhoneNumber = :newPhoneNumber,
+               daProofId = :newIdno,
+               daProof = :newIdProof,
+               daImg = :newImg"""
     )
     suspend fun updateAllCartItems(
         newName: String,

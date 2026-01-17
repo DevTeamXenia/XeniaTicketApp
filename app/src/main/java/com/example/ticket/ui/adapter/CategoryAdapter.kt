@@ -72,7 +72,7 @@ class CategoryAdapter(
             val isSelected = position == selectedItemPosition
             itemView.setBackgroundResource(
                 if (isSelected) R.drawable.category_select_bg
-                else R.color.light_green
+                else R.drawable.category_unselect_bg
             )
 
             categoryNameTextView.setTextColor(

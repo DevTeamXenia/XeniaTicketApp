@@ -4,11 +4,15 @@ import com.example.ticket.data.network.model.CategoryResponse
 import com.example.ticket.data.network.model.CompanyResponse
 import com.example.ticket.data.network.model.LoginRequest
 import com.example.ticket.data.network.model.LoginResponse
+import com.example.ticket.data.network.model.OrderResponse
+import com.example.ticket.data.network.model.TicketPaymentRequest
+import com.example.ticket.data.network.model.TicketRequest
 import com.example.ticket.data.network.model.TicketResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.Query
 
 interface ApiService {
 
@@ -27,10 +31,16 @@ interface ApiService {
         @Header("Authorization") bearerToken: String
     ): CategoryResponse
 
-    @GET(" Ticket/sync")
+    @GET("Ticket/sync")
     suspend fun getTicket(
         @Header("Authorization") bearerToken: String
     ): TicketResponse
+
+    @POST("Orders/Darshan")
+    suspend fun postTicket(
+        @Header("Authorization") bearerToken: String,
+        @Body request: TicketPaymentRequest
+    ): OrderResponse
 
 
 }

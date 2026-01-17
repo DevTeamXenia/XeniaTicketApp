@@ -21,6 +21,7 @@ import com.example.ticket.R
 import com.example.ticket.data.enum.UserType
 import com.example.ticket.data.listeners.InactivityHandlerActivity
 import com.example.ticket.data.repository.CompanyRepository
+import com.example.ticket.databinding.ActivityLanguageBinding
 import com.example.ticket.databinding.ActivityMainBinding
 import com.example.ticket.ui.dialog.CustomInactivityDialog
 import com.example.ticket.ui.dialog.CustomInternetAvailabilityDialog
@@ -52,7 +53,7 @@ class LanguageActivity : AppCompatActivity(),
     CustomInternetAvailabilityDialog.InternetAvailabilityListener,
     CustomInactivityDialog.InactivityCallback,
     InactivityHandlerActivity {
-    private lateinit var binding: ActivityMainBinding
+    private lateinit var binding: ActivityLanguageBinding
     private val sessionManager: SessionManager by inject()
     private val companyRepository: CompanyRepository by inject()
     private var screen: String? = null
@@ -64,7 +65,7 @@ class LanguageActivity : AppCompatActivity(),
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
+        binding = ActivityLanguageBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         getScreenInfo(applicationContext)
@@ -129,7 +130,7 @@ class LanguageActivity : AppCompatActivity(),
             LANGUAGE_KANNADA to binding.cardKannada,
             LANGUAGE_TELUGU to binding.cardTelugu,
             LANGUAGE_HINDI to binding.cardHindi,
-            LANGUAGE_PUNJABI to binding.cardP,
+            LANGUAGE_PUNJABI to binding.cardPunjabi,
             LANGUAGE_MARATHI to binding.cardMarathi,
         ).filterValues { it != null }
             .mapValues { it.value!! }
@@ -240,7 +241,7 @@ class LanguageActivity : AppCompatActivity(),
                     return@launch
                 }
 
-                // 3️⃣ USE DATA
+
                 enabledLanguages = companyRepository
                     .getString(CompanyKey.COMPANY_LANGUAGES)
                     ?.split(",")

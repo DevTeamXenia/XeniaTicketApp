@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.example.ticket.data.room.entity.ActiveTicket
+import com.example.ticket.data.room.entity.Ticket
 
 @Dao
 interface ActiveTicketDao {
@@ -17,4 +18,12 @@ interface ActiveTicketDao {
 
     @Query("DELETE FROM ActiveTickets")
     suspend fun clearAll()
+
+    @Query("""
+        SELECT * FROM activetickets 
+        WHERE ticketCategoryId = :categoryId 
+        AND ticketActive = 1
+    """)
+    suspend fun getTicketsByCategory(categoryId: Int): List<ActiveTicket>
+
 }
