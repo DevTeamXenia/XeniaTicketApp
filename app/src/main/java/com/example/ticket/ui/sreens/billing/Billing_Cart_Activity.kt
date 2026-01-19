@@ -1,21 +1,317 @@
 package com.example.ticket.ui.sreens.billing
 
+import android.annotation.SuppressLint
+import android.content.Intent
+import android.content.pm.ActivityInfo
+import android.graphics.BitmapFactory
 import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
+import android.util.Base64
+import android.util.Log
+import android.view.MotionEvent
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.ticket.R
+import com.example.ticket.data.listeners.InactivityHandlerActivity
+import com.example.ticket.data.listeners.OnTicketClickListener
+import com.example.ticket.data.network.model.TicketDto
+import com.example.ticket.data.network.model.TicketPaymentRequest
+import com.example.ticket.data.repository.CompanyRepository
+import com.example.ticket.data.repository.PaymentRepository
+import com.example.ticket.data.repository.TicketRepository
+import com.example.ticket.data.room.entity.Ticket
+import com.example.ticket.databinding.ActivityBillingCartBinding
+import com.example.ticket.ui.adapter.TicketCartAdapter
+import com.example.ticket.ui.dialog.CustomInactivityDialog
+import com.example.ticket.ui.dialog.CustomInternetAvailabilityDialog
+import com.example.ticket.ui.dialog.CustomTicketPopupDialogue
+import com.example.ticket.ui.sreens.screen.PaymentActivity
+import com.example.ticket.ui.sreens.screen.TicketActivity
+import com.example.ticket.utils.common.CommonMethod.generateNumericTransactionReferenceID
+import com.example.ticket.utils.common.CommonMethod.setLocale
+import com.example.ticket.utils.common.CommonMethod.showSnackbar
+import com.example.ticket.utils.common.InactivityHandler
+import com.example.ticket.utils.common.SessionManager
+import com.google.gson.Gson
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.koin.android.ext.android.inject
+import retrofit2.HttpException
+import kotlin.getValue
 
-class Billing_Cart_Activity : AppCompatActivity() {
+class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCartClickListener,
+    OnTicketClickListener,
+     CustomInternetAvailabilityDialog.InternetAvailabilityListener{
+
+    private lateinit var binding: ActivityBillingCartBinding
+    private val ticketRepository: TicketRepository by inject()
+    private lateinit var ticketCartAdapter: TicketCartAdapter
+    private val sessionManager: SessionManager by inject()
+    private val paymentRepository: PaymentRepository by inject()
+    private val companyRepository: CompanyRepository by inject()
+    private var formattedTotalAmount: String = ""
+    private var selectedLanguage: String? = ""
+    private var idProofType : String? = ""
+    private var devoteeName: String? = null
+    private var devoteePhone: String? = null
+    private var devoteeIdProof: String? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContentView(R.layout.activity_billing_cart)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
+        binding = ActivityBillingCartBinding.inflate(layoutInflater)
+
+        if (intent.getBooleanExtra("forceLandscape", false)) {
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         }
+        setContentView(binding.root)
+        selectedLanguage = sessionManager.getBillingSelectedLanguage()
+        setLocale(this, selectedLanguage)
+        devoteeName = intent.getStringExtra("name")
+        devoteePhone = intent.getStringExtra("phno")
+        idProofType = intent.getStringExtra("ID")
+        devoteeIdProof = intent.getStringExtra("IDtype")
+        idProofType = intent.getStringExtra("ID")
+
+        binding.relDarshanCart.layoutManager = LinearLayoutManager(this)
+        ticketCartAdapter =
+            TicketCartAdapter(this, sessionManager.getSelectedLanguage(), "Dharshan", this)
+        binding.relDarshanCart.adapter = ticketCartAdapter
+        loadDarshanItems()
+        binding.btnPay.setOnClickListener {
+            postTicketPaymentHistory("S", "")
+        }
+    }
+
+    @SuppressLint("SetTextI18n", "DefaultLocale")
+    private fun loadDarshanItems() {
+        lifecycleScope.launch {
+            val allDarshanTickets = ticketRepository.getAllTicketsInCart()
+            val (totalAmount) = ticketRepository.getCartStatus()
+            if (allDarshanTickets.isEmpty()) {
+                startActivity(Intent(this@Billing_Cart_Activity, TicketActivity::class.java))
+                finish()
+            } else {
+                val firstItem = allDarshanTickets.first()
+                binding.txtValName.text = firstItem.daName
+                binding.txtValPhNo.text = firstItem.daPhoneNumber
+                binding.txtValIdNo.text = firstItem.daProofId
+                binding.txtIdNo.text = "$idProofType:"
+                val bitmap = BitmapFactory.decodeByteArray(firstItem.daImg, 0, firstItem.daImg.size)
+                binding.personImage.setImageBitmap(bitmap)
+                binding.personImage.visibility = View.VISIBLE
+                ticketCartAdapter.updateTickets(allDarshanTickets)
+                formattedTotalAmount = String.format("%.2f", totalAmount)
+                binding.btnPay.text = getString(R.string.pay) + "  Rs. " + formattedTotalAmount
+                binding.btnPay.isEnabled = true
+                binding.btnPay.setBackgroundColor(
+                    ContextCompat.getColor(
+                        this@Billing_Cart_Activity,
+                        R.color.primaryColor
+                    )
+                )
+
+            }
+        }
+    }
+
+    override fun onDeleteClick(ticket: Ticket) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onEditClick(ticketItem: Ticket) {
+        val dialog = CustomTicketPopupDialogue()
+
+        dialog.setData(
+            ticketId = ticketItem.ticketId,
+            ticketName = ticketItem.ticketName,
+            ticketNameMa = ticketItem.ticketNameMa ?: "",
+            ticketNameTa = ticketItem.ticketNameTa ?: "",
+            ticketNameKa = ticketItem.ticketNameKa ?: "",
+            ticketNameTe = ticketItem.ticketNameTe ?: "",
+            ticketNameHi = ticketItem.ticketNameHi ?: "",
+            ticketNameSi = ticketItem.ticketNameSi ?: "",
+            ticketNamePa = ticketItem.ticketNamePa ?: "",
+            ticketNameMr = ticketItem.ticketNameMr ?: "",
+            ticketCtegoryId = ticketItem.ticketCategoryId,
+            ticketCompanyId = ticketItem.ticketCompanyId,
+            ticketRate = ticketItem.ticketAmount
+        )
+
+        dialog.setListener(this)
+
+        dialog.show(supportFragmentManager, "CustomPopup")
+    }
+    private fun postTicketPaymentHistory(
+        status: String,
+        statusDesc: String,
+        retryCount: Int = 0
+    ) {
+        lifecycleScope.launch {
+
+            val cartTickets = ticketRepository.getAllTicketsInCart()
+            if (cartTickets.isEmpty()) return@launch
+
+            val firstTicket = cartTickets.first()
+
+            val imageBase64 = Base64.encodeToString(
+                firstTicket.daImg ?: ByteArray(0),
+                Base64.NO_WRAP
+            )
+
+            val itemsList = cartTickets.map { item ->
+                TicketPaymentRequest.Item(
+                    taCategoryId = item.ticketCategoryId,
+                    TicketId = item.ticketId,
+                    Quantity = item.daQty,
+                    Rate = item.daRate
+                )
+            }
+
+            val companyId = companyRepository.getCompany()?.companyId ?: 0
+            val token = sessionManager.getToken()
+
+            if (token.isNullOrBlank()) {
+                binding.btnPay.isEnabled = true
+                showSnackbar(binding.root, "Authorization token missing")
+                return@launch
+            }
+
+            val request = TicketPaymentRequest(
+                CompanyId = companyId,
+                UserId = sessionManager.getUserId(),
+                Name = firstTicket.daName.orEmpty(),
+                tTranscationId = generateNumericTransactionReferenceID(),
+                tCustRefNo = firstTicket.daCustRefNo.orEmpty(),
+                tNpciTransId = firstTicket.daNpciTransId.orEmpty(),
+                tIdProofNo = firstTicket.daProofId.orEmpty(),
+                tImage = imageBase64,
+                PhoneNumber = firstTicket.daPhoneNumber.orEmpty(),
+                tPaymentStatus = status,
+                tPaymentMode = "UPI",
+                tPaymentDes = statusDesc,
+                Items = itemsList
+            )
+
+            try {
+                val response = withContext(Dispatchers.IO) {
+                    paymentRepository.postTicket(
+                        bearerToken = "Bearer $token",
+                        request = request
+                    )
+                }
+
+                Log.d("DARSHAN_REQUEST", Gson().toJson(request))
+                Log.d("DARSHAN_RESPONSE", Gson().toJson(response))
+
+                if (response.status.equals("OPEN", true)) {
+
+                    val (totalAmount) = ticketRepository.getCartStatus()
+
+                    handleTicketTransactionStatus(
+                        status = status,
+                        orderId = response.orderId,     // String
+                        totalAmount = totalAmount.toDouble()
+                    )
+
+
+                } else {
+                    binding.btnPay.isEnabled = true
+                    showSnackbar(binding.root, "Failed to post order")
+                }
+
+            } catch (e: HttpException) {
+                handleRetry(e, status, statusDesc, retryCount)
+            } catch (e: Exception) {
+                handleRetry(e, status, statusDesc, retryCount)
+            }
+        }
+    }
+
+    private fun handleRetry(
+        e: Exception,
+        status: String,
+        statusDesc: String,
+        retryCount: Int
+    ) {
+        if (e is HttpException && e.code() == 401) {
+            binding.btnPay.isEnabled = true
+            showSnackbar(binding.root, "Unauthorized: Please login again")
+            return
+        }
+
+        if (retryCount < 3) {
+            postTicketPaymentHistory(status, statusDesc, retryCount + 1)
+        } else {
+            binding.btnPay.isEnabled = true
+            showSnackbar(binding.root, "Failed: ${e.message}")
+        }
+    }
+
+    private fun handleTicketTransactionStatus(
+        status: String,
+        orderId: String,
+        totalAmount: Double
+    ) {
+        Log.d("PAYMENT_NAV", "Navigating to PaymentActivity")
+
+        val intent = Intent(this, PaymentActivity::class.java).apply {
+            putExtra("from", "billing")
+            putExtra("status", status)
+            putExtra("amount", totalAmount.toString())
+            putExtra("orderID", orderId)   // ✅ String
+            putExtra("transID", "BookingTest")
+            putExtra("name", devoteeName)
+            putExtra("phno", devoteePhone)
+            putExtra("IDNO", devoteeIdProof)
+            putExtra("ID", idProofType)
+        }
+
+        startActivity(intent)
+        finish()
+    }
+
+
+    override fun onTicketClick(darshanItem: TicketDto) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onTicketClear(darshanItem: TicketDto) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onTicketAdded() {
+        loadDarshanItems()
+    }
+
+
+
+    override fun onResume() {
+        super.onResume()
+        loadDarshanItems()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        loadDarshanItems()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        loadDarshanItems()
+    }
+
+    override fun onRetryClicked() {
+        loadDarshanItems()
+    }
+    override fun onDialogInactive() {
+        loadDarshanItems()
+    }
+
+    override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
+        loadDarshanItems()
+        return super.dispatchTouchEvent(ev)
     }
 }

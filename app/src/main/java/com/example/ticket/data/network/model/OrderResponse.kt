@@ -6,5 +6,5 @@ data class OrderResponse(
     @SerializedName("Status")
     val status: String,
     @SerializedName("OrderId")
-    val orderId: Int,
+    val orderId: String,
 )

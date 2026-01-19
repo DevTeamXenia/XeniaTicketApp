@@ -13,19 +13,16 @@ class TicketRepository(private val ticketDao: TicketDao) {
         val ticketExists = ticketDao.getCartItemByTicketId(ticket.ticketId) != null
 
         if (ticketExists) {
-            val existingTicket = ticketDao.getCartItemByTicketId(ticket.ticketId)!!
-            val newQty = existingTicket.daQty + ticket.daQty
-            val newAmount = existingTicket.daTotalAmount + ticket.daTotalAmount
-
             ticketDao.updateExistingTicket(
                 ticketId = ticket.ticketId,
-                newQty = newQty,
-                additionalAmount = newAmount
+                newQty = ticket.daQty,
+                additionalAmount = ticket.daTotalAmount
             )
         } else {
             ticketDao.insertCartItem(ticket)
         }
     }
+
 
     suspend fun insertCartBookingItem(ticket: Ticket, key: String) = withContext(Dispatchers.IO) {
         val existingTicket = ticketDao.getCartItemByTicketId(ticket.ticketId)
@@ -47,7 +44,6 @@ class TicketRepository(private val ticketDao: TicketDao) {
             ticketDao.insertCartItem(ticket)
         }
     }
-
 
     suspend fun getTicketsMapByIds(): Map<Int, Ticket> {
         return ticketDao.getAllCart().associateBy { it.ticketId }

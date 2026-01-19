@@ -43,6 +43,7 @@ class TicketAdapter(
     private var ticketItems: List<TicketDto> = listOf()
     private var dbItemsMap: Map<Int, Ticket> = emptyMap()
     private var selectedItemPosition = 0
+    private val tickets = mutableListOf<TicketDto>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(context)
@@ -62,8 +63,9 @@ class TicketAdapter(
         private val relCardItem: RelativeLayout = itemView.findViewById(R.id.relCardItem)
         private val txtTicketName1: TextView = itemView.findViewById(R.id.txt_ticket_name_1)
         private val txtTicketPrice1: TextView = itemView.findViewById(R.id.txt_ticket_price_1)
-        private val txtTicketName2: TextView = itemView.findViewById(R.id.txtQty)
+        private val txtTicketName2: TextView = itemView.findViewById(R.id.txt_ticket_name_2)
         private val txtTicketPrice2: TextView = itemView.findViewById(R.id.txt_ticket_price_2)
+        private val Quantity: TextView = itemView.findViewById(R.id.txtQty)
         private val imgClearCart: ImageView = itemView.findViewById(R.id.imgClearCart)
         private val txtTotalAmount: TextView = itemView.findViewById(R.id.txt_ticket_total_price_2)
 
@@ -91,9 +93,14 @@ class TicketAdapter(
                                     LANGUAGE_PUNJABI -> ticketItem.ticketNamePa
                                     else -> ticketItem.ticketName
                                 }
+                                val qty = cartItem.daQty
+                                val ticketRate = ticketItem.ticketAmount
+                                Quantity.text = "Amount. $ticketRate * $qty/-"
+
                                 txtTicketPrice2.text = "Rs. ${ticketItem.ticketAmount}"
-                                val formattedTotal = String.format("%.2f", cartItem.ticketTotalAmount)
-                                txtTotalAmount.text = "Rs. $formattedTotal/-"
+                                val formattedTotal = String.format("%.2f", cartItem.ticketTotalAmount*qty)
+                                txtTotalAmount.text = "$formattedTotal/-"
+
                             } else {
                                 relNoneCardItem.visibility = View.VISIBLE
                                 relCardItem.visibility = View.GONE
@@ -141,6 +148,8 @@ class TicketAdapter(
     @SuppressLint("NotifyDataSetChanged")
     fun updateTickets(newTickets: List<TicketDto>) {
         ticketItems = newTickets
+        tickets.clear()
+        tickets.addAll(newTickets)
         notifyDataSetChanged()
     }
 

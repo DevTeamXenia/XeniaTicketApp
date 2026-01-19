@@ -8,6 +8,7 @@ import com.example.ticket.data.repository.LoginRepository
 import com.example.ticket.data.repository.PaymentRepository
 import com.example.ticket.data.repository.TicketRepository
 import com.example.ticket.data.room.AppDatabase
+import com.example.ticket.ui.dialog.CustomTicketPopupDialogue
 import com.example.ticket.utils.common.SessionManager
 import org.koin.android.ext.koin.androidApplication
 import org.koin.android.ext.koin.androidContext
@@ -36,4 +37,8 @@ val roomModule = module {
     single { ActiveTicketRepository(get()) }
     single { TicketRepository(get()) }
     single { PaymentRepository() }
+
+
+
+    factory { CustomTicketPopupDialogue() }
 }

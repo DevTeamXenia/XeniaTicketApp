@@ -10,7 +10,13 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.ticket.R
 import com.example.ticket.databinding.ActivityPrinterSettingBinding
+import com.example.ticket.utils.common.CommonMethod.setLocale
+import com.example.ticket.utils.common.Constants.PRINTER_B200MAX
+import com.example.ticket.utils.common.Constants.PRINTER_FALCON
+import com.example.ticket.utils.common.Constants.PRINTER_I900
+import com.example.ticket.utils.common.Constants.PRINTER_KIOSK
 import com.example.ticket.utils.common.SessionManager
+import com.urovo.sdk.print.PrinterProviderImpl
 
 class PrinterSettingActivity : AppCompatActivity() {
 
@@ -80,7 +86,7 @@ class PrinterSettingActivity : AppCompatActivity() {
             )
         }
         binding.imgKiosk.setOnClickListener { selectPrinter(PRINTER_KIOSK, binding.imgKiosk) }
-        binding.imgI900.setOnClickListener { selectPrinter(PRINTER_I900, binding.imgI900) }
+
 
         binding.btnSave.setOnClickListener {
             if (selectedPrinter == null) {
@@ -109,7 +115,6 @@ class PrinterSettingActivity : AppCompatActivity() {
         binding.imgFalcon.setBackgroundResource(R.drawable.bg_printer_unselected)
         binding.imgBPOS200Max.setBackgroundResource(R.drawable.bg_printer_unselected)
         binding.imgKiosk.setBackgroundResource(R.drawable.bg_printer_unselected)
-        binding.imgI900.setBackgroundResource(R.drawable.bg_printer_unselected)
         selectedView.setBackgroundResource(R.drawable.bg_printer_selected)
     }
     private fun savePrinterSelection() {
@@ -117,7 +122,7 @@ class PrinterSettingActivity : AppCompatActivity() {
 
         when {
             ps == "pd" -> {
-                val printIntent = Intent(this, PaymentDarshanActivity::class.java).apply {
+                val printIntent = Intent(this, PaymentActivity::class.java).apply {
                     putExtra("from", from)
                     putExtra("status", status)
                     putExtra("amount", amount)
@@ -130,13 +135,6 @@ class PrinterSettingActivity : AppCompatActivity() {
                 finish()
             }
 
-            sr == "RS" -> {
-                val reportIntent = Intent(this, SummaryReportActivity::class.java).apply {
-                    putExtra("SR", "RS")
-                }
-                startActivity(reportIntent)
-                finish()
-            }
 
             fromLogin == "Login" -> {
                 val intent = Intent(this, LanguageActivity::class.java).apply {
@@ -167,20 +165,6 @@ class PrinterSettingActivity : AppCompatActivity() {
                 finish()
             }
 
-            pv == "ps" -> {
-                val printIntent = Intent(this, PaymentVazhipaduActivity::class.java).apply {
-                    putExtra("from", from)
-                    putExtra("status", status)
-                    putExtra("amount", amount)
-                    putExtra("transID", transID)
-                    putExtra("orderID", orderID)
-                    putExtra("phno", phoneNo)
-                    putExtra("billFrom", billFrom)
-                    putExtra("pv", "ps")
-                }
-                startActivity(printIntent)
-                finish()
-            }
 
             else -> {
                 finish()
@@ -198,7 +182,6 @@ class PrinterSettingActivity : AppCompatActivity() {
                 PRINTER_FALCON -> selectPrinter(PRINTER_FALCON, binding.imgFalcon)
                 PRINTER_B200MAX -> selectPrinter(PRINTER_B200MAX, binding.imgBPOS200Max)
                 PRINTER_KIOSK -> selectPrinter(PRINTER_KIOSK, binding.imgKiosk)
-                PRINTER_I900 -> selectPrinter(PRINTER_I900, binding.imgI900)
             }
         }
     }

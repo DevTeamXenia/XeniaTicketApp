@@ -3,27 +3,35 @@ package com.example.ticket.ui.sreens.screen
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
+import android.view.MotionEvent
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.ticket.R
 import com.example.ticket.data.listeners.InactivityHandlerActivity
 import com.example.ticket.data.listeners.OnTicketClickListener
 import com.example.ticket.data.network.model.TicketDto
 import com.example.ticket.data.repository.ActiveTicketRepository
+import com.example.ticket.data.repository.CategoryRepository
+import com.example.ticket.data.repository.CompanyRepository
 import com.example.ticket.data.repository.TicketRepository
 import com.example.ticket.data.room.entity.ActiveTicket
-import com.example.ticket.data.room.entity.Ticket
+import com.example.ticket.data.room.entity.Category
 import com.example.ticket.databinding.ActivityTicketBinding
+import com.example.ticket.ui.adapter.CategoryAdapter
 import com.example.ticket.ui.adapter.TicketAdapter
 import com.example.ticket.ui.dialog.CustomInactivityDialog
+import com.example.ticket.ui.dialog.CustomInternetAvailabilityDialog
 import com.example.ticket.ui.dialog.CustomTicketPopupDialogue
 import com.example.ticket.utils.common.CommonMethod.setLocale
 import com.example.ticket.utils.common.CommonMethod.showSnackbar
+import com.example.ticket.utils.common.CompanyKey
+import com.example.ticket.utils.common.InactivityHandler
 import com.example.ticket.utils.common.SessionManager
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -31,19 +39,25 @@ import org.koin.android.ext.android.inject
 import kotlin.getValue
 
 class TicketActivity : AppCompatActivity(), OnTicketClickListener,
-CustomInactivityDialog.InactivityCallback,
-    InactivityHandlerActivity {
+CustomInactivityDialog.InactivityCallback,CustomInternetAvailabilityDialog.InternetAvailabilityListener,
+    InactivityHandlerActivity,  CategoryAdapter.OnCategoryClickListener{
 
     private lateinit var binding: ActivityTicketBinding
     private val ticketRepository: TicketRepository by inject()
     private val activeTicketRepository: ActiveTicketRepository by inject()
-    private val customTicketPopupDialogue: CustomTicketPopupDialogue by inject()
+    private val categoryRepository: CategoryRepository by inject()
+
     private val sessionManager: SessionManager by inject()
+    private val companyRepository: CompanyRepository by inject()
+    private lateinit var categoryAdapter: CategoryAdapter
     private lateinit var ticketAdapter: TicketAdapter
     private var categoryId: Int = 0
     private var selectedLanguage: String? = ""
+    private var selectedCategoryId: Int = 0
 
     private var formattedTotalAmount: String = ""
+    private lateinit var inactivityHandler: InactivityHandler
+    private lateinit var inactivityDialog: CustomInactivityDialog
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,15 +65,17 @@ CustomInactivityDialog.InactivityCallback,
         setLocale(this, sessionManager.getSelectedLanguage())
         selectedLanguage = sessionManager.getSelectedLanguage()
         categoryId = intent.getIntExtra("CATEGORY_ID", 0)
-
+        inactivityDialog = CustomInactivityDialog(this)
+        inactivityHandler =
+            InactivityHandler(this, supportFragmentManager, inactivityDialog)
         setupUI()
         setContentView(binding.root)
         setupRecyclerViews()
         lifecycleScope.launch {
             updateCartUI()
         }
+        getCategory()
 
-        getTickets()
 
 
 
@@ -71,19 +87,105 @@ CustomInactivityDialog.InactivityCallback,
         }
     }
     private fun setupUI() {
-        binding.txtHome?.text = getString(R.string.more_people)
+        binding.txtHome?.text = getString(R.string.home)
         binding.txtselectTicket.text = getString(R.string.choose_your_tickets)
 
     }
     @SuppressLint("NotifyDataSetChanged")
     private fun setupRecyclerViews() {
-        ticketAdapter =
-            TicketAdapter(this, selectedLanguage!!, ticketRepository, lifecycleScope, this)
+        categoryAdapter = CategoryAdapter(this, selectedLanguage!!, this)
+
+        binding.ticketCat.layoutManager = LinearLayoutManager(this)
+        binding.ticketCat.adapter = categoryAdapter
+
+        ticketAdapter = TicketAdapter(
+            context = this,
+            selectedLanguage = selectedLanguage ?: "en",
+            coroutineScope = lifecycleScope,
+            onTicketClickListener = this,
+            ticketRepository = ticketRepository
+        )
+
         binding.ticketRecycler.layoutManager =
-            GridLayoutManager(this@TicketActivity, 3)
+            GridLayoutManager(this, 3)
         binding.ticketRecycler.adapter = ticketAdapter
+
+
+
     }
-    private fun getTickets() {
+    private fun getCategory() {
+        lifecycleScope.launch {
+            try {
+                val token = sessionManager.getToken()
+
+                if (token.isNullOrEmpty()) {
+                    binding.ticketCat.visibility = View.GONE
+                    return@launch
+                }
+
+                val isLoaded = withContext(Dispatchers.IO) {
+                    categoryRepository.loadCategories(token)
+                }
+
+                if (!isLoaded) {
+                    binding.ticketCat.visibility = View.GONE
+                    return@launch
+                }
+
+                val categoryEntities = withContext(Dispatchers.IO) {
+                    categoryRepository.getAllCategory()
+                }
+
+                if (categoryEntities.isEmpty()) {
+                    binding.ticketCat.visibility = View.GONE
+                    return@launch
+                }
+
+                val activeCategories = categoryEntities.filter { it.categoryActive }
+
+                if (activeCategories.isEmpty()) {
+                    binding.ticketCat.visibility = View.GONE
+                    return@launch
+                }
+
+                binding.ticketCat.visibility =
+                    if (companyRepository.getBoolean(CompanyKey.CATEGORY_ENABLE))
+                        View.VISIBLE
+                    else View.GONE
+
+                val selectedCategory = activeCategories.first()
+                selectedCategoryId = selectedCategory.categoryId
+
+                val categories = activeCategories.map { entity ->
+                    Category(
+                        categoryId = entity.categoryId,
+                        categoryName = entity.categoryName,
+                        categoryNameMa = entity.categoryNameMa,
+                        categoryNameTa = entity.categoryNameTa,
+                        categoryNameTe = entity.categoryNameTe,
+                        categoryNameKa = entity.categoryNameKa,
+                        categoryNameHi = entity.categoryNameHi,
+                        categoryNameMr = entity.categoryNameMr,
+                        categoryNamePa = entity.categoryNamePa,
+                        categoryNameSi = entity.categoryNameSi,
+                        CategoryCompanyId = entity.CategoryCompanyId,
+                        categoryCreatedDate = entity.categoryCreatedDate,
+                        categoryCreatedBy = entity.categoryCreatedBy,
+                        categoryModifiedDate = entity.categoryModifiedDate,
+                        categoryModifiedBy = entity.categoryModifiedBy,
+                        categoryActive = entity.categoryActive
+                    )
+                }
+
+                categoryAdapter.updateCategories(categories)
+                getTickets(selectedCategoryId)
+            } catch (e: Exception) {
+                Log.e("DEBUG", "Category load error", e)
+                binding.ticketCat.visibility = View.GONE
+            }
+        }
+    }
+    private fun getTickets(categoryId: Int) {
         lifecycleScope.launch {
             try {
                 val token = sessionManager.getToken()
@@ -95,25 +197,21 @@ CustomInactivityDialog.InactivityCallback,
                     return@launch
                 }
 
-                val tickets = activeTicketRepository.getTicketsByCategory(categoryId)
+                val tickets =
+                    activeTicketRepository.getTicketsByCategory(categoryId)
+
+                val ticketDtos = tickets.map { it.toDto() }
+                ticketAdapter.updateTickets(ticketDtos)
 
                 if (tickets.isEmpty()) {
                     showSnackbar(binding.root, "No tickets for this category")
-                    return@launch
                 }
-
-                // Entity → DTO
-                val ticketDtos = tickets.map { it.toDto() }
-
-                ticketAdapter.updateTickets(ticketDtos)
 
             } catch (e: Exception) {
                 showSnackbar(binding.root, "Error: ${e.message}")
             }
         }
     }
-
-
 
 
     override fun onTicketClick(ticketItem: TicketDto) {
@@ -145,14 +243,14 @@ CustomInactivityDialog.InactivityCallback,
     override fun onTicketClear(darshanItem: TicketDto) {
         lifecycleScope.launch {
             ticketRepository.deleteTicketById(darshanItem.ticketId)
-            getTickets()
+            getTickets(selectedCategoryId)
             updateCartUI()
         }
     }
 
     override fun onTicketAdded() {
         lifecycleScope.launch {
-            getTickets()
+            getTickets(selectedCategoryId)
             updateCartUI()
         }
     }
@@ -160,7 +258,7 @@ CustomInactivityDialog.InactivityCallback,
     override fun onRestart() {
         super.onRestart()
         setupRecyclerViews()
-        getTickets()
+        getTickets(selectedCategoryId)
         lifecycleScope.launch {
             updateCartUI()
         }
@@ -195,10 +293,36 @@ CustomInactivityDialog.InactivityCallback,
         }
     }
 
-    override fun resetInactivityTimer() {
 
+
+    override fun onPause() {
+        super.onPause()
+        inactivityHandler.pauseInactivityCheck()
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        inactivityHandler.cleanup()
+    }
+
+    override fun onRetryClicked() {
+        inactivityHandler.resumeInactivityCheck()
+        //generatePaymentToken(donationAmount!!)
+    }
+
+    override fun onDialogInactive() {
+        inactivityHandler.resumeInactivityCheck()
+        inactivityHandler.showDialogSafely()
+    }
+
+    override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
+        inactivityHandler.resetTimer()
+        return super.dispatchTouchEvent(ev)
+    }
+
+    override fun resetInactivityTimer() {
+        inactivityHandler.resetTimer()
+    }
     fun ActiveTicket.toDto() = TicketDto(
         ticketId = ticketId,
         ticketName = ticketName,
@@ -218,6 +342,10 @@ CustomInactivityDialog.InactivityCallback,
         ticketActive = ticketActive
     )
 
+    override fun onCategoryClick(category: Category) {
+        selectedCategoryId = category.categoryId
+        getTickets(selectedCategoryId)
+    }
 
 
 

@@ -17,7 +17,6 @@ import com.example.ticket.data.enum.UserType
 import com.example.ticket.data.repository.CompanyRepository
 import com.example.ticket.data.repository.LoginRepository
 import com.example.ticket.databinding.ActivityLoginBinding
-import com.example.ticket.ui.sreens.billing.Billing_Selection_Activity
 import com.example.ticket.utils.common.CommonMethod.dismissLoader
 import com.example.ticket.utils.common.CommonMethod.isInternetAvailable
 import com.example.ticket.utils.common.CommonMethod.showSnackbar
@@ -60,7 +59,7 @@ class LoginActivity : AppCompatActivity() {
                     UserType.COUNTER_USER -> {
                         if (selectedLanguage.isNotEmpty()) {
                             startActivity(
-                                Intent(this@LoginActivity, Billing_Selection_Activity::class.java)
+                                Intent(this@LoginActivity, LanguageActivity::class.java)
                             )
                         } else {
                             startActivity(
@@ -207,7 +206,7 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
                             )
                             return@launch
                         }
-                        startActivity(Intent(this@LoginActivity, Billing_Selection_Activity::class.java))
+                        startActivity(Intent(this@LoginActivity, LanguageActivity::class.java))
                         finish()
                     }
 

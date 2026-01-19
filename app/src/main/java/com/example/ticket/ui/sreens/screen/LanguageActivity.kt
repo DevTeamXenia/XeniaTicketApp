@@ -25,7 +25,7 @@ import com.example.ticket.databinding.ActivityLanguageBinding
 import com.example.ticket.databinding.ActivityMainBinding
 import com.example.ticket.ui.dialog.CustomInactivityDialog
 import com.example.ticket.ui.dialog.CustomInternetAvailabilityDialog
-import com.example.ticket.ui.sreens.billing.Billing_Selection_Activity
+import com.example.ticket.ui.sreens.billing.Billin_Ticket_Activity
 import com.example.ticket.utils.common.CommonMethod.dismissLoader
 import com.example.ticket.utils.common.CommonMethod.getScreenSize
 import com.example.ticket.utils.common.CommonMethod.isLandscapeScreen
@@ -58,8 +58,6 @@ class LanguageActivity : AppCompatActivity(),
     private val companyRepository: CompanyRepository by inject()
     private var screen: String? = null
 
-    private lateinit var inactivityHandler: InactivityHandler
-    private lateinit var inactivityDialog: CustomInactivityDialog
 
     private var enabledLanguages: List<String> = emptyList()
 
@@ -71,14 +69,6 @@ class LanguageActivity : AppCompatActivity(),
         getScreenInfo(applicationContext)
         screen = intent.getStringExtra("screen")
 
-
-        inactivityDialog = CustomInactivityDialog(this)
-
-        inactivityHandler = InactivityHandler(
-            this@LanguageActivity,
-            supportFragmentManager,
-            inactivityDialog
-        )
 
         requestOverlayPermission()
         loadCompanyDetails()
@@ -311,7 +301,7 @@ class LanguageActivity : AppCompatActivity(),
 
                 sessionManager.saveBillingSelectedLanguage(language)
                 startActivity(
-                    Intent(this@LanguageActivity, Billing_Selection_Activity::class.java)
+                    Intent(this@LanguageActivity, Billin_Ticket_Activity::class.java)
                 )
                 finish()
 
@@ -329,7 +319,7 @@ class LanguageActivity : AppCompatActivity(),
 
                 if (isCategoryEnabled) {
                     startActivity(
-                        Intent(this@LanguageActivity, SelectionActivity::class.java)
+                        Intent(this@LanguageActivity, TicketActivity::class.java)
                     )
                 } else {
                     // fallback if category not enabled
@@ -343,20 +333,19 @@ class LanguageActivity : AppCompatActivity(),
 
     override fun onResume() {
         super.onResume()
-        inactivityHandler.resumeInactivityCheck()
 
 
     }
 
     override fun onPause() {
         super.onPause()
-        inactivityHandler.pauseInactivityCheck()
+
     }
 
 
     override fun onDestroy() {
         super.onDestroy()
-            inactivityHandler.cleanup()
+
 
     }
 
@@ -385,10 +374,8 @@ class LanguageActivity : AppCompatActivity(),
 
     override fun resetInactivityTimer() {
         lifecycleScope.launch {
-            inactivityHandler.cleanup()
 
         }
     }
-
 
 }

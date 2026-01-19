@@ -36,7 +36,7 @@ interface ApiService {
         @Header("Authorization") bearerToken: String
     ): TicketResponse
 
-    @POST("Orders/Darshan")
+    @POST("orders/create")
     suspend fun postTicket(
         @Header("Authorization") bearerToken: String,
         @Body request: TicketPaymentRequest

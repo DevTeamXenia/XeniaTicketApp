@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -12,22 +13,33 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.ticket.R
 import com.example.ticket.data.listeners.InactivityHandlerActivity
+import com.example.ticket.data.listeners.OnBookingTicketClick
 import com.example.ticket.data.listeners.OnTicketClickListener
 import com.example.ticket.data.network.model.TicketDto
 import com.example.ticket.data.repository.ActiveTicketRepository
+import com.example.ticket.data.repository.CategoryRepository
+import com.example.ticket.data.repository.CompanyRepository
 import com.example.ticket.data.repository.TicketRepository
 import com.example.ticket.data.room.entity.ActiveTicket
+import com.example.ticket.data.room.entity.Category
 import com.example.ticket.data.room.entity.Ticket
 import com.example.ticket.databinding.ActivityBillinTicketBinding
 import com.example.ticket.databinding.ActivityTicketBinding
+import com.example.ticket.ui.adapter.CategoryAdapter
 import com.example.ticket.ui.adapter.TicketAdapter
+import com.example.ticket.ui.adapter.TicketBookingAdapter
+import com.example.ticket.ui.adapter.TicketCartAdapter
 import com.example.ticket.ui.dialog.CustomInactivityDialog
 import com.example.ticket.ui.dialog.CustomTicketPopupDialogue
 import com.example.ticket.ui.sreens.screen.IdProofActivity
+import com.example.ticket.utils.common.CommonMethod.getScreenSize
+import com.example.ticket.utils.common.CommonMethod.isLandscapeScreen
 import com.example.ticket.utils.common.CommonMethod.setLocale
 import com.example.ticket.utils.common.CommonMethod.showSnackbar
+import com.example.ticket.utils.common.CompanyKey
 import com.example.ticket.utils.common.SessionManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -36,14 +48,25 @@ import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
 import kotlin.getValue
 
-class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener{
+class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener,
+    CategoryAdapter.OnCategoryClickListener, OnBookingTicketClick,
+    TicketCartAdapter.OnTicketCartClickListener {
     private lateinit var binding: ActivityBillinTicketBinding
     private val ticketRepository: TicketRepository by inject()
     private val activeTicketRepository: ActiveTicketRepository by inject()
-    private lateinit var ticketAdapter: TicketAdapter
-    private var categoryId: Int = 0
-    private var selectedLanguage: String? = ""
+    private val categoryRepository: CategoryRepository by inject()
+    private lateinit var ticketCartAdapter: TicketCartAdapter
     private val sessionManager: SessionManager by inject()
+    private val companyRepository: CompanyRepository by inject()
+    private lateinit var categoryAdapter: CategoryAdapter
+
+    private val customTicketPopupDialogue: CustomTicketPopupDialogue by inject()
+    private lateinit var ticketAdapter: TicketBookingAdapter
+    private var selectedProofMode: String = ""
+    private var selectedLanguage: String? = ""
+    private var selectedCategoryId: Int = 0
+
+    private lateinit var ticketItemsItems: TicketDto
     private var formattedTotalAmount: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,13 +79,13 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener{
         setContentView(binding.root)
         setLocale(this, sessionManager.getSelectedLanguage())
         selectedLanguage = sessionManager.getSelectedLanguage()
-        categoryId = intent.getIntExtra("CATEGORY_ID", 0)
         setupUI()
+        setContentView(binding.root)
         setupRecyclerViews()
-        getTickets()
         lifecycleScope.launch {
             updateCartUI()
         }
+        getCategory()
 
         binding.btnProceed.setOnClickListener {
             val intent = Intent(applicationContext, IdProofActivity::class.java)
@@ -70,20 +93,113 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener{
             startActivity(intent)
         }
     }
+
     private fun setupUI() {
-        binding.txtHome?.text = getString(R.string.more_people)
-        binding.txtselectTicket.text = getString(R.string.choose_your_tickets)
+        binding.txtHome?.text = getString(R.string.home)
+        binding.txtTicketTitle.text = getString(R.string.choose_your_tickets)
 
     }
+
     @SuppressLint("NotifyDataSetChanged")
     private fun setupRecyclerViews() {
+        categoryAdapter = CategoryAdapter(this, selectedLanguage!!, this)
+
+        binding.ticketCat.layoutManager = LinearLayoutManager(this)
+        binding.ticketCat.adapter = categoryAdapter
+
         ticketAdapter =
-            TicketAdapter(this, selectedLanguage!!, ticketRepository, lifecycleScope, this)
+            TicketBookingAdapter(selectedLanguage!!, this, this)
+        val spanCount = if (isLandscapeScreen(applicationContext)) {
+            8
+        } else {
+            val screenSize = getScreenSize(applicationContext)
+            if (screenSize == "Normal") 2 else 2
+        }
         binding.ticketRecycler.layoutManager =
-            GridLayoutManager(this@Billin_Ticket_Activity, 3)
+            GridLayoutManager(this@Billin_Ticket_Activity, spanCount)
         binding.ticketRecycler.adapter = ticketAdapter
+
+
+        binding.relCart.layoutManager = LinearLayoutManager(this)
+        ticketCartAdapter = TicketCartAdapter(this, selectedLanguage!!, "Booking", this)
+        binding.relCart.adapter = ticketCartAdapter
+        getTickets(selectedCategoryId)
     }
-    private fun getTickets() {
+
+    private fun getCategory() {
+        lifecycleScope.launch {
+            try {
+                val token = sessionManager.getToken()
+
+                if (token.isNullOrEmpty()) {
+                    binding.ticketCat.visibility = View.GONE
+                    return@launch
+                }
+
+                val isLoaded = withContext(Dispatchers.IO) {
+                    categoryRepository.loadCategories(token)
+                }
+
+                if (!isLoaded) {
+                    binding.ticketCat.visibility = View.GONE
+                    return@launch
+                }
+
+                val categoryEntities = withContext(Dispatchers.IO) {
+                    categoryRepository.getAllCategory()
+                }
+
+                if (categoryEntities.isEmpty()) {
+                    binding.ticketCat.visibility = View.GONE
+                    return@launch
+                }
+
+                val activeCategories = categoryEntities.filter { it.categoryActive }
+
+                if (activeCategories.isEmpty()) {
+                    binding.ticketCat.visibility = View.GONE
+                    return@launch
+                }
+
+                binding.ticketCat.visibility =
+                    if (companyRepository.getBoolean(CompanyKey.CATEGORY_ENABLE))
+                        View.VISIBLE
+                    else View.GONE
+
+                val selectedCategory = activeCategories.first()
+                selectedCategoryId = selectedCategory.categoryId
+
+                val categories = activeCategories.map { entity ->
+                    Category(
+                        categoryId = entity.categoryId,
+                        categoryName = entity.categoryName,
+                        categoryNameMa = entity.categoryNameMa,
+                        categoryNameTa = entity.categoryNameTa,
+                        categoryNameTe = entity.categoryNameTe,
+                        categoryNameKa = entity.categoryNameKa,
+                        categoryNameHi = entity.categoryNameHi,
+                        categoryNameMr = entity.categoryNameMr,
+                        categoryNamePa = entity.categoryNamePa,
+                        categoryNameSi = entity.categoryNameSi,
+                        CategoryCompanyId = entity.CategoryCompanyId,
+                        categoryCreatedDate = entity.categoryCreatedDate,
+                        categoryCreatedBy = entity.categoryCreatedBy,
+                        categoryModifiedDate = entity.categoryModifiedDate,
+                        categoryModifiedBy = entity.categoryModifiedBy,
+                        categoryActive = entity.categoryActive
+                    )
+                }
+
+                categoryAdapter.updateCategories(categories)
+                getTickets(selectedCategoryId)
+            } catch (e: Exception) {
+                Log.e("DEBUG", "Category load error", e)
+                binding.ticketCat.visibility = View.GONE
+            }
+        }
+    }
+
+    private fun getTickets(categoryId: Int) {
         lifecycleScope.launch {
             try {
                 val token = sessionManager.getToken()
@@ -95,61 +211,68 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener{
                     return@launch
                 }
 
-                val tickets = activeTicketRepository.getTicketsByCategory(categoryId)
+                val tickets =
+                    activeTicketRepository.getTicketsByCategory(categoryId)
+
+                val ticketDtos = tickets.map { it.toDto() }
+                ticketAdapter.updateTickets(ticketDtos)
+                val updatedMap = ticketRepository.getTicketsMapByIds()
+                ticketAdapter.updateDbItemsMap(updatedMap)
 
                 if (tickets.isEmpty()) {
                     showSnackbar(binding.root, "No tickets for this category")
-                    return@launch
                 }
-
-                // Entity → DTO
-                val ticketDtos = tickets.map { it.toDto() }
-
-                ticketAdapter.updateTickets(ticketDtos)
-
+                getCartTicket()
             } catch (e: Exception) {
                 showSnackbar(binding.root, "Error: ${e.message}")
             }
         }
     }
 
+
     override fun onTicketClick(ticketItem: TicketDto) {
+        runOnUiThread {
 
-        val dialog = CustomTicketPopupDialogue()
+            ticketItemsItems = ticketItem
 
-        dialog.setData(
-            ticketId = ticketItem.ticketId,
-            ticketName = ticketItem.ticketName,
-            ticketNameMa = ticketItem.ticketNameMa ?: "",
-            ticketNameTa = ticketItem.ticketNameTa ?: "",
-            ticketNameKa = ticketItem.ticketNameKa ?: "",
-            ticketNameTe = ticketItem.ticketNameTe ?: "",
-            ticketNameHi = ticketItem.ticketNameHi ?: "",
-            ticketNameSi = ticketItem.ticketNameSi ?: "",
-            ticketNamePa = ticketItem.ticketNamePa ?: "",
-            ticketNameMr = ticketItem.ticketNameMr ?: "",
-            ticketCtegoryId = ticketItem.ticketCategoryId,
-            ticketCompanyId = ticketItem.ticketCompanyId,
-            ticketRate = ticketItem.ticketAmount
-        )
-
-        dialog.setListener(this)
-
-        dialog.show(supportFragmentManager, "CustomPopup")
+            customTicketPopupDialogue.setData(
+                ticketId = ticketItem.ticketId,
+                ticketName = ticketItem.ticketName,
+                ticketNameMa = ticketItem.ticketNameMa ?: "",
+                ticketNameTa = ticketItem.ticketNameTa ?: "",
+                ticketNameKa = ticketItem.ticketNameKa ?: "",
+                ticketNameTe = ticketItem.ticketNameTe ?: "",
+                ticketNameHi = ticketItem.ticketNameHi ?: "",
+                ticketNameSi = ticketItem.ticketNameSi ?: "",
+                ticketNamePa = ticketItem.ticketNamePa ?: "",
+                ticketNameMr = ticketItem.ticketNameMr ?: "",
+                ticketCtegoryId = ticketItem.ticketCategoryId,
+                ticketCompanyId = ticketItem.ticketCompanyId,
+                ticketRate = ticketItem.ticketAmount
+            )
+            customTicketPopupDialogue.setListener(this)
+            if (!customTicketPopupDialogue.isAdded) {
+                customTicketPopupDialogue.show(
+                    supportFragmentManager,
+                    "CustomPopup"
+                )
+            }
+        }
     }
 
 
-    override fun onTicketClear(darshanItem: TicketDto) {
+    override fun onTicketClear(ticketItem: TicketDto) {
         lifecycleScope.launch {
-            ticketRepository.deleteTicketById(darshanItem.ticketId)
-            getTickets()
+            ticketItemsItems = ticketItem
+            ticketRepository.deleteTicketById(ticketItem.ticketId)
+            getTickets(selectedCategoryId)
             updateCartUI()
         }
     }
 
     override fun onTicketAdded() {
         lifecycleScope.launch {
-            getTickets()
+            getTickets(selectedCategoryId)
             updateCartUI()
         }
     }
@@ -157,41 +280,11 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener{
     override fun onRestart() {
         super.onRestart()
         setupRecyclerViews()
-        getTickets()
+        getTickets(selectedCategoryId)
         lifecycleScope.launch {
             updateCartUI()
         }
     }
-    @SuppressLint("SetTextI18n", "DefaultLocale")
-    private suspend fun updateCartUI() {
-        val (totalAmount, hasData) = ticketRepository.getCartStatus()
-
-        withContext(Dispatchers.Main) {
-            if (hasData) {
-                formattedTotalAmount = String.format("%.2f", totalAmount)
-                binding.btnProceed.text =
-                    getString(R.string.proceed) + "  Rs.$formattedTotalAmount"
-
-                binding.btnProceed.isEnabled = true
-                binding.btnProceed.setBackgroundColor(
-                    ContextCompat.getColor(
-                        this@Billin_Ticket_Activity,
-                        R.color.primaryColor
-                    )
-                )
-            } else {
-                binding.btnProceed.text = getString(R.string.proceed)
-                binding.btnProceed.isEnabled = false
-                binding.btnProceed.setBackgroundColor(
-                    ContextCompat.getColor(
-                        this@Billin_Ticket_Activity,
-                        R.color.light_grey
-                    )
-                )
-            }
-        }
-    }
-
 
     fun ActiveTicket.toDto() = TicketDto(
         ticketId = ticketId,
@@ -211,5 +304,167 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener{
         ticketCreatedBy = ticketCreatedBy,
         ticketActive = ticketActive
     )
+
+    override fun onCategoryClick(category: Category) {
+        selectedCategoryId = category.categoryId
+        getTickets(selectedCategoryId)
+    }
+
+    override fun onTicketMinusClick(ticketItem: TicketDto) {
+        lifecycleScope.launch {
+
+            val existingItem =
+                ticketRepository.getCartItemByTicketId(ticketItem.ticketId)
+
+            val currentQty = existingItem?.daQty ?: 0
+
+            if (currentQty > 0) {
+
+                val newQty = currentQty - 1
+
+                if (newQty == 0) {
+
+
+                    ticketRepository.deleteTicketById(ticketItem.ticketId)
+
+                } else {
+
+                    val totalAmount = ticketItem.ticketAmount * newQty
+
+                    val cartItem = Ticket(
+                        id = existingItem?.id ?: 0L,
+                        ticketId = ticketItem.ticketId,
+                        ticketName = ticketItem.ticketName,
+                        ticketNameMa = ticketItem.ticketNameMa,
+                        ticketNameTa = ticketItem.ticketNameTa,
+                        ticketNameTe = ticketItem.ticketNameTe,
+                        ticketNameKa = ticketItem.ticketNameKa,
+                        ticketNameHi = ticketItem.ticketNameHi,
+                        ticketNamePa = ticketItem.ticketNamePa,
+                        ticketNameMr = ticketItem.ticketNameMr,
+                        ticketNameSi = ticketItem.ticketNameSi,
+                        ticketCategoryId = ticketItem.ticketCategoryId,
+                        ticketCompanyId = ticketItem.ticketCompanyId,
+                        ticketAmount = ticketItem.ticketAmount,
+                        ticketTotalAmount = totalAmount,
+                        ticketCreatedDate = existingItem?.ticketCreatedDate ?: "",
+                        ticketCreatedBy = existingItem?.ticketCreatedBy ?: 1,
+                        ticketActive = true,
+                        daName = binding.editName?.text.toString(),
+                        daRate = ticketItem.ticketAmount,
+                        daQty = newQty,
+                        daTotalAmount = totalAmount,
+                        daPhoneNumber = binding.editPhNo?.text.toString(),
+                        daCustRefNo = "",
+                        daNpciTransId = "",
+                        daProofId = binding.editId?.text.toString(),
+                        daProof = selectedProofMode,
+                        daImg = byteArrayOf()
+                    )
+
+                    ticketRepository.insertCartBookingItem(cartItem, "Sub")
+                }
+
+                val updatedMap = ticketRepository.getTicketsMapByIds()
+                ticketAdapter.updateDbItemsMap(updatedMap)
+                getCartTicket()
+            }
+        }
+    }
+
+    @SuppressLint("SetTextI18n", "DefaultLocale", "SuspiciousIndentation")
+    private fun getCartTicket() {
+        lifecycleScope.launch {
+            val allDarshanTickets = ticketRepository.getAllTicketsInCart()
+            ticketCartAdapter.updateTickets(allDarshanTickets)
+            lifecycleScope.launch {
+                updateCartUI()
+            }
+        }
+    }
+
+    @SuppressLint("DefaultLocale", "SetTextI18n")
+    private fun updateCartUI() {
+        lifecycleScope.launch {
+            val (totalAmount) = ticketRepository.getCartStatus()
+            formattedTotalAmount = String.format("%.2f", totalAmount)
+            val hasUserAmount = !binding.editName.text.isNullOrBlank()
+
+            if (totalAmount > 0 && hasUserAmount) {
+                binding.btnProceed.text = getString(R.string.pay) + " Rs. " + formattedTotalAmount
+                binding.btnProceed.setBackgroundColor(
+                    ContextCompat.getColor(this@Billin_Ticket_Activity, R.color.primaryColor)
+                )
+                binding.btnProceed.isEnabled = true
+            } else if (totalAmount > 0) {
+                if (!isLandscapeScreen(applicationContext)) {
+                    binding.btnProceed.text =
+                        getString(R.string.pay) + " Rs. " + formattedTotalAmount
+                    binding.btnProceed.setBackgroundColor(
+                        ContextCompat.getColor(this@Billin_Ticket_Activity, R.color.primaryColor)
+                    )
+                    binding.btnProceed.isEnabled = true
+                }
+
+            } else {
+                binding.btnProceed.text = getString(R.string.pay) + " Rs. " + formattedTotalAmount
+                binding.btnProceed.setBackgroundColor(
+                    ContextCompat.getColor(this@Billin_Ticket_Activity, R.color.light_grey)
+                )
+                binding.btnProceed.isEnabled = false
+            }
+        }
+    }
+
+    override fun onTicketPlusClick(ticketItem: TicketDto) {
+        lifecycleScope.launch {
+            val cartItem = Ticket(
+                ticketId = ticketItem.ticketId,
+                ticketName = ticketItem.ticketName,
+                ticketNameMa = ticketItem.ticketNameMa,
+                ticketNameTa = ticketItem.ticketNameTa,
+                ticketNameTe = ticketItem.ticketNameTe,
+                ticketNameKa = ticketItem.ticketNameKa,
+                ticketNameHi = ticketItem.ticketNameHi,
+                ticketNamePa = ticketItem.ticketNamePa,
+                ticketNameMr = ticketItem.ticketNameMr,
+                ticketNameSi = ticketItem.ticketNameSi,
+                ticketCategoryId = ticketItem.ticketCategoryId,
+                ticketCompanyId = ticketItem.ticketCompanyId,
+                ticketAmount = ticketItem.ticketAmount,
+                ticketTotalAmount = ticketItem.ticketAmount,
+                ticketCreatedDate = "",
+                ticketCreatedBy = 1,
+                ticketActive = true,
+                daName = binding.editName?.text.toString(),
+                daRate = ticketItem.ticketAmount,
+                daQty = 1,
+                daTotalAmount = ticketItem.ticketAmount,
+                daPhoneNumber = binding.editPhNo?.text.toString(),
+                daCustRefNo = "",
+                daNpciTransId = "",
+                daProofId = binding.editId?.text.toString(),
+                daProof = selectedProofMode,
+                daImg = byteArrayOf()
+            )
+
+            ticketRepository.insertCartBookingItem(cartItem, "Add")
+
+            val updatedMap = ticketRepository.getTicketsMapByIds()
+            ticketAdapter.updateDbItemsMap(updatedMap)
+
+            getCartTicket()
+        }
+    }
+
+
+    override fun onDeleteClick(ticket: Ticket) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onEditClick(ticket: Ticket) {
+        TODO("Not yet implemented")
+    }
+
 
 }

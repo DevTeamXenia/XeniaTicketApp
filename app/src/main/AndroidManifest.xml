@@ -32,6 +32,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Ticket">
         <activity
+            android:name=".ui.sreens.billing.BillingCartActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.sreens.screen.PrinterSettingActivity"
             android:exported="false" />
         <activity
