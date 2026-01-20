@@ -22,6 +22,7 @@ import com.example.ticket.data.listeners.InactivityHandlerActivity
 import com.example.ticket.data.repository.TicketRepository
 import com.example.ticket.databinding.ActivityIdProofBinding
 import com.example.ticket.ui.dialog.CustomInactivityDialog
+import com.example.ticket.ui.sreens.billing.Billing_Cart_Activity
 import com.example.ticket.utils.common.CommonMethod.enableInactivityReset
 import com.example.ticket.utils.common.InactivityHandler
 import com.example.ticket.utils.common.SessionManager
@@ -41,6 +42,7 @@ class IdProofActivity : AppCompatActivity(), CustomInactivityDialog.InactivityCa
     private var imageData: ByteArray? = null
     private var selectedLanguage: String? = ""
     private var selectedProofType: String = ""
+    private var from: String? = null
     private var isProofSelected = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,6 +56,7 @@ class IdProofActivity : AppCompatActivity(), CustomInactivityDialog.InactivityCa
         inactivityHandler =
             InactivityHandler(this, supportFragmentManager, inactivityDialog)
         totalAmount = intent.getStringExtra("ITEM_TOTAL") ?: "0.0"
+        from = intent.getStringExtra("from")
         binding.btnProceed.text = getString(R.string.proceed) + "  Rs." + totalAmount
         initUI()
         binding.editTextId.addTextChangedListener(object : TextWatcher {
@@ -116,9 +119,6 @@ class IdProofActivity : AppCompatActivity(), CustomInactivityDialog.InactivityCa
                 }
             }
 
-
-
-
             lifecycleScope.launch {
                 ticketRepository.updateCartItemsInfo(
                     newName = name,
@@ -129,12 +129,22 @@ class IdProofActivity : AppCompatActivity(), CustomInactivityDialog.InactivityCa
                 )
             }
 
-            val intent = Intent(this, TicketCartActivity::class.java).apply {
+            val intent = if (from == "billing") {
+                Intent(this, Billing_Cart_Activity::class.java)
+            } else {
+                Intent(this, TicketCartActivity::class.java)
+            }
+
+            intent.apply {
+                putExtra("from", from)
                 putExtra("name", name)
                 putExtra("phno", phone)
                 putExtra("IDNO", idNo)
                 putExtra("ID", binding.txtId.text.toString())
             }
+
+            startActivity(intent)
+
             startActivity(intent)
         }
 

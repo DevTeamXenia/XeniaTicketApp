@@ -6,6 +6,8 @@ import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -65,10 +67,28 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener,
     private var selectedProofMode: String = ""
     private var selectedLanguage: String? = ""
     private var selectedCategoryId: Int = 0
+    private var backPressedTime: Long = 0
+    private var toast: Toast? = null
 
     private lateinit var ticketItemsItems: TicketDto
     private var formattedTotalAmount: String = ""
-
+    val callback = object : OnBackPressedCallback(true) {
+        override fun handleOnBackPressed() {
+            val currentTime = System.currentTimeMillis()
+            if (currentTime - backPressedTime < 2000) {
+                toast?.cancel()
+                finishAffinity()
+            } else {
+                backPressedTime = currentTime
+                toast = Toast.makeText(
+                    this@Billin_Ticket_Activity,
+                    "Press back again to exit",
+                    Toast.LENGTH_SHORT
+                )
+                toast?.show()
+            }
+        }
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityBillinTicketBinding.inflate(layoutInflater)
@@ -77,8 +97,10 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener,
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         }
         setContentView(binding.root)
-        setLocale(this, sessionManager.getSelectedLanguage())
-        selectedLanguage = sessionManager.getSelectedLanguage()
+        onBackPressedDispatcher.addCallback(this, callback)
+
+        selectedLanguage = sessionManager.getBillingSelectedLanguage()
+        setLocale(this, selectedLanguage)
         setupUI()
         setContentView(binding.root)
         setupRecyclerViews()
@@ -89,15 +111,14 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener,
 
         binding.btnProceed.setOnClickListener {
             val intent = Intent(applicationContext, IdProofActivity::class.java)
+            intent.putExtra("from", "billing")
             intent.putExtra("ITEM_TOTAL", formattedTotalAmount)
             startActivity(intent)
         }
     }
-
     private fun setupUI() {
         binding.txtHome?.text = getString(R.string.home)
-        binding.txtTicketTitle.text = getString(R.string.choose_your_tickets)
-
+        binding.txtselectTicket.text = getString(R.string.choose_your_tickets)
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -113,7 +134,7 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener,
             8
         } else {
             val screenSize = getScreenSize(applicationContext)
-            if (screenSize == "Normal") 2 else 2
+            if (screenSize == "Small") 2 else 2
         }
         binding.ticketRecycler.layoutManager =
             GridLayoutManager(this@Billin_Ticket_Activity, spanCount)
@@ -123,7 +144,6 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener,
         binding.relCart.layoutManager = LinearLayoutManager(this)
         ticketCartAdapter = TicketCartAdapter(this, selectedLanguage!!, "Booking", this)
         binding.relCart.adapter = ticketCartAdapter
-        getTickets(selectedCategoryId)
     }
 
     private fun getCategory() {

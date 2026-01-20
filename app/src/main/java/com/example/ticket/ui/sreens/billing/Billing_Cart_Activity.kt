@@ -14,7 +14,6 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.ticket.R
-import com.example.ticket.data.listeners.InactivityHandlerActivity
 import com.example.ticket.data.listeners.OnTicketClickListener
 import com.example.ticket.data.network.model.TicketDto
 import com.example.ticket.data.network.model.TicketPaymentRequest
@@ -24,23 +23,25 @@ import com.example.ticket.data.repository.TicketRepository
 import com.example.ticket.data.room.entity.Ticket
 import com.example.ticket.databinding.ActivityBillingCartBinding
 import com.example.ticket.ui.adapter.TicketCartAdapter
-import com.example.ticket.ui.dialog.CustomInactivityDialog
 import com.example.ticket.ui.dialog.CustomInternetAvailabilityDialog
 import com.example.ticket.ui.dialog.CustomTicketPopupDialogue
 import com.example.ticket.ui.sreens.screen.PaymentActivity
 import com.example.ticket.ui.sreens.screen.TicketActivity
+import com.example.ticket.utils.common.CommonMethod.dismissLoader
 import com.example.ticket.utils.common.CommonMethod.generateNumericTransactionReferenceID
+import com.example.ticket.utils.common.CommonMethod.isInternetAvailable
 import com.example.ticket.utils.common.CommonMethod.setLocale
 import com.example.ticket.utils.common.CommonMethod.showSnackbar
-import com.example.ticket.utils.common.InactivityHandler
+import com.example.ticket.utils.common.JwtUtils
 import com.example.ticket.utils.common.SessionManager
-import com.google.gson.Gson
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
 import retrofit2.HttpException
 import kotlin.getValue
+
 
 class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCartClickListener,
     OnTicketClickListener,
@@ -51,6 +52,7 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
     private lateinit var ticketCartAdapter: TicketCartAdapter
     private val sessionManager: SessionManager by inject()
     private val paymentRepository: PaymentRepository by inject()
+    private val customInternetAvailabilityDialog: CustomInternetAvailabilityDialog by inject()
     private val companyRepository: CompanyRepository by inject()
     private var formattedTotalAmount: String = ""
     private var selectedLanguage: String? = ""
@@ -58,33 +60,59 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
     private var devoteeName: String? = null
     private var devoteePhone: String? = null
     private var devoteeIdProof: String? = null
+    private lateinit var jwtToken: String
+    private var userId: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityBillingCartBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        selectedLanguage = sessionManager.getBillingSelectedLanguage()
+        setLocale(this, selectedLanguage)
 
         if (intent.getBooleanExtra("forceLandscape", false)) {
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         }
-        setContentView(binding.root)
-        selectedLanguage = sessionManager.getBillingSelectedLanguage()
-        setLocale(this, selectedLanguage)
+
+        initView()
+
+        binding.relTicketCart.layoutManager = LinearLayoutManager(this)
+        ticketCartAdapter =
+            TicketCartAdapter(this, sessionManager.getBillingSelectedLanguage(), "Dharshan", this)
+        binding.relTicketCart.adapter = ticketCartAdapter
+
+        loadDarshanItems()
+
+    }
+    private fun initView() {
+        jwtToken = sessionManager.getToken() ?: throw IllegalStateException("Token missing")
+        userId =
+            JwtUtils.getUserId(jwtToken) ?: throw IllegalStateException("UserId missing in JWT")
         devoteeName = intent.getStringExtra("name")
         devoteePhone = intent.getStringExtra("phno")
         idProofType = intent.getStringExtra("ID")
         devoteeIdProof = intent.getStringExtra("IDtype")
         idProofType = intent.getStringExtra("ID")
 
-        binding.relDarshanCart.layoutManager = LinearLayoutManager(this)
-        ticketCartAdapter =
-            TicketCartAdapter(this, sessionManager.getSelectedLanguage(), "Dharshan", this)
-        binding.relDarshanCart.adapter = ticketCartAdapter
-        loadDarshanItems()
         binding.btnPay.setOnClickListener {
-            postTicketPaymentHistory("S", "")
+            if (!isInternetAvailable(this)) {
+                dismissLoader()
+                showSnackbar(
+                    binding.root,
+                    applicationContext.getString(R.string.no_internet_connection)
+                )
+                if (!customInternetAvailabilityDialog.isAdded && !isFinishing && !isDestroyed) {
+                    customInternetAvailabilityDialog.show(
+                        supportFragmentManager,
+                        "internet_availability_dialog"
+                    )
+                }
+                return@setOnClickListener
+            }
+            binding.btnPay.isEnabled = false
+            postTicketPaymentHistory("S", "Successful")
         }
     }
-
     @SuppressLint("SetTextI18n", "DefaultLocale")
     private fun loadDarshanItems() {
         lifecycleScope.launch {
@@ -153,14 +181,6 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
 
             val cartTickets = ticketRepository.getAllTicketsInCart()
             if (cartTickets.isEmpty()) return@launch
-
-            val firstTicket = cartTickets.first()
-
-            val imageBase64 = Base64.encodeToString(
-                firstTicket.daImg ?: ByteArray(0),
-                Base64.NO_WRAP
-            )
-
             val itemsList = cartTickets.map { item ->
                 TicketPaymentRequest.Item(
                     taCategoryId = item.ticketCategoryId,
@@ -169,6 +189,10 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
                     Rate = item.daRate
                 )
             }
+            val firstTicket = cartTickets.firstOrNull()
+            val byteArray = firstTicket?.daImg ?: ByteArray(0)
+            val imageBase64String =
+                Base64.encodeToString(byteArray, Base64.NO_WRAP)
 
             val companyId = companyRepository.getCompany()?.companyId ?: 0
             val token = sessionManager.getToken()
@@ -178,19 +202,18 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
                 showSnackbar(binding.root, "Authorization token missing")
                 return@launch
             }
-
             val request = TicketPaymentRequest(
                 CompanyId = companyId,
-                UserId = sessionManager.getUserId(),
-                Name = firstTicket.daName.orEmpty(),
+                UserId = userId,
+                Name = firstTicket?.daName.orEmpty(),
                 tTranscationId = generateNumericTransactionReferenceID(),
-                tCustRefNo = firstTicket.daCustRefNo.orEmpty(),
-                tNpciTransId = firstTicket.daNpciTransId.orEmpty(),
-                tIdProofNo = firstTicket.daProofId.orEmpty(),
-                tImage = imageBase64,
-                PhoneNumber = firstTicket.daPhoneNumber.orEmpty(),
+                tCustRefNo = firstTicket?.daCustRefNo.orEmpty(),
+                tNpciTransId = firstTicket?.daNpciTransId.orEmpty(),
+                tIdProofNo = firstTicket?.daProofId.orEmpty(),
+                tImage = imageBase64String,
+                PhoneNumber = firstTicket?.daPhoneNumber.orEmpty(),
                 tPaymentStatus = status,
-                tPaymentMode = "UPI",
+                tPaymentMode = "CASH",
                 tPaymentDes = statusDesc,
                 Items = itemsList
             )
@@ -203,19 +226,19 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
                     )
                 }
 
-                Log.d("DARSHAN_REQUEST", Gson().toJson(request))
-                Log.d("DARSHAN_RESPONSE", Gson().toJson(response))
-
-                if (response.status.equals("OPEN", true)) {
+                if (
+                    response.status.equals("Success", ignoreCase = true) &&
+                    !response.receipt.isNullOrBlank()
+                ) {
 
                     val (totalAmount) = ticketRepository.getCartStatus()
 
                     handleTicketTransactionStatus(
-                        status = status,
-                        orderId = response.orderId,     // String
+                        status = "S",
+                        orderId = response.receipt,
+                        ticket = response.ticket,
                         totalAmount = totalAmount.toDouble()
                     )
-
 
                 } else {
                     binding.btnPay.isEnabled = true
@@ -227,6 +250,12 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
             } catch (e: Exception) {
                 handleRetry(e, status, statusDesc, retryCount)
             }
+            catch (e: HttpException) {
+                val errorBody = e.response()?.errorBody()?.string()
+                Log.e("API_ERROR", "Code: ${e.code()}, Body: $errorBody", e)
+                handleRetry(e, status, statusDesc, retryCount)
+            }
+
         }
     }
 
@@ -253,20 +282,17 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
     private fun handleTicketTransactionStatus(
         status: String,
         orderId: String,
+        ticket: String?,
         totalAmount: Double
     ) {
-        Log.d("PAYMENT_NAV", "Navigating to PaymentActivity")
 
         val intent = Intent(this, PaymentActivity::class.java).apply {
             putExtra("from", "billing")
             putExtra("status", status)
             putExtra("amount", totalAmount.toString())
-            putExtra("orderID", orderId)   // ✅ String
-            putExtra("transID", "BookingTest")
-            putExtra("name", devoteeName)
-            putExtra("phno", devoteePhone)
-            putExtra("IDNO", devoteeIdProof)
-            putExtra("ID", idProofType)
+            putExtra("orderID", orderId)
+            putExtra("transID", "")
+            putExtra("ticket", ticket)
         }
 
         startActivity(intent)

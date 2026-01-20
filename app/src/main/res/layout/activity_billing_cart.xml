@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    tools:context=".ui.sreens.billing.Billing_Cart_Activity">
 
     <LinearLayout
         android:id="@+id/linTop"
@@ -98,7 +99,7 @@
                 android:textColor="@color/black"
                 android:layout_marginTop="10dp"
                 android:textSize="20sp"
-                android:visibility="visible"
+                android:visibility="invisible"
                 android:textStyle="bold"
                 android:fontFamily="@font/poppins_regular"/>
 
@@ -140,7 +141,7 @@
 
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/relDarshanCart"
+        android:id="@+id/relTicketCart"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/linPerson"

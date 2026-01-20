@@ -30,6 +30,7 @@ import com.example.ticket.utils.common.CommonMethod.generateNumericTransactionRe
 import com.example.ticket.utils.common.CommonMethod.setLocale
 import com.example.ticket.utils.common.CommonMethod.showSnackbar
 import com.example.ticket.utils.common.InactivityHandler
+import com.example.ticket.utils.common.JwtUtils
 import com.example.ticket.utils.common.SessionManager
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
@@ -59,6 +60,8 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
         private var devoteeIdProof: String? = null
     private lateinit var inactivityHandler: InactivityHandler
     private lateinit var inactivityDialog: CustomInactivityDialog
+    private lateinit var jwtToken: String
+    private var userId: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,7 +76,9 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
         idProofType = intent.getStringExtra("ID")
         devoteeIdProof = intent.getStringExtra("IDtype")
 
-
+        jwtToken = sessionManager.getToken() ?: throw IllegalStateException("Token missing")
+        userId =
+            JwtUtils.getUserId(jwtToken) ?: throw IllegalStateException("UserId missing in JWT")
         inactivityDialog = CustomInactivityDialog(this)
         inactivityHandler =
             InactivityHandler(this, supportFragmentManager, inactivityDialog)
@@ -88,7 +93,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
         loadDarshanItems()
 
         binding.btnPay.setOnClickListener {
-            postTicketPaymentHistory("S", "")
+            postTicketPaymentHistory("S","")
         }
     }
 
@@ -154,91 +159,91 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
             dialog.show(supportFragmentManager, "CustomPopup")
         }
 
-        private fun postTicketPaymentHistory(
-            status: String,
-            statusDesc: String,
-            retryCount: Int = 0
-        ) {
-            lifecycleScope.launch {
+    private fun postTicketPaymentHistory(
+        status: String,
+        statusDesc: String,
+        retryCount: Int = 0
+    ) {
+        lifecycleScope.launch {
 
-                val cartTickets = ticketRepository.getAllTicketsInCart()
-                if (cartTickets.isEmpty()) return@launch
-
-                val firstTicket = cartTickets.first()
-
-                val imageBase64 = Base64.encodeToString(
-                    firstTicket.daImg ?: ByteArray(0),
-                    Base64.NO_WRAP
+            val cartTickets = ticketRepository.getAllTicketsInCart()
+            if (cartTickets.isEmpty()) return@launch
+            val itemsList = cartTickets.map { item ->
+                TicketPaymentRequest.Item(
+                    taCategoryId = item.ticketCategoryId,
+                    TicketId = item.ticketId,
+                    Quantity = item.daQty,
+                    Rate = item.daRate
                 )
+            }
+            val firstTicket = cartTickets.firstOrNull()
+            val byteArray = firstTicket?.daImg ?: ByteArray(0)
+            val imageBase64String =
+                Base64.encodeToString(byteArray, Base64.NO_WRAP)
 
-                val itemsList = cartTickets.map { item ->
-                    TicketPaymentRequest.Item(
-                        taCategoryId = item.ticketCategoryId,
-                        TicketId = item.ticketId,
-                        Quantity = item.daQty,
-                        Rate = item.daRate
+            val token = sessionManager.getToken()
+
+            if (token.isNullOrBlank()) {
+                binding.btnPay.isEnabled = true
+                showSnackbar(binding.root, "Authorization token missing")
+                return@launch
+            }
+            val request = TicketPaymentRequest(
+                CompanyId = companyRepository.getCompany()?.companyId ?: 0,
+                UserId = userId,
+                Name = firstTicket?.daName.orEmpty(),
+                tTranscationId = generateNumericTransactionReferenceID(),
+                tCustRefNo = firstTicket?.daCustRefNo.orEmpty(),
+                tNpciTransId = firstTicket?.daNpciTransId.orEmpty(),
+                tIdProofNo = firstTicket?.daProofId.orEmpty(),
+                tImage = imageBase64String,
+                PhoneNumber = firstTicket?.daPhoneNumber.orEmpty(),
+                tPaymentStatus = status,
+                tPaymentMode = "CASH",
+                tPaymentDes = statusDesc,
+                Items = itemsList
+            )
+
+            try {
+                val response = withContext(Dispatchers.IO) {
+                    paymentRepository.postTicket(
+                        bearerToken = "Bearer $token",
+                        request = request
                     )
                 }
 
-                val companyId = companyRepository.getCompany()?.companyId ?: 0
-                val token = sessionManager.getToken()
+                if (
+                    response.status.equals("Success", ignoreCase = true) &&
+                    !response.receipt.isNullOrBlank()
+                ) {
 
-                if (token.isNullOrBlank()) {
+                    val (totalAmount) = ticketRepository.getCartStatus()
+
+                    handleTicketTransactionStatus(
+                        status = "SUCCESS",
+                        orderId = response.receipt,
+                        totalAmount = totalAmount.toDouble()
+                    )
+
+                } else {
                     binding.btnPay.isEnabled = true
-                    showSnackbar(binding.root, "Authorization token missing")
-                    return@launch
+                    showSnackbar(binding.root, "Failed to post order")
                 }
 
-                val request = TicketPaymentRequest(
-                    CompanyId = companyId,
-                    UserId = sessionManager.getUserId(),
-                    Name = firstTicket.daName.orEmpty(),
-                    tTranscationId = generateNumericTransactionReferenceID(),
-                    tCustRefNo = firstTicket.daCustRefNo.orEmpty(),
-                    tNpciTransId = firstTicket.daNpciTransId.orEmpty(),
-                    tIdProofNo = firstTicket.daProofId.orEmpty(),
-                    tImage = imageBase64,
-                    PhoneNumber = firstTicket.daPhoneNumber.orEmpty(),
-                    tPaymentStatus = status,
-                    tPaymentMode = "UPI",
-                    tPaymentDes = statusDesc,
-                    Items = itemsList
-                )
 
-                try {
-                    val response = withContext(Dispatchers.IO) {
-                        paymentRepository.postTicket(
-                            bearerToken = "Bearer $token",
-                            request = request
-                        )
-                    }
-
-                    Log.d("DARSHAN_REQUEST", Gson().toJson(request))
-                    Log.d("DARSHAN_RESPONSE", Gson().toJson(response))
-
-                    if (response.status.equals("OPEN", true)) {
-
-                        val (totalAmount) = ticketRepository.getCartStatus()
-
-                        handleTicketTransactionStatus(
-                            status = status,
-                            orderId = response.orderId,     // String
-                            totalAmount = totalAmount.toDouble()
-                        )
-
-
-                    } else {
-                        binding.btnPay.isEnabled = true
-                        showSnackbar(binding.root, "Failed to post order")
-                    }
-
-                } catch (e: HttpException) {
-                    handleRetry(e, status, statusDesc, retryCount)
-                } catch (e: Exception) {
-                    handleRetry(e, status, statusDesc, retryCount)
-                }
+            } catch (e: HttpException) {
+                handleRetry(e, status, statusDesc, retryCount)
+            } catch (e: Exception) {
+                handleRetry(e, status, statusDesc, retryCount)
             }
+            catch (e: HttpException) {
+                val errorBody = e.response()?.errorBody()?.string()
+                Log.e("API_ERROR", "Code: ${e.code()}, Body: $errorBody", e)
+                handleRetry(e, status, statusDesc, retryCount)
+            }
+
         }
+    }
 
         private fun handleRetry(
             e: Exception,

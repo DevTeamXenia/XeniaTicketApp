@@ -21,7 +21,6 @@ import com.example.ticket.R
 import com.example.ticket.data.enum.UserType
 import com.example.ticket.data.listeners.InactivityHandlerActivity
 import com.example.ticket.data.repository.CompanyRepository
-import com.example.ticket.databinding.ActivityLanguageBinding
 import com.example.ticket.databinding.ActivityMainBinding
 import com.example.ticket.ui.dialog.CustomInactivityDialog
 import com.example.ticket.ui.dialog.CustomInternetAvailabilityDialog
@@ -37,6 +36,7 @@ import com.example.ticket.utils.common.Constants.LANGUAGE_KANNADA
 import com.example.ticket.utils.common.Constants.LANGUAGE_MALAYALAM
 import com.example.ticket.utils.common.Constants.LANGUAGE_MARATHI
 import com.example.ticket.utils.common.Constants.LANGUAGE_PUNJABI
+import com.example.ticket.utils.common.Constants.LANGUAGE_SINHALA
 import com.example.ticket.utils.common.Constants.LANGUAGE_TAMIL
 import com.example.ticket.utils.common.Constants.LANGUAGE_TELUGU
 import com.example.ticket.utils.common.InactivityHandler
@@ -48,12 +48,13 @@ import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
 import java.io.File
 import java.io.FileOutputStream
+import kotlin.compareTo
 
 class LanguageActivity : AppCompatActivity(),
     CustomInternetAvailabilityDialog.InternetAvailabilityListener,
     CustomInactivityDialog.InactivityCallback,
     InactivityHandlerActivity {
-    private lateinit var binding: ActivityLanguageBinding
+    private lateinit var binding: ActivityMainBinding
     private val sessionManager: SessionManager by inject()
     private val companyRepository: CompanyRepository by inject()
     private var screen: String? = null
@@ -63,7 +64,7 @@ class LanguageActivity : AppCompatActivity(),
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityLanguageBinding.inflate(layoutInflater)
+        binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         getScreenInfo(applicationContext)
@@ -122,6 +123,7 @@ class LanguageActivity : AppCompatActivity(),
             LANGUAGE_HINDI to binding.cardHindi,
             LANGUAGE_PUNJABI to binding.cardPunjabi,
             LANGUAGE_MARATHI to binding.cardMarathi,
+            LANGUAGE_SINHALA to binding.cardSinhala
         ).filterValues { it != null }
             .mapValues { it.value!! }
     }
@@ -137,19 +139,6 @@ class LanguageActivity : AppCompatActivity(),
             visibility = View.VISIBLE
             setOnClickListener { selectLanguage(LANGUAGE_ENGLISH) }
         }
-        binding.cardEnglish.setOnClickListener {
-            Log.d("LanguageActivity", "English card clicked!")
-            selectLanguage(LANGUAGE_ENGLISH)
-        }
-
-        enabledLanguages.forEach { lang ->
-            languageCardMap[lang]?.apply {
-                setOnClickListener {
-                    Log.d("LanguageActivity", "$lang card clicked!")
-                    selectLanguage(lang)
-                }
-            }
-        }
 
         enabledLanguages.forEach { lang ->
             languageCardMap[lang]?.apply {
@@ -157,49 +146,63 @@ class LanguageActivity : AppCompatActivity(),
                 setOnClickListener { selectLanguage(lang) }
             }
         }
+
+
+        lifecycleScope.launch {
+            setupCardPosition(enabledLanguages)
+        }
     }
 
     private suspend fun setupCardPosition(enabledLanguages: List<String>) {
+
+        val container = binding.languageCardContainer ?: return
+        if (container.childCount < 5) return
 
         val languageCardMap = getLanguageCardMap()
         val defaultLanguage = companyRepository.getDefaultLanguage()
 
         val orderedCards = mutableListOf<View>()
-        orderedCards.add(binding.cardEnglish)
+
+        binding.cardEnglish?.let { orderedCards.add(it) }
 
         if (defaultLanguage != LANGUAGE_ENGLISH) {
-            languageCardMap[defaultLanguage]?.let {
-                orderedCards.add(it)
-            }
+            languageCardMap[defaultLanguage]?.let { orderedCards.add(it) }
         }
 
         enabledLanguages.forEach { lang ->
             languageCardMap[lang]?.let { card ->
-                if (card !in orderedCards) {
-                    orderedCards.add(card)
-                }
+                if (card !in orderedCards) orderedCards.add(card)
             }
         }
 
-        val container = binding.languageCardContainer
-        val rowCount = container.childCount
-
-        if (rowCount == 0) return
-
-        val rows = (0 until rowCount).mapNotNull {
+        val rows = (0 until 5).mapNotNull {
             container.getChildAt(it) as? LinearLayout
         }
+
+        if (rows.size < 5) return
 
         rows.forEach { it.removeAllViews() }
 
         orderedCards.forEachIndexed { index, card ->
-            val rowIndex = index / 2
-            if (rowIndex < rows.size) {
-                (card.parent as? LinearLayout)?.removeView(card)
-                rows[rowIndex].addView(card)
+            (card.parent as? LinearLayout)?.removeView(card)
+            rows[index / 2].addView(card)
+        }
+
+        rows.forEach { row ->
+            if (row.childCount == 1) {
+                row.addView(
+                    View(this).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            0,
+                            LinearLayout.LayoutParams.WRAP_CONTENT,
+                            1f
+                        )
+                    }
+                )
             }
         }
     }
+
 
 
     private fun loadCompanyDetails() {

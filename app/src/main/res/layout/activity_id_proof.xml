@@ -35,7 +35,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:visibility="visible"
+            android:visibility="invisible"
             android:orientation="horizontal">
 
             <ImageView
@@ -84,7 +84,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/linProof"
             android:layout_marginTop="20dp"
-            android:visibility="visible"
+            android:visibility="invisible"
             android:fontFamily="@font/poppins_regular"
             android:textColor="@color/black"
             android:textSize="20sp" />
@@ -98,7 +98,7 @@
             android:layout_marginBottom="10dp"
             android:background="@drawable/edittext_bg"
             android:focusable="true"
-            android:visibility="visible"
+            android:visibility="invisible"
             android:focusableInTouchMode="true"
             android:imeOptions="actionNext"
             android:inputType="text"

@@ -69,6 +69,7 @@ class PaymentActivity : AppCompatActivity() {
     private var amount: String? = null
     private var transID: String? = null
     private var name: String? = null
+    private var ticket: String? = null
     private var orderID: Long = 0L
     private var idProof: String? = null
     private var idProofMode: String? = null
@@ -88,6 +89,7 @@ class PaymentActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         from = intent.getStringExtra("from")
+        ticket = intent.getStringExtra("ticket")
         status = intent.getStringExtra("status")
         amount = intent.getStringExtra("amount")
         transID = intent.getStringExtra("transID")
@@ -411,155 +413,272 @@ class PaymentActivity : AppCompatActivity() {
         ticket: List<Ticket>,
         selectedLanguage: String
     ): Bitmap {
-
         val width = 576
-        val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+        val paint = Paint().apply { isAntiAlias = true }
+        var defaultlang = companyRepository.getDefaultLanguage().toString()
+
+        val labelReceiptNo = getLocalizedString("Receipt No", selectedLanguage)
+        val labelDate = getLocalizedString("Date", selectedLanguage)
+        val labelItem = getLocalizedString("Item", selectedLanguage)
+        val labelPrice = getLocalizedString("Price", selectedLanguage)
+        val labelAmount = getLocalizedString("Amount", selectedLanguage)
+        val labelUPI = getLocalizedString("UPI Reference No", selectedLanguage)
+        val labelQty = getLocalizedString("Qty", selectedLanguage)
+        val labelDevooteDetails = getLocalizedString("Devotees Details", selectedLanguage)
+        val labelIdNumber = getLocalizedString("ID No", selectedLanguage)
+        val labelPhonenumber = getLocalizedString("Phone No", selectedLanguage)
+        val labelTotalAmount = getLocalizedString("Total Amount", selectedLanguage)
+        val labelName = getLocalizedString("Name", selectedLanguage)
+        val labelmessage =
+            getLocalizedString("There is NO Prasadam for Sheeghra Darshan", selectedLanguage)
+
+        val labelDReceiptNo = getLocalizedString("Receipt No", defaultlang)
+        val labelDDate = getLocalizedString("Date", defaultlang)
+        val labelDItem = getLocalizedString("Item", defaultlang)
+        val labelDPrice = getLocalizedString("Price", defaultlang)
+        val labelDAmount = getLocalizedString("Amount", defaultlang)
+        val labelDUPI = getLocalizedString("UPI Reference No", defaultlang)
+        val labelDQty = getLocalizedString("Qty", defaultlang)
+        val labelDDevooteDetails = getLocalizedString("Devotees Details", defaultlang)
+        val labelDPhonenumber = getLocalizedString("Phone No", defaultlang)
+        val labelDTotalAmount = getLocalizedString("Total Amount", defaultlang)
+        val labelDName = getLocalizedString("Name", defaultlang)
+        val labelDmessage =
+            getLocalizedString("There is NO Prasadam for Sheeghra Darshan", defaultlang)
+        val firstItem =
+            ticket.firstOrNull() ?: return createBitmap(1, 1)
+
+        val tempBitmap = createBitmap(width, 10000)
+        val tempCanvas = Canvas(tempBitmap)
+
+        paint.textSize = 30f
         paint.color = Color.BLACK
-
-        val tempBitmap = Bitmap.createBitmap(width, 5000, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(tempBitmap)
-
-        var yOffset = 40f
-
-
         paint.textAlign = Paint.Align.CENTER
-        paint.textSize = 32f
-        paint.isFakeBoldText = true
-        canvas.drawText("THRISSUR ZOOLOGICAL PARK", width / 2f, yOffset, paint)
 
-        yOffset += 35f
-        paint.textSize = 18f
-        paint.isFakeBoldText = false
-        canvas.drawText(
-            "Puthur, Thrissur, Kerala 680014",
-            width / 2f,
-            yOffset,
-            paint
-        )
-
-        yOffset += 35f
-        paint.textSize = 22f
-        canvas.drawText("Thrissur Zoological Park", width / 2f, yOffset, paint)
+        val receiptTitle = when (selectedLanguage) {
+            "ml" -> "ടിക്കറ്റ്"
+            "kn" -> "ಟಿಕೆಟ್"
+            "ta" -> "டிக்கெட் "
+            "te" -> "టికెట్ "
+            "hi" -> "टिकट "
+            "pa" -> "ਟਿਕਟ "
+            "mr" -> "तिकीट "
+            "si" -> "ටිකට් "
+            else -> "Ticket"
 
 
+        }
 
-        yOffset += 45f
+        val receiptDTitle = when (defaultlang) {
+
+            "ml" -> "ടിക്കറ്റ്"
+            "kn" -> "ಟಿಕೆಟ್ "
+            "ta" -> "டிக்கெட் "
+            "te" -> "టికెట్ "
+            "hi" -> "टिकट "
+            "pa" -> "ਟਿਕਟ "
+            "mr" -> "तिकीट "
+            "si" -> "ටිකට් "
+            else -> "Ticket"
+
+        }
+
+        tempCanvas.drawText(receiptTitle, width / 2f, 40f, paint)
+        tempCanvas.drawText(receiptDTitle, width / 2f, 80f, paint)
+
+        var yOffset = 130f
         paint.textAlign = Paint.Align.LEFT
-        paint.textSize = 20f
-
-        canvas.drawText("Receipt No : $orderID", 20f, yOffset, paint)
-        yOffset += 30f
-        canvas.drawText(
-            "Date : ${currentDate.replace("-", " - ")}",
-            20f,
-            yOffset,
-            paint
-        )
-
-
-        yOffset += 60f
         paint.textSize = 22f
 
-        canvas.drawText("Item", 20f, yOffset, paint)
+        tempCanvas.drawText("$labelReceiptNo($labelDReceiptNo): $orderID", 20f, yOffset, paint)
+        yOffset += 35f
+        tempCanvas.drawText("$labelDate($labelDDate): $currentDate", 20f, yOffset, paint)
+        yOffset += 35f
 
-        paint.textAlign = Paint.Align.CENTER
-        canvas.drawText("Price", width * 0.50f, yOffset, paint)
-        canvas.drawText("Qty", width * 0.65f, yOffset, paint)
 
-        paint.textAlign = Paint.Align.RIGHT
-        canvas.drawText("Amount", width - 20f, yOffset, paint)
-
-        yOffset += 15f
-        canvas.drawLine(20f, yOffset, width - 20f, yOffset, paint)
-
+//        paint.textSize = 24f
+//        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
+//        tempCanvas.drawText("$labelItem", 20f, yOffset, paint)
+//        paint.textAlign = Paint.Align.CENTER
+//        tempCanvas.drawText("$labelPrice", width * 0.5f, yOffset, paint)
+//        tempCanvas.drawText("$labelQty", width * 0.65f, yOffset, paint)
+//        paint.textAlign = Paint.Align.RIGHT
+//        tempCanvas.drawText("$labelAmount", width - 30f, yOffset, paint)
 
         yOffset += 30f
-        var totalAmount = 0.0
+        paint.textAlign = Paint.Align.LEFT
+        tempCanvas.drawText(labelItem, 20f, yOffset, paint)
 
+        paint.textAlign = Paint.Align.CENTER
+        tempCanvas.drawText(labelPrice, width * 0.5f, yOffset, paint)
+        tempCanvas.drawText(labelQty, width * 0.65f, yOffset, paint)
+        paint.textAlign = Paint.Align.RIGHT
+        tempCanvas.drawText(labelAmount, width - 30f, yOffset, paint)
+        yOffset += 30f
+        paint.textAlign = Paint.Align.LEFT
+        tempCanvas.drawText(labelDItem, 20f, yOffset, paint)
+
+        paint.textAlign = Paint.Align.CENTER
+        tempCanvas.drawText(labelDPrice, width * 0.5f, yOffset, paint)
+        tempCanvas.drawText(labelDQty, width * 0.65f, yOffset, paint)
+        paint.textAlign = Paint.Align.RIGHT
+        tempCanvas.drawText(labelDAmount, width - 30f, yOffset, paint)
+
+        yOffset += 30f
+        paint.strokeWidth = 2f
+        tempCanvas.drawLine(20f, yOffset, width - 20f, yOffset, paint)
+        yOffset += 40f
+
+        var totalAmount = 0.0
         for (item in ticket) {
+            val priceStr = String.format("%.2f", item.daRate)
+            val qtyStr = item.daQty.toString()
+            val amountStr = String.format("%.2f", item.daTotalAmount)
             totalAmount += item.daTotalAmount
 
             paint.textAlign = Paint.Align.LEFT
-            canvas.drawText(item.ticketName ?: "", 20f, yOffset, paint)
+            paint.isAntiAlias = true
 
+
+            val itemName = when (selectedLanguage.lowercase()) {
+                "ml" -> item.ticketNameMa
+                "hi" -> item.ticketNameHi
+                "ta" -> item.ticketNameTa
+                "kn" -> item.ticketNameKa
+                "te" -> item.ticketNameTe
+                "si" -> item.ticketNameSi!!
+                "pa" -> item.ticketNamePa
+                "mr" -> item.ticketNameMr
+                else -> item.ticketName
+            }
+            val itemDName = when (defaultlang.lowercase()) {
+                "ml" -> item.ticketNameMa
+                "hi" -> item.ticketNameHi
+                "ta" -> item.ticketNameTa
+                "kn" -> item.ticketNameKa
+                "te" -> item.ticketNameTe
+                "si" -> item.ticketNameSi!!
+                "pa" -> item.ticketNamePa
+                "mr" -> item.ticketNameMr
+                else -> item.ticketName
+            }
+
+            tempCanvas.drawText(itemName ?: "", 20f, yOffset, paint)
+
+            yOffset += 35f
+
+            tempCanvas.drawText(itemDName ?: "", 20f, yOffset, paint)
+            yOffset += 35f
             paint.textAlign = Paint.Align.CENTER
-            canvas.drawText(item.daRate.toInt().toString(), width * 0.50f, yOffset, paint)
-            canvas.drawText(item.daQty.toString(), width * 0.65f, yOffset, paint)
-
+            tempCanvas.drawText(priceStr, width * 0.5f, yOffset, paint)
+            tempCanvas.drawText(qtyStr, width * 0.65f, yOffset, paint)
             paint.textAlign = Paint.Align.RIGHT
-            canvas.drawText(
-                "₹${item.daTotalAmount.toInt()}",
-                width - 20f,
-                yOffset,
-                paint
-            )
+            tempCanvas.drawText(amountStr, width - 40f, yOffset, paint)
 
-            yOffset += 50f
+
+
+            yOffset += 45f
         }
 
-        paint.textAlign = Paint.Align.RIGHT
-        paint.textSize = 26f
-        paint.isFakeBoldText = true
+        paint.strokeWidth = 2f
+        tempCanvas.drawLine(20f, yOffset, width - 20f, yOffset, paint)
+        yOffset += 60f
 
-        canvas.drawText(
-            "Total Amount : ₹${totalAmount.toInt()}",
+
+        paint.textSize = 24f
+        paint.textAlign = Paint.Align.RIGHT
+        tempCanvas.drawText(
+            "$labelTotalAmount ($labelDTotalAmount): ${String.format("%.2f", totalAmount)}",
             width - 20f,
             yOffset,
             paint
         )
+        yOffset += 35f
 
 
-        paint.isFakeBoldText = false
+        paint.textSize = 22f
+        tempCanvas.drawText("$labelUPI: $transID", width - 20f, yOffset, paint)
+        yOffset += 35f
 
 
-        yOffset += 40f
+        paint.textSize = 22f
+        paint.textAlign = Paint.Align.CENTER
+
+        val lines = listOf(
+            labelmessage
+        )
+
+        val padding = 30f
+        val textPadding = 65f
+        val rectTop = yOffset
+        val rectRight = width - padding
+
+        var tempYOffset = yOffset + textPadding
+
+        tempYOffset += 35f
+        val imageSize = 100f
+        val textHeight = 35f * 3
+        tempYOffset += maxOf(imageSize, textHeight) + 20f
+
+
+        val rectBottom = tempYOffset + textPadding
+
+
         paint.style = Paint.Style.STROKE
-        paint.strokeWidth = 2f
+        paint.color = Color.BLACK
+        paint.strokeWidth = 1f
+        val cornerRadius = 20f
 
-        val boxTop = yOffset
-        val boxBottom = boxTop + 200f
-
-        canvas.drawRoundRect(
-            20f,
-            boxTop,
-            width - 20f,
-            boxBottom,
-            20f,
-            20f,
+        tempCanvas.drawRoundRect(
+            padding, rectTop, rectRight, rectBottom,
+            cornerRadius, cornerRadius,
             paint
         )
 
-        paint.style = Paint.Style.FILL
-        paint.textAlign = Paint.Align.CENTER
-        paint.textSize = 22f
+        yOffset += textPadding
 
-        canvas.drawText("Visitor Details", width / 2f, boxTop + 35f, paint)
+
+        yOffset += 35f
+
+        val textX = padding + 15f
+        var textY = yOffset
 
         paint.textAlign = Paint.Align.LEFT
         paint.textSize = 20f
+        paint.typeface = Typeface.DEFAULT
 
-        canvas.drawText("Name : $name", 40f, boxTop + 75f, paint)
-        canvas.drawText("Phone No : $phoneNo", 40f, boxTop + 110f, paint)
-        canvas.drawText("ID No : $idProof", 40f, boxTop + 145f, paint)
+        tempCanvas.drawText("$labelName : $name", textX, textY, paint)
+        textY += 25f
+        tempCanvas.drawText(labelDName, textX, textY, paint)
+        textY += 35f
+        tempCanvas.drawText("$labelPhonenumber: $phoneNo", textX, textY, paint)
+        textY += 25f
+        tempCanvas.drawText(labelDPhonenumber, textX, textY, paint)
 
-        yOffset = boxBottom + 40f
+        yOffset = textY + 45f
 
 
+
+        generateQRCode()?.let { qrBitmap ->
+            val qrSize = 300
+            val qrX = (width - qrSize) / 2f
+            tempCanvas.drawBitmap(qrBitmap, qrX, yOffset, paint)
+            yOffset += qrSize + 50f
+        }
         paint.textAlign = Paint.Align.CENTER
         paint.textSize = 20f
-        canvas.drawText("Thank You!", width / 2f, yOffset, paint)
-
+        tempCanvas.drawText("Thank You!", width / 2f, yOffset, paint)
         yOffset += 30f
         paint.textSize = 16f
-        canvas.drawText("Powered by www.xenionline.in", width / 2f, yOffset, paint)
+        tempCanvas.drawText("Powered by www.xenionline.in", width / 2f, yOffset, paint)
 
-
-
-        val finalBitmap =
-            Bitmap.createBitmap(width, (yOffset + 40f).toInt(), Bitmap.Config.ARGB_8888)
+        val finalBitmap = createBitmap(width, (yOffset + 50f).toInt())
         Canvas(finalBitmap).drawBitmap(tempBitmap, 0f, 0f, null)
 
+
+
         tempBitmap.recycle()
+
         return finalBitmap
     }
 
@@ -572,179 +691,223 @@ class PaymentActivity : AppCompatActivity() {
         ticket: List<Ticket>,
         selectedLanguage: String
     ): Bitmap {
-
         val width = 576
-        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.BLACK
-        }
-
+        val paint = Paint().apply { isAntiAlias = true }
 
         val labelReceiptNo = getLocalizedString("Receipt No", selectedLanguage)
         val labelDate = getLocalizedString("Date", selectedLanguage)
         val labelItem = getLocalizedString("Item", selectedLanguage)
         val labelPrice = getLocalizedString("Price", selectedLanguage)
-        val labelQty = getLocalizedString("Qty", selectedLanguage)
         val labelAmount = getLocalizedString("Amount", selectedLanguage)
-        val labelTotalAmount = getLocalizedString("Total Amount", selectedLanguage)
-        val labelVisitorDetails = getLocalizedString("Visitor Details", selectedLanguage)
-        val labelName = getLocalizedString("Name", selectedLanguage)
+        val labelUPI = getLocalizedString("UPI Reference No", selectedLanguage)
+        val labelQty = getLocalizedString("Qty", selectedLanguage)
+        val labelDevooteDetails = getLocalizedString("Devotees Details", selectedLanguage)
         val labelPhonenumber = getLocalizedString("Phone No", selectedLanguage)
-        val labelIdNo = getLocalizedString("ID No", selectedLanguage)
+        val labelTotalAmount = getLocalizedString("Total Amount", selectedLanguage)
+        val labelName = getLocalizedString("Name", selectedLanguage)
+        val labelmessage =
+            getLocalizedString("There is NO Prasadam for Sheeghra Darshan", selectedLanguage)
+        val tempBitmap = createBitmap(width, 10000)
+        val tempCanvas = Canvas(tempBitmap)
 
-        val tempBitmap = Bitmap.createBitmap(width, 6000, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(tempBitmap)
-
-        var yOffset = 40f
-
+        paint.textSize = 30f
+        paint.color = Color.BLACK
         paint.textAlign = Paint.Align.CENTER
-        paint.textSize = 32f
-        paint.isFakeBoldText = true
-        canvas.drawText("THRISSUR ZOOLOGICAL PARK", width / 2f, yOffset, paint)
 
-        yOffset += 35f
-        paint.textSize = 18f
-        paint.isFakeBoldText = false
-        canvas.drawText(
-            "Puthur, Thrissur, Kerala 680014",
-            width / 2f,
-            yOffset,
-            paint
-        )
+        val receiptTitle = when (selectedLanguage) {
 
-        yOffset += 35f
-        paint.textSize = 22f
-        canvas.drawText("Thrissur Zoological Park", width / 2f, yOffset, paint)
+            "ml" -> "ടിക്കറ്റ് "
+            "kn" -> "ಟಿಕೆಟ್ "
+            "ta" -> "டிக்கெட் "
+            "te" -> "టికెట్ "
+            "hi" -> "टिकट "
+            "pa" -> "ਟਿਕਟ "
+            "mr" -> "तिकीट "
+            "si" -> "ටිකට් "
+            else -> "Ticket "
 
 
+        }
 
-        yOffset += 45f
+        tempCanvas.drawText(receiptTitle, width / 2f, 40f, paint)
+
+
+        var yOffset = 130f
         paint.textAlign = Paint.Align.LEFT
-        paint.textSize = 20f
-
-        canvas.drawText("$labelReceiptNo : $orderID", 20f, yOffset, paint)
-        yOffset += 30f
-        canvas.drawText("$labelDate : $currentDate", 20f, yOffset, paint)
-
-
-
-        yOffset += 40f
         paint.textSize = 22f
 
-        canvas.drawText(labelItem, 20f, yOffset, paint)
-
-        paint.textAlign = Paint.Align.CENTER
-        canvas.drawText(labelPrice, width * 0.50f, yOffset, paint)
-        canvas.drawText(labelQty, width * 0.65f, yOffset, paint)
-
-        paint.textAlign = Paint.Align.RIGHT
-        canvas.drawText(labelAmount, width - 20f, yOffset, paint)
-
-        yOffset += 15f
-        canvas.drawLine(20f, yOffset, width - 20f, yOffset, paint)
+        tempCanvas.drawText("$labelReceiptNo: $orderID", 20f, yOffset, paint)
+        yOffset += 35f
+        tempCanvas.drawText("$labelDate: $currentDate", 20f, yOffset, paint)
+        yOffset += 35f
 
 
         yOffset += 30f
-        var totalAmount = 0.0
+        paint.textAlign = Paint.Align.LEFT
+        tempCanvas.drawText(labelItem, 20f, yOffset, paint)
 
+        paint.textAlign = Paint.Align.CENTER
+        tempCanvas.drawText(labelPrice, width * 0.5f, yOffset, paint)
+        tempCanvas.drawText(labelQty, width * 0.65f, yOffset, paint)
+        paint.textAlign = Paint.Align.RIGHT
+        tempCanvas.drawText(labelAmount, width - 30f, yOffset, paint)
+
+
+        yOffset += 30f
+        paint.strokeWidth = 2f
+        tempCanvas.drawLine(20f, yOffset, width - 20f, yOffset, paint)
+        yOffset += 40f
+
+        var totalAmount = 0.0
         for (item in ticket) {
+            val priceStr = String.format("%.2f", item.daRate)
+            val qtyStr = item.daQty.toString()
+            val amountStr = String.format("%.2f", item.daTotalAmount)
             totalAmount += item.daTotalAmount
+
+            paint.textAlign = Paint.Align.LEFT
+            paint.isAntiAlias = true
+
 
             val itemName = when (selectedLanguage.lowercase()) {
                 "ml" -> item.ticketNameMa
                 "hi" -> item.ticketNameHi
-                "ta" -> item.ticketNameTe
+                "ta" -> item.ticketNameTa
                 "kn" -> item.ticketNameKa
                 "te" -> item.ticketNameTe
-                "si" -> item.ticketNameSi
-                "mr" -> item.ticketNameMr
+                "si" -> item.ticketNameSi!!
                 "pa" -> item.ticketNamePa
+                "mr" -> item.ticketNameMr
                 else -> item.ticketName
             }
 
-            paint.textAlign = Paint.Align.LEFT
-            canvas.drawText(itemName ?: "", 20f, yOffset, paint)
-
-            paint.textAlign = Paint.Align.CENTER
-            canvas.drawText(item.daRate.toInt().toString(), width * 0.50f, yOffset, paint)
-            canvas.drawText(item.daQty.toString(), width * 0.65f, yOffset, paint)
-
-            paint.textAlign = Paint.Align.RIGHT
-            canvas.drawText(
-                "₹${item.daTotalAmount.toInt()}",
-                width - 20f,
-                yOffset,
-                paint
-            )
+            tempCanvas.drawText(itemName ?: "", 20f, yOffset, paint)
 
             yOffset += 35f
+
+            paint.textAlign = Paint.Align.CENTER
+            tempCanvas.drawText(priceStr, width * 0.5f, yOffset, paint)
+            tempCanvas.drawText(qtyStr, width * 0.65f, yOffset, paint)
+            paint.textAlign = Paint.Align.RIGHT
+            tempCanvas.drawText(amountStr, width - 40f, yOffset, paint)
+
+
+
+            yOffset += 45f
         }
 
+        paint.strokeWidth = 2f
+        tempCanvas.drawLine(20f, yOffset, width - 20f, yOffset, paint)
+        yOffset += 60f
 
-        yOffset += 20f
-        paint.textAlign = Paint.Align.CENTER
-        paint.textSize = 26f
-        paint.isFakeBoldText = true
 
-        canvas.drawText(
-            "$labelTotalAmount : ₹${totalAmount.toInt()}",
-            width / 2f,
+        paint.textSize = 24f
+        paint.textAlign = Paint.Align.RIGHT
+        tempCanvas.drawText(
+            "$labelTotalAmount: ${String.format("%.2f", totalAmount)}",
+            width - 20f,
             yOffset,
             paint
         )
 
-        paint.isFakeBoldText = false
+        yOffset += 35f
 
 
+        paint.textSize = 22f
+        tempCanvas.drawText("$labelUPI: $transID", width - 20f, yOffset, paint)
+        yOffset += 35f
 
-        yOffset += 40f
+        val padding = 30f
+        val textPadding = 45f
+        val rectTop = yOffset
+        val rectRight = width - padding
+
+        var tempYOffset = yOffset + textPadding
+
+        tempYOffset += 35f
+        val imageSize = 100f
+        val textHeight = 35f * 3
+        tempYOffset += maxOf(imageSize, textHeight) + 20f
+
+
+        val rectBottom = tempYOffset + textPadding
+
+
         paint.style = Paint.Style.STROKE
-        paint.strokeWidth = 2f
+        paint.color = Color.BLACK
+        paint.strokeWidth = 1f
+        val cornerRadius = 20f
 
-        val boxTop = yOffset
-        val boxBottom = boxTop + 200f
-
-        canvas.drawRoundRect(
-            20f,
-            boxTop,
-            width - 20f,
-            boxBottom,
-            20f,
-            20f,
+        tempCanvas.drawRoundRect(
+            padding, rectTop, rectRight, rectBottom,
+            cornerRadius, cornerRadius,
             paint
         )
 
-        paint.style = Paint.Style.FILL
-        paint.textAlign = Paint.Align.CENTER
-        paint.textSize = 22f
-
-        canvas.drawText(labelVisitorDetails, width / 2f, boxTop + 35f, paint)
+        val textX = padding + 15f
+        var textY = yOffset
 
         paint.textAlign = Paint.Align.LEFT
         paint.textSize = 20f
+        paint.typeface = Typeface.DEFAULT
+        textY += 25f
+        tempCanvas.drawText("$labelName : $name", textX, textY, paint)
+        textY += 25f
+        textY += 25f
+        tempCanvas.drawText("$labelPhonenumber: $phoneNo", textX, textY, paint)
 
-        canvas.drawText("$labelName : $name", 40f, boxTop + 75f, paint)
-        canvas.drawText("$labelPhonenumber : $phoneNo", 40f, boxTop + 110f, paint)
-        canvas.drawText("$labelIdNo : $idProof", 40f, boxTop + 145f, paint)
 
-        yOffset = boxBottom + 40f
+        yOffset = textY + 45f
 
+        generateQRCode()?.let { qrBitmap ->
+            val qrSize = 300
+            val qrX = (width - qrSize) / 2f
+            tempCanvas.drawBitmap(qrBitmap, qrX, yOffset, paint)
+            yOffset += qrSize + 50f
+        }
 
         paint.textAlign = Paint.Align.CENTER
-        paint.textSize = 24f
-        canvas.drawText("Thank You!", width / 2f, yOffset, paint)
-
+        paint.textSize = 20f
+        tempCanvas.drawText("Thank You!", width / 2f, yOffset, paint)
         yOffset += 30f
         paint.textSize = 16f
-        canvas.drawText("Powered by www.xenionline.in", width / 2f, yOffset, paint)
+        tempCanvas.drawText("Powered by www.xenionline.in", width / 2f, yOffset, paint)
 
-        val finalBitmap =
-            Bitmap.createBitmap(width, (yOffset + 40f).toInt(), Bitmap.Config.ARGB_8888)
+        val finalBitmap = createBitmap(width, (yOffset + 50f).toInt())
         Canvas(finalBitmap).drawBitmap(tempBitmap, 0f, 0f, null)
 
+
+
         tempBitmap.recycle()
+
         return finalBitmap
     }
 
+    private fun generateQRCode(): Bitmap? {
+        val data = ticket?.toString().orEmpty()
+        val qrCodeWriter = QRCodeWriter()
+        return try {
+            val size = 300
+            val bitMatrix: BitMatrix = qrCodeWriter.encode(data, BarcodeFormat.QR_CODE, size, size)
+            val width = bitMatrix.width
+            val height = bitMatrix.height
+            val bmp = Bitmap.createBitmap(
+                width,
+                height,
+                Bitmap.Config.ARGB_8888
+            )  // Fixed bitmap creation
+            for (x in 0 until width) {
+                for (y in 0 until height) {
+                    val color = if (bitMatrix[x, y]) Color.BLACK else Color.WHITE
+                    bmp.setPixel(x, y, color)  // Fixed pixel setting
+                }
+            }
+            bmp
+        } catch (e: WriterException) {
+            e.printStackTrace()
+            null
+        }
+    }
 
     private fun getLocalizedString(key: String, languageCode: String): String {
         return when (languageCode.lowercase()) {
@@ -768,7 +931,6 @@ class PaymentActivity : AppCompatActivity() {
                 "There is NO Prasadam for Sheeghra Darshan" -> "ശീഘ്ര ദർശനത്തിന് പ്രസാദം ഇല്ല"
                 else -> key
             }
-
 
 
             "hi" -> when (key) {
@@ -894,28 +1056,6 @@ class PaymentActivity : AppCompatActivity() {
         }
     }
 
-
-    private fun generateQRCode(data: String): Bitmap? {
-        val encryptedData = AESEncryptionUtil.encrypt(data, SECRET_KEY)
-        val qrCodeWriter = QRCodeWriter()
-        return try {
-            val size = 300
-            val bitMatrix: BitMatrix =
-                qrCodeWriter.encode(encryptedData, BarcodeFormat.QR_CODE, size, size)
-            val width = bitMatrix.width
-            val height = bitMatrix.height
-            val bmp = createBitmap(width, height)
-            for (x in 0 until width) {
-                for (y in 0 until height) {
-                    bmp[x, y] = if (bitMatrix[x, y]) Color.BLACK else Color.WHITE
-                }
-            }
-            bmp
-        } catch (e: WriterException) {
-            e.printStackTrace()
-            null
-        }
-    }
 
     private fun redirect() {
         Handler(mainLooper).postDelayed({
