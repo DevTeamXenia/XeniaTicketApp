@@ -54,12 +54,13 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
     private val paymentRepository: PaymentRepository by inject()
     private val customInternetAvailabilityDialog: CustomInternetAvailabilityDialog by inject()
     private val companyRepository: CompanyRepository by inject()
+
     private var formattedTotalAmount: String = ""
     private var selectedLanguage: String? = ""
     private var idProofType : String? = ""
-    private var devoteeName: String? = null
-    private var devoteePhone: String? = null
-    private var devoteeIdProof: String? = null
+    private val customTicketPopupDialogue: CustomTicketPopupDialogue by inject()
+    private lateinit var ticketItemsItems: Ticket
+
     private lateinit var jwtToken: String
     private var userId: Int = 0
 
@@ -77,8 +78,10 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
         initView()
 
         binding.relTicketCart.layoutManager = LinearLayoutManager(this)
+
         ticketCartAdapter =
-            TicketCartAdapter(this, sessionManager.getBillingSelectedLanguage(), "Dharshan", this)
+            TicketCartAdapter(this, sessionManager.getSelectedLanguage(), "Booking", this)
+
         binding.relTicketCart.adapter = ticketCartAdapter
 
         loadDarshanItems()
@@ -88,12 +91,6 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
         jwtToken = sessionManager.getToken() ?: throw IllegalStateException("Token missing")
         userId =
             JwtUtils.getUserId(jwtToken) ?: throw IllegalStateException("UserId missing in JWT")
-        devoteeName = intent.getStringExtra("name")
-        devoteePhone = intent.getStringExtra("phno")
-        idProofType = intent.getStringExtra("ID")
-        devoteeIdProof = intent.getStringExtra("IDtype")
-        idProofType = intent.getStringExtra("ID")
-
         binding.btnPay.setOnClickListener {
             if (!isInternetAvailable(this)) {
                 dismissLoader()
@@ -146,13 +143,19 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
     }
 
     override fun onDeleteClick(ticket: Ticket) {
-        TODO("Not yet implemented")
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            ticketRepository.deleteTicketById(ticket.ticketId)
+            withContext(Dispatchers.Main) {
+                loadDarshanItems()
+            }
+        }
     }
-
     override fun onEditClick(ticketItem: Ticket) {
-        val dialog = CustomTicketPopupDialogue()
 
-        dialog.setData(
+        ticketItemsItems = ticketItem
+
+        customTicketPopupDialogue.setData(
             ticketId = ticketItem.ticketId,
             ticketName = ticketItem.ticketName,
             ticketNameMa = ticketItem.ticketNameMa ?: "",
@@ -167,11 +170,19 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
             ticketCompanyId = ticketItem.ticketCompanyId,
             ticketRate = ticketItem.ticketAmount
         )
-
-        dialog.setListener(this)
-
-        dialog.show(supportFragmentManager, "CustomPopup")
+        customTicketPopupDialogue.setListener(this)
+        if (!customTicketPopupDialogue.isAdded) {
+            customTicketPopupDialogue.show(
+                supportFragmentManager,
+                "CustomPopup"
+            )
+        }
     }
+
+
+
+
+
     private fun postTicketPaymentHistory(
         status: String,
         statusDesc: String,

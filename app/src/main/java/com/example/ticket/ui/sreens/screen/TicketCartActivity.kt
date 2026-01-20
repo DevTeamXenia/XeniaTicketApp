@@ -83,12 +83,12 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
         inactivityHandler =
             InactivityHandler(this, supportFragmentManager, inactivityDialog)
 
-        binding.relDarshanCart.layoutManager = LinearLayoutManager(this)
+        binding.relTicketCart.layoutManager = LinearLayoutManager(this)
 
         ticketCartAdapter =
             TicketCartAdapter(this, sessionManager.getSelectedLanguage(), "Dharshan", this)
 
-        binding.relDarshanCart.adapter = ticketCartAdapter
+        binding.relTicketCart.adapter = ticketCartAdapter
 
         loadDarshanItems()
 
@@ -132,8 +132,14 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
         }
 
         override fun onDeleteClick(ticket: Ticket) {
-            TODO("Not yet implemented")
-        }
+
+                lifecycleScope.launch(Dispatchers.IO) {
+                    ticketRepository.deleteTicketById(ticket.ticketId)
+                    withContext(Dispatchers.Main) {
+                        loadDarshanItems()
+                    }
+                }
+            }
 
         override fun onEditClick(ticketItem: Ticket) {
             val dialog = CustomTicketPopupDialogue()
@@ -181,6 +187,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
             val imageBase64String =
                 Base64.encodeToString(byteArray, Base64.NO_WRAP)
 
+            val companyId = companyRepository.getCompany()?.companyId ?: 0
             val token = sessionManager.getToken()
 
             if (token.isNullOrBlank()) {
@@ -189,7 +196,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                 return@launch
             }
             val request = TicketPaymentRequest(
-                CompanyId = companyRepository.getCompany()?.companyId ?: 0,
+                CompanyId = companyId,
                 UserId = userId,
                 Name = firstTicket?.daName.orEmpty(),
                 tTranscationId = generateNumericTransactionReferenceID(),
@@ -220,8 +227,9 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                     val (totalAmount) = ticketRepository.getCartStatus()
 
                     handleTicketTransactionStatus(
-                        status = "SUCCESS",
+                        status = "S",
                         orderId = response.receipt,
+                        ticket = response.ticket,
                         totalAmount = totalAmount.toDouble()
                     )
 
@@ -229,7 +237,6 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                     binding.btnPay.isEnabled = true
                     showSnackbar(binding.root, "Failed to post order")
                 }
-
 
             } catch (e: HttpException) {
                 handleRetry(e, status, statusDesc, retryCount)
@@ -265,28 +272,25 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
             }
         }
 
-        private fun handleTicketTransactionStatus(
-            status: String,
-            orderId: String,
-            totalAmount: Double
-        ) {
-            Log.d("PAYMENT_NAV", "Navigating to PaymentActivity")
+    private fun handleTicketTransactionStatus(
+        status: String,
+        orderId: String,
+        ticket: String?,
+        totalAmount: Double
+    ) {
 
-            val intent = Intent(this, PaymentActivity::class.java).apply {
-                putExtra("from", "billing")
-                putExtra("status", status)
-                putExtra("amount", totalAmount.toString())
-                putExtra("orderID", orderId)   // ✅ String
-                putExtra("transID", "BookingTest")
-                putExtra("name", devoteeName)
-                putExtra("phno", devoteePhone)
-                putExtra("IDNO", devoteeIdProof)
-                putExtra("ID", idProofType)
-            }
-
-            startActivity(intent)
-            finish()
+        val intent = Intent(this, PaymentActivity::class.java).apply {
+            putExtra("from", "billing")
+            putExtra("status", status)
+            putExtra("amount", totalAmount.toString())
+            putExtra("orderID", orderId)
+            putExtra("transID", "")
+            putExtra("ticket", ticket)
         }
+
+        startActivity(intent)
+        finish()
+    }
 
 
         override fun onTicketClick(darshanItem: TicketDto) {

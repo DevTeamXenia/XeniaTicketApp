@@ -70,7 +70,7 @@ class PaymentActivity : AppCompatActivity() {
     private var transID: String? = null
     private var name: String? = null
     private var ticket: String? = null
-    private var orderID: Long = 0L
+    private var orderID: String? = null
     private var idProof: String? = null
     private var idProofMode: String? = null
     private var phoneNo: String? = null
@@ -93,7 +93,7 @@ class PaymentActivity : AppCompatActivity() {
         status = intent.getStringExtra("status")
         amount = intent.getStringExtra("amount")
         transID = intent.getStringExtra("transID")
-        orderID = intent.getLongExtra("orderID", 0L)
+        orderID = intent.getStringExtra("orderID")
         phoneNo = intent.getStringExtra("phno")
         idProof = intent.getStringExtra("IDNO")
         idProofMode = intent.getStringExtra("ID")
@@ -654,10 +654,7 @@ class PaymentActivity : AppCompatActivity() {
         tempCanvas.drawText("$labelPhonenumber: $phoneNo", textX, textY, paint)
         textY += 25f
         tempCanvas.drawText(labelDPhonenumber, textX, textY, paint)
-
-        yOffset = textY + 45f
-
-
+        yOffset = textY + 60f
 
         generateQRCode()?.let { qrBitmap ->
             val qrSize = 300
@@ -665,6 +662,7 @@ class PaymentActivity : AppCompatActivity() {
             tempCanvas.drawBitmap(qrBitmap, qrX, yOffset, paint)
             yOffset += qrSize + 50f
         }
+
         paint.textAlign = Paint.Align.CENTER
         paint.textSize = 20f
         tempCanvas.drawText("Thank You!", width / 2f, yOffset, paint)
@@ -853,11 +851,9 @@ class PaymentActivity : AppCompatActivity() {
         textY += 25f
         tempCanvas.drawText("$labelName : $name", textX, textY, paint)
         textY += 25f
-        textY += 25f
         tempCanvas.drawText("$labelPhonenumber: $phoneNo", textX, textY, paint)
 
-
-        yOffset = textY + 45f
+        yOffset = textY + 60f
 
         generateQRCode()?.let { qrBitmap ->
             val qrSize = 300

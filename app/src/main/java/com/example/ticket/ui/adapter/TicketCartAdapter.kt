@@ -105,6 +105,9 @@ class TicketCartAdapter(
             imgDelete.setOnClickListener {
                 onTicketCartClickListener.onDeleteClick(ticketItem)
             }
+            txtEdit.setOnClickListener {
+                onTicketCartClickListener.onEditClick(ticketItem)
+            }
         }
     }
 
