@@ -25,8 +25,17 @@ object JwtUtils {
         null
     }
     fun getUserType(token: String): String? = try {
-        decodeJwt(token).getString("UserType")
+        val json = decodeJwt(token)
+        json.optString(
+            "UserType",
+            json.optString(
+                "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+            )
+        )
     } catch (e: Exception) {
         null
     }
+
+
+
 }

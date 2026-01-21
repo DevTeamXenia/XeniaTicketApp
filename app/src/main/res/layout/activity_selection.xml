@@ -34,7 +34,7 @@
                 android:layout_height="0dp"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp"
-                android:layout_weight="53"
+                android:layout_weight="52"
                 android:orientation="vertical">
 
                 <RelativeLayout
@@ -439,7 +439,7 @@
                 android:id="@+id/layoutBottom"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="7"
+                android:layout_weight="8"
                 android:gravity="center"
                 android:orientation="horizontal">
 

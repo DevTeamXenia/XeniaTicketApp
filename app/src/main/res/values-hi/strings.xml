@@ -6,7 +6,9 @@
     <string name="amount_10_000">राशि  Rs. 10,000 /-</string>
     <string name="scan_this_code_to_pay">इस कोड को स्कैन करें और भुगतान करें</string>
     <string name="expire">क्यूआर समाप्त होगा :</string>
-
+    <string name="pay">पैसे चुकाएं</string>
+    <string name="name">नाम</string>
+    <string name="phone_number">फोन नंबर</string>
     //payment_Screen
     <string name="thank_you">धन्यवाद!</string>
     <string name="your_payment_was_successful">आपका भुगतान सफल रहा!</string>

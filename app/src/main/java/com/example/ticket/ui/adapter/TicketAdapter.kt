@@ -31,6 +31,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.Locale
 
 class TicketAdapter(
     private val context: Context,
@@ -98,8 +99,10 @@ class TicketAdapter(
 
                                 Quantity.text = "Amount  $ticketRate * $qty"
                                 txtTicketPrice2.text = "Rs. ${ticketItem.ticketAmount}"
-                                val formattedTotal = String.format("%.2f", cartItem.ticketTotalAmount)
-                                txtTotalAmount.text = "$formattedTotal/-"
+                                val total = ticketRate * qty
+                                txtTotalAmount.text = String.format(Locale.ENGLISH, "%.2f/-", total)
+
+
 
 
                             } else {
@@ -117,8 +120,14 @@ class TicketAdapter(
                                     LANGUAGE_PUNJABI -> ticketItem.ticketNamePa
                                     else -> ticketItem.ticketName
                                 }
-                                val formattedRate = String.format("%.2f", ticketItem.ticketAmount)
+                                val formattedRate = String.format(
+                                    Locale.ENGLISH,
+                                    "%.2f",
+                                    ticketItem.ticketAmount
+                                )
+
                                 txtTicketPrice1.text = "Rs. $formattedRate"
+
                             }
                         }
                     } catch (e: Exception) {

@@ -21,6 +21,7 @@ import android.widget.RelativeLayout
 
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import java.util.Locale
 
 
 class TicketCartAdapter(
@@ -98,10 +99,8 @@ class TicketCartAdapter(
                 LANGUAGE_MARATHI -> ticketItem.ticketNameMr
                 else -> ticketItem.ticketName
             }
-
-            txtQty.text = "Rs. %.2f x %d".format(ticketItem.daRate, ticketItem.daQty)
-            totalAmount.text = "Rs. %.2f/-".format(ticketItem.daTotalAmount)
-
+            txtQty.text = "Rs. ${String.format(Locale.ENGLISH, "%.2f", ticketItem.daRate)} x ${String.format(Locale.ENGLISH, "%d", ticketItem.daQty)}"
+            totalAmount.text = "Rs. ${String.format(Locale.ENGLISH, "%.2f", ticketItem.daTotalAmount)}/-"
             imgDelete.setOnClickListener {
                 onTicketCartClickListener.onDeleteClick(ticketItem)
             }
@@ -133,8 +132,8 @@ class TicketCartAdapter(
                 else -> ticketItem.ticketName
             }
 
-            txtQty.text = ticketItem.daQty.toString()
-            txtRate.text = "Rs. ${ticketItem.daRate.toInt()}"
+            txtRate.text = "Rs. ${String.format(Locale.ENGLISH, "%.0f", ticketItem.daRate)}"  // Use %.0f to truncate decimals like toInt(), but with English digits
+            totalAmount.text = "Rs. ${String.format(Locale.ENGLISH, "%.0f", ticketItem.daTotalAmount)}/-"
             totalAmount.text = "Rs. ${ticketItem.daTotalAmount.toInt()}/-"
 
 

@@ -13,13 +13,6 @@
     <string name="home">मुख्यपृष्ठ</string>
     <string name="sync">समन्वय</string>
 
-    <!-- home_screen -->
-    <string name="kanika">ई-कणिका</string>
-    <string name="melkavu_devi">मेल्कावू\nदेवी</string>
-    <string name="keezhkavu_devi">कीळ्कावू\nदेवी</string>
-    <string name="ayyappa">अय्यप्पा\n</string>
-    <string name="shiva">शिव\n</string>
-    <string name="nagam">नागम्\n</string>
 
     <!-- donation_screen -->
     <string name="fill_out_your_details">तपशील भरा</string>
@@ -121,33 +114,4 @@
 
 
 
-    <string-array name="nakshatras">
-        <item>अश्विनी</item>
-        <item>भरणी</item>
-        <item>कृत्तिका</item>
-        <item>रोहिणी</item>
-        <item>मृगशिरा</item>
-        <item>आर्द्रा</item>
-        <item>पुनर्वसू</item>
-        <item>पुष्य</item>
-        <item>आश्लेषा</item>
-        <item>मघा</item>
-        <item>पूर्वा फाल्गुनी</item>
-        <item>उत्तर फाल्गुनी</item>
-        <item>हस्त</item>
-        <item>चित्रा</item>
-        <item>स्वाती</item>
-        <item>विशाखा</item>
-        <item>अनुराधा</item>
-        <item>ज्येष्ठा</item>
-        <item>मूळ</item>
-        <item>पूर्वाषाढा</item>
-        <item>उत्तराषाढा</item>
-        <item>श्रवण</item>
-        <item>धनिष्ठा</item>
-        <item>शततारका</item>
-        <item>पूर्वा भाद्रपदा</item>
-        <item>उत्तर भाद्रपदा</item>
-        <item>रेवती</item>
-    </string-array>
 </resources>

@@ -104,7 +104,7 @@ class PaymentActivity : AppCompatActivity() {
             binding.linSuccess.visibility = View.VISIBLE
             binding.linFailed.visibility = View.GONE
             val amountDouble = amount?.toDoubleOrNull() ?: 0.00
-            val formattedAmount = String.format("%.2f", amountDouble)
+            val formattedAmount =String.format(Locale.ENGLISH, "%.2f", amountDouble)
             binding.txtAmount.text = getString(R.string.amount) + " " + formattedAmount
             if (transID.isNullOrEmpty()) {
                 binding.txtTransId.visibility = View.GONE
@@ -527,9 +527,9 @@ class PaymentActivity : AppCompatActivity() {
 
         var totalAmount = 0.0
         for (item in ticket) {
-            val priceStr = String.format("%.2f", item.daRate)
+            val priceStr = String.format(Locale.ENGLISH, "%.2f", item.daRate)
             val qtyStr = item.daQty.toString()
-            val amountStr = String.format("%.2f", item.daTotalAmount)
+            val amountStr = String.format(Locale.ENGLISH, "%.2f", item.daTotalAmount)
             totalAmount += item.daTotalAmount
 
             paint.textAlign = Paint.Align.LEFT
@@ -584,7 +584,7 @@ class PaymentActivity : AppCompatActivity() {
         paint.textSize = 24f
         paint.textAlign = Paint.Align.RIGHT
         tempCanvas.drawText(
-            "$labelTotalAmount ($labelDTotalAmount): ${String.format("%.2f", totalAmount)}",
+            "$labelTotalAmount ($labelDTotalAmount): ${String.format(Locale.ENGLISH, "%.2f", totalAmount)}",
             width - 20f,
             yOffset,
             paint

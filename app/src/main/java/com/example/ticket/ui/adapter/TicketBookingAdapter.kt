@@ -10,6 +10,7 @@ import com.example.ticket.data.network.model.TicketDto
 
 import com.example.ticket.data.room.entity.Ticket
 import com.example.ticket.databinding.BookingTicketItemListRowBinding
+import java.util.Locale
 
 class TicketBookingAdapter(
     private val selectedLanguage: String,
@@ -49,7 +50,7 @@ class TicketBookingAdapter(
             else -> ticketItems.ticketName
         }
 
-        binding.txtDharshanPrice.text = "Rs. ${"%.2f".format(ticketItems.ticketAmount)}"
+        binding.txtDharshanPrice.text = "Rs. ${String.format(Locale.ENGLISH, "%.2f", ticketItems.ticketAmount)}"
 
         val dbItem = dbItemsMap[ticketItems.ticketId]
         val qty = dbItem?.daQty ?: 0
@@ -57,7 +58,7 @@ class TicketBookingAdapter(
 
         binding.txtQty.text = qty.toString()
         if(qty != 0){
-            binding.txtDharshanPrice.text = "Rs. %.2f".format(total)
+            binding.txtDharshanPrice.text = "Rs. ${String.format(Locale.ENGLISH, "%.2f", total)}"
         }
 
         binding.relPlus.setOnClickListener {

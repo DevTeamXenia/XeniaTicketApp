@@ -41,6 +41,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
 import retrofit2.HttpException
+import java.util.Locale
 import kotlin.getValue
 
 
@@ -144,7 +145,7 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
                 val firstItem = allDarshanTickets.first()
                 val bitmap = BitmapFactory.decodeByteArray(firstItem.daImg, 0, firstItem.daImg.size)
                 ticketCartAdapter.updateTickets(allDarshanTickets)
-                formattedTotalAmount = String.format("%.2f", totalAmount)
+                formattedTotalAmount = String.format(Locale.ENGLISH, "%.2f", totalAmount)
                 binding.btnPay.text = getString(R.string.pay) + "  Rs. " + formattedTotalAmount
                 binding.btnPay.isEnabled = true
                 binding.btnPay.setBackgroundColor(

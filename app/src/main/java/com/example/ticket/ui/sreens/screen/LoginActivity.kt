@@ -1,5 +1,6 @@
 package com.example.ticket.ui.sreens.screen
 
+import UserType
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
@@ -13,8 +14,6 @@ import androidx.core.content.edit
 import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import com.example.ticket.R
-import com.example.ticket.data.enum.UserType
-import com.example.ticket.data.repository.CompanyRepository
 import com.example.ticket.data.repository.LoginRepository
 import com.example.ticket.databinding.ActivityLoginBinding
 import com.example.ticket.utils.common.CommonMethod.dismissLoader
@@ -150,13 +149,21 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
                 finish()
             }
 
-            else -> {
+            UserType.PROCESS_USER -> {
+                dismissLoader()
+                showSnackbar(
+                    binding.root,
+                    "PROCESS_USER is not allowed to login on this device!"
+                )
+                return
+            }
 
+            UserType.CUSTOMER -> {
                 if (screenSizeMask != Configuration.SCREENLAYOUT_SIZE_XLARGE || !isPortrait) {
                     dismissLoader()
                     showSnackbar(
                         binding.root,
-                        "NORMAL_USER has no permission for this device/orientation!"
+                        "User has no permission for this device/orientation!"
                     )
                     return
                 }
@@ -165,8 +172,14 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
                 startActivity(Intent(this, LanguageActivity::class.java))
                 finish()
             }
+
+            UserType.UNKNOWN -> {
+                dismissLoader()
+                showSnackbar(binding.root, "Unknown user type!")
+            }
         }
     }
+
 
     private fun performLogin(
         userId: String,
@@ -185,8 +198,9 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
             try {
                 val response = loginRepository.login(userId, password)
                 val token = response.Token
+
                 sessionManager.clearSession()
-                sessionManager.saveToken( "Bearer $token")
+                sessionManager.saveToken("Bearer $token")
                 sessionManager.savePassword(password)
 
                 sharedPref.edit {
@@ -203,16 +217,15 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
                 val screenSizeMask = config.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK
                 val isLandscape = config.orientation == Configuration.ORIENTATION_LANDSCAPE
                 val isPortrait = config.orientation == Configuration.ORIENTATION_PORTRAIT
+
                 val jwtPayload = JwtUtils.decodeJwt(token)
                 val userTypeValue = jwtPayload.getString("UserType")
                 val userType = UserType.fromValue(userTypeValue)
 
-
-
+              
                 when (userType) {
 
                     UserType.COUNTER_USER -> {
-                        Log.d("LOGIN_DEBUG", "Entering COUNTER_USER block")
 
                         val allowedForLarge =
                             screenSizeMask == Configuration.SCREENLAYOUT_SIZE_LARGE
@@ -227,24 +240,37 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
                             )
                             return@launch
                         }
-                        startActivity(Intent(this@LoginActivity, LanguageActivity::class.java))
+
+                        startActivity(
+                            Intent(this@LoginActivity, LanguageActivity::class.java)
+                        )
                         finish()
                     }
 
-                    else -> {
-                        Log.d("LOGIN_DEBUG", "Entering NORMAL_USER block")
+                    UserType.PROCESS_USER -> {
 
-                        if (screenSizeMask != Configuration.SCREENLAYOUT_SIZE_XLARGE || !isPortrait && !UserType.CUSTOMER.equals("User")) {
+                        dismissLoader()
+                        showSnackbar(
+                            binding.root,
+                            "PROCESS_USER is not allowed to login on this device!"
+                        )
+                        return@launch
+                    }
+
+                    else -> {
+                        if (screenSizeMask != Configuration.SCREENLAYOUT_SIZE_XLARGE || !isPortrait) {
                             dismissLoader()
                             showSnackbar(
                                 binding.root,
-                                "NORMAL_USER has no permission for this device/orientation!"
+                                "User has no permission for this device/orientation!"
                             )
                             return@launch
                         }
 
                         sessionManager.saveSelectedPrinter(PRINTER_KIOSK)
-                        startActivity(Intent(this@LoginActivity, LanguageActivity::class.java))
+                        startActivity(
+                            Intent(this@LoginActivity, LanguageActivity::class.java)
+                        )
                         finish()
                     }
                 }
@@ -252,7 +278,6 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
             } catch (e: HttpException) {
 
                 val errorBody = e.response()?.errorBody()?.string()
-
                 val msg = when (e.code()) {
                     404 -> "Incorrect Username!"
                     401 -> "Incorrect Password!"
@@ -270,7 +295,6 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
                     e.localizedMessage ?: "Something went wrong! Please try again."
                 )
             }
-
         }
     }
 

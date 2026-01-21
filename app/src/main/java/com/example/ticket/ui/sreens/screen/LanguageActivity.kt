@@ -18,7 +18,6 @@ import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.example.ticket.R
-import com.example.ticket.data.enum.UserType
 import com.example.ticket.data.listeners.InactivityHandlerActivity
 import com.example.ticket.data.repository.CompanyRepository
 import com.example.ticket.data.repository.TicketRepository
@@ -40,7 +39,6 @@ import com.example.ticket.utils.common.Constants.LANGUAGE_PUNJABI
 import com.example.ticket.utils.common.Constants.LANGUAGE_SINHALA
 import com.example.ticket.utils.common.Constants.LANGUAGE_TAMIL
 import com.example.ticket.utils.common.Constants.LANGUAGE_TELUGU
-import com.example.ticket.utils.common.InactivityHandler
 import com.example.ticket.utils.common.SessionManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

@@ -9,10 +9,11 @@
     <string name="user_id">ਉਪਭੋਗਤਾ ਆਈ.ਡੀ.</string>
     <string name="password">ਪਾਸਵਰਡ</string>
     <string name="log_in">ਲੌਗ ਇਨ</string>
-
+    <string name="pay">ਪੈਸੇ ਭਰੋ</string>
     <string name="home">ਮੁੱਖ ਪੰਨਾ</string>
     <string name="sync">ਸਮਨ੍ਵਯ</string>
-
+    <string name="name">ਨਾਮ</string>
+    <string name="phone_number">ਫੋਨ ਨੰਬਰ</string>
 
 
     <!-- Popup_Screen -->

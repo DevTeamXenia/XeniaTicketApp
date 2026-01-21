@@ -54,7 +54,9 @@
     <string name="proceed">కதொடர</string>
     <string name="no_of_tickets">டிக்கெட் எண்ணிக்கை</string>
     <string name="click_here_to_take_photo">புகைப்படம் எடுக்க இங்கே கிளிக் செய்யவும்</string>
-
+    <string name="pay">பணம் செலுத்து</string>
+    <string name="name">பெயர்</string>
+    <string name="phone_number">தொலைபேசி எண்</string>
     <string name="do_you_want_to_logout">நீங்கள் வெளியேற விரும்புகிறீர்களா?</string>
     <string name="choose_item">உருப்படியைத் தேர்ந்தெடுக்கவும்</string>
     <string name="done">முடிந்தது</string>

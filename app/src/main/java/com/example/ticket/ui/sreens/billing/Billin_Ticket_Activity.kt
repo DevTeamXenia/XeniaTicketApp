@@ -40,6 +40,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
+import java.util.Locale
 import kotlin.getValue
 
 class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener,
@@ -106,6 +107,7 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener,
         binding.txtHome?.text = getString(R.string.home)
         binding.txtselectTicket.text = getString(R.string.choose_your_tickets)
         binding.btnProceed.text = getString(R.string.proceed)
+        binding.texthead1.text = getString(R.string.ticket)
         binding.btnProceed.setOnClickListener {
             val intent = Intent(applicationContext, Billing_Cart_Activity::class.java)
 
@@ -404,7 +406,7 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener,
     private fun updateCartUI() {
         lifecycleScope.launch {
             val (totalAmount) = ticketRepository.getCartStatus()
-            formattedTotalAmount = String.format("%.2f", totalAmount)
+            formattedTotalAmount = String.format(Locale.ENGLISH, "%.2f", totalAmount)
             val hasUserAmount = !binding.editName.text.isNullOrBlank()
 
             if (totalAmount > 0 && hasUserAmount) {

@@ -39,6 +39,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
+import java.util.Locale
 import kotlin.getValue
 
 class CustomTicketPopupDialogue : DialogFragment() {
@@ -192,7 +193,7 @@ class CustomTicketPopupDialogue : DialogFragment() {
 
 
 
-        val formattedAmount = String.format("%.2f", ticketRate)
+        val formattedAmount = String.format(Locale.ENGLISH, "%.2f", ticketRate)
         txtTicketRate.text = "Rs. $formattedAmount /-"
 
         editTextTickets.inputType = 0
@@ -377,10 +378,10 @@ class CustomTicketPopupDialogue : DialogFragment() {
         }
 
         totalAmount = (ticketRate * quantity).toString()
-        val formattedRate = String.format("%.2f", ticketRate)
+        val formattedRate = String.format(Locale.ENGLISH, "%.2f", ticketRate)
         txtQty.text = getString(R.string.txt_amount)+" : " + formattedRate + " x " + quantity
 
-        val formattedTotal = String.format("%.2f", totalAmount.toDouble())
+        val formattedTotal = String.format(Locale.ENGLISH, "%.2f", totalAmount.toDouble())
         txtTotalAmount.text = "Rs. $formattedTotal/-"
     }
 

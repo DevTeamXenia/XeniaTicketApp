@@ -44,6 +44,7 @@ import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
 import org.koin.core.qualifier.named
 import retrofit2.HttpException
+import java.util.Locale
 import kotlin.getValue
 
 
@@ -152,7 +153,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                 val bitmap =
                     BitmapFactory.decodeByteArray(firstItem.daImg, 0, firstItem.daImg.size)
                 ticketCartAdapter.updateTickets(allDarshanTickets)
-                formattedTotalAmount = String.format("%.2f", totalAmount)
+                formattedTotalAmount = String.format(Locale.ENGLISH, "%.2f", totalAmount)
                 binding.btnPay.text = getString(R.string.pay) + "  Rs. " + formattedTotalAmount
                 binding.btnPay.isEnabled = true
                 binding.btnPay.setBackgroundColor(
@@ -270,7 +271,6 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
             }
 
             try {
-                // 7️⃣ API call
                 val response = withContext(Dispatchers.IO) {
                     paymentRepository.postTicket(
                         bearerToken = "Bearer $token",
@@ -278,7 +278,6 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                     )
                 }
 
-                // 8️⃣ Success handling
                 if (
                     response.status.equals("Success", ignoreCase = true) &&
                     !response.receipt.isNullOrBlank()

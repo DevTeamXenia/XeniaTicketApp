@@ -36,6 +36,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
+import java.util.Locale
 import kotlin.getValue
 
 class TicketActivity : AppCompatActivity(), OnTicketClickListener,
@@ -62,7 +63,7 @@ CustomInactivityDialog.InactivityCallback,CustomInternetAvailabilityDialog.Inter
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityTicketBinding.inflate(layoutInflater)
-        setLocale(this, sessionManager.getSelectedLanguage())
+        setLocale(this, sessionManager.getSelectedLanguage().toString())
         selectedLanguage = sessionManager.getSelectedLanguage()
         categoryId = intent.getIntExtra("CATEGORY_ID", 0)
         inactivityDialog = CustomInactivityDialog(this)
@@ -71,23 +72,20 @@ CustomInactivityDialog.InactivityCallback,CustomInternetAvailabilityDialog.Inter
         setupUI()
         setContentView(binding.root)
         setupRecyclerViews()
+        getCategory()
         lifecycleScope.launch {
             updateCartUI()
         }
-        getCategory()
-
-
-
 
     }
     private fun setupUI() {
         binding.txtHome?.text = getString(R.string.home)
         binding.txtselectTicket.text = getString(R.string.choose_your_tickets)
         binding.btnProceed.text = getString(R.string.proceed)
+        binding.texthead1.text = getString(R.string.ticket)
         binding.linHome?.setOnClickListener {
             startActivity(Intent(applicationContext, LanguageActivity::class.java))
             finish()
-
 
         }
 
@@ -276,7 +274,7 @@ CustomInactivityDialog.InactivityCallback,CustomInternetAvailabilityDialog.Inter
 
         withContext(Dispatchers.Main) {
             if (hasData) {
-                formattedTotalAmount = String.format("%.2f", totalAmount)
+                formattedTotalAmount = String.format(Locale.ENGLISH, "%.2f", totalAmount)
                 binding.btnProceed.text =
                     getString(R.string.proceed) + "  Rs.$formattedTotalAmount"
 
