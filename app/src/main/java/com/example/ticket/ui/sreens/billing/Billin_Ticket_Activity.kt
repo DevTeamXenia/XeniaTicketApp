@@ -8,16 +8,12 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.ticket.R
-import com.example.ticket.data.listeners.InactivityHandlerActivity
 import com.example.ticket.data.listeners.OnBookingTicketClick
 import com.example.ticket.data.listeners.OnTicketClickListener
 import com.example.ticket.data.network.model.TicketDto
@@ -29,21 +25,17 @@ import com.example.ticket.data.room.entity.ActiveTicket
 import com.example.ticket.data.room.entity.Category
 import com.example.ticket.data.room.entity.Ticket
 import com.example.ticket.databinding.ActivityBillinTicketBinding
-import com.example.ticket.databinding.ActivityTicketBinding
 import com.example.ticket.ui.adapter.CategoryAdapter
-import com.example.ticket.ui.adapter.TicketAdapter
 import com.example.ticket.ui.adapter.TicketBookingAdapter
 import com.example.ticket.ui.adapter.TicketCartAdapter
-import com.example.ticket.ui.dialog.CustomInactivityDialog
 import com.example.ticket.ui.dialog.CustomTicketPopupDialogue
-import com.example.ticket.ui.sreens.screen.IdProofActivity
+import com.example.ticket.ui.sreens.screen.LanguageActivity
 import com.example.ticket.utils.common.CommonMethod.getScreenSize
 import com.example.ticket.utils.common.CommonMethod.isLandscapeScreen
 import com.example.ticket.utils.common.CommonMethod.setLocale
 import com.example.ticket.utils.common.CommonMethod.showSnackbar
 import com.example.ticket.utils.common.CompanyKey
 import com.example.ticket.utils.common.SessionManager
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -109,18 +101,22 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener,
         }
         getCategory()
 
-        binding.btnProceed.setOnClickListener {
-            val intent = Intent(applicationContext, IdProofActivity::class.java)
-            intent.putExtra("from", "billing")
-            intent.putExtra("ITEM_TOTAL", formattedTotalAmount)
-            startActivity(intent)
-        }
     }
     private fun setupUI() {
         binding.txtHome?.text = getString(R.string.home)
         binding.txtselectTicket.text = getString(R.string.choose_your_tickets)
-    }
+        binding.btnProceed.text = getString(R.string.proceed)
+        binding.btnProceed.setOnClickListener {
+            val intent = Intent(applicationContext, Billing_Cart_Activity::class.java)
 
+            startActivity(intent)
+        }
+        binding.linHome?.setOnClickListener {
+            startActivity(Intent(applicationContext, LanguageActivity::class.java))
+            finish()
+
+        }
+    }
     @SuppressLint("NotifyDataSetChanged")
     private fun setupRecyclerViews() {
         categoryAdapter = CategoryAdapter(this, selectedLanguage!!, this)
@@ -144,6 +140,7 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener,
         binding.relCart.layoutManager = LinearLayoutManager(this)
         ticketCartAdapter = TicketCartAdapter(this, selectedLanguage!!, "Booking", this)
         binding.relCart.adapter = ticketCartAdapter
+        getCategory()
     }
 
     private fun getCategory() {
@@ -209,7 +206,6 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener,
                         categoryActive = entity.categoryActive
                     )
                 }
-
                 categoryAdapter.updateCategories(categories)
                 getTickets(selectedCategoryId)
             } catch (e: Exception) {
@@ -300,6 +296,7 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener,
     override fun onRestart() {
         super.onRestart()
         setupRecyclerViews()
+        getCategory()
         getTickets(selectedCategoryId)
         lifecycleScope.launch {
             updateCartUI()
@@ -486,5 +483,13 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener,
         TODO("Not yet implemented")
     }
 
-
+    override fun onBackPressed() {
+        val intent = Intent(this, LanguageActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                    Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        startActivity(intent)
+        finish()
+    }
 }

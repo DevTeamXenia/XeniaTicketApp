@@ -3,26 +3,8 @@
     <string name="home">ஹோம்</string>
 
 
-    //home_screen
-    <string name="kanika">ஏ கனிகா</string>
-    <string name="melkavu_devi">மேல்காவில்\nபகவதி</string>
-    <string name="keezhkavu_devi">கீழ்காவில்\nபகவதி</string>
-    <string name="ayyappa">அய்யப்பன்\n</string>
-    <string name="shiva">சிவன்\n</string>
-    <string name="nagam">நாகம்\n</string>
-    <string name="sync">ஒத்திசைவு</string>
 
 
-    donation_screen
-    <string name="fill_out_your_details">உங்கள் விவரங்களை நிரப்பவும்</string>
-    <string name="donation_amount">கண்ணிகா தொகை*</string>
-    <string name="annadana_amount">அன்னதான தொகை</string>
-    <string name="_10_000">Rs.</string>
-    <string name="pay">செலுத்து</string>
-    <string name="phone_number">தொலை எண்</string>
-    <string name="_91">+91</string>
-    <string name="name">பெயர்</string>
-    <string name="select_your_janma_nakshatra">உங்கள் பிறந்த நக்ஷத்திரத்தை தேர்ந்தெடுக்கவும்</string>
 
     //Popup_Screen
     <string name="amount_10_000">தொகை  Rs. 10,000 /-</string>
@@ -48,12 +30,11 @@
     <string name="you_have_been_inactive_for_a_while_please_touch_the_screen_to_continue">நீங்கள் ஒரு காலமாக செயலற்றுள்ளீர்கள். தொடரவேண்டுமானால், திரையை தொடவும்.</string>
     <string name="qr_expire">QR முடிவடையும் நேரம் :</string>
 
-    <string name="vazhipadu">வழிபாடு</string>
-    <string name="donation">தானம்</string>
-    <string name="darshan">தரிசனம்</string>
-    <string name="pooja_item">பூ.பொ.</string>
+
+    <string name="ticket">டிக்கெட்</string>
+
+
     <string name="welcome">வரவேற்கிறோம்!</string>
-    <string name="annadana">அன்னதானம்</string>
     <string name="choose_your_tickets">உங்கள் டிக்கெட்டுகளை தேர்வு செய்யுங்கள்</string>
 
 

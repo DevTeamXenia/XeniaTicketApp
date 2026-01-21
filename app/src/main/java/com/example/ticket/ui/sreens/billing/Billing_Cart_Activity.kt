@@ -8,7 +8,7 @@ import android.os.Bundle
 import android.util.Base64
 import android.util.Log
 import android.view.MotionEvent
-import android.view.View
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
@@ -28,6 +28,7 @@ import com.example.ticket.ui.dialog.CustomTicketPopupDialogue
 import com.example.ticket.ui.sreens.screen.PaymentActivity
 import com.example.ticket.ui.sreens.screen.TicketActivity
 import com.example.ticket.utils.common.CommonMethod.dismissLoader
+import com.example.ticket.utils.common.CommonMethod.enableInactivityReset
 import com.example.ticket.utils.common.CommonMethod.generateNumericTransactionReferenceID
 import com.example.ticket.utils.common.CommonMethod.isInternetAvailable
 import com.example.ticket.utils.common.CommonMethod.setLocale
@@ -63,6 +64,7 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
 
     private lateinit var jwtToken: String
     private var userId: Int = 0
+    private var imageData: ByteArray? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,7 +82,7 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
         binding.relTicketCart.layoutManager = LinearLayoutManager(this)
 
         ticketCartAdapter =
-            TicketCartAdapter(this, sessionManager.getSelectedLanguage(), "Booking", this)
+            TicketCartAdapter(this, sessionManager.getBillingSelectedLanguage(), "Booking", this)
 
         binding.relTicketCart.adapter = ticketCartAdapter
 
@@ -88,10 +90,30 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
 
     }
     private fun initView() {
+        binding.txtName.text = getString(R.string.name)
+        binding.txtPhoneNumber.text = getString(R.string.phone_number)
+        binding.btnPay.text = getString(R.string.pay)
         jwtToken = sessionManager.getToken() ?: throw IllegalStateException("Token missing")
         userId =
             JwtUtils.getUserId(jwtToken) ?: throw IllegalStateException("UserId missing in JWT")
+
         binding.btnPay.setOnClickListener {
+            val name = binding.editTextName.text.toString()
+            val phone = binding.editTextPhoneNumber.text.toString().trim()
+            if (phone.isNotEmpty() && phone.length != 10) {
+                showMessage("Enter valid phone number")
+                return@setOnClickListener
+            }
+
+            lifecycleScope.launch {
+                ticketRepository.updateCartItemsInfo(
+                    newName = name,
+                    newPhoneNumber = phone,
+                    newIdno = "",
+                    newIdProof = "",
+                    newImg = imageData ?: ByteArray(0)
+                )
+            }
             if (!isInternetAvailable(this)) {
                 dismissLoader()
                 showSnackbar(
@@ -120,13 +142,7 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
                 finish()
             } else {
                 val firstItem = allDarshanTickets.first()
-                binding.txtValName.text = firstItem.daName
-                binding.txtValPhNo.text = firstItem.daPhoneNumber
-                binding.txtValIdNo.text = firstItem.daProofId
-                binding.txtIdNo.text = "$idProofType:"
                 val bitmap = BitmapFactory.decodeByteArray(firstItem.daImg, 0, firstItem.daImg.size)
-                binding.personImage.setImageBitmap(bitmap)
-                binding.personImage.visibility = View.VISIBLE
                 ticketCartAdapter.updateTickets(allDarshanTickets)
                 formattedTotalAmount = String.format("%.2f", totalAmount)
                 binding.btnPay.text = getString(R.string.pay) + "  Rs. " + formattedTotalAmount
@@ -178,11 +194,6 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
             )
         }
     }
-
-
-
-
-
     private fun postTicketPaymentHistory(
         status: String,
         statusDesc: String,
@@ -190,21 +201,33 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
     ) {
         lifecycleScope.launch {
 
+            // 1️⃣ Get cart tickets
             val cartTickets = ticketRepository.getAllTicketsInCart()
-            if (cartTickets.isEmpty()) return@launch
-            val itemsList = cartTickets.map { item ->
-                TicketPaymentRequest.Item(
-                    taCategoryId = item.ticketCategoryId,
-                    TicketId = item.ticketId,
-                    Quantity = item.daQty,
-                    Rate = item.daRate
-                )
+            if (cartTickets.isEmpty()) {
+                binding.btnPay.isEnabled = true
+                return@launch
             }
-            val firstTicket = cartTickets.firstOrNull()
-            val byteArray = firstTicket?.daImg ?: ByteArray(0)
-            val imageBase64String =
-                Base64.encodeToString(byteArray, Base64.NO_WRAP)
 
+            // 2️⃣ Split quantity -> each ticket Quantity = 1
+            val itemsList = cartTickets.flatMap { item ->
+                (1..item.daQty).map {
+                    TicketPaymentRequest.Item(
+                        taCategoryId = item.ticketCategoryId,
+                        TicketId = item.ticketId,
+                        Quantity = 1,
+                        Rate = item.daRate
+                    )
+                }
+            }
+
+            // 3️⃣ Take image from first ticket
+            val firstTicket = cartTickets.first()
+            val imageBase64String = Base64.encodeToString(
+                firstTicket.daImg ?: ByteArray(0),
+                Base64.NO_WRAP
+            )
+
+            // 4️⃣ Get required data
             val companyId = companyRepository.getCompany()?.companyId ?: 0
             val token = sessionManager.getToken()
 
@@ -213,23 +236,36 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
                 showSnackbar(binding.root, "Authorization token missing")
                 return@launch
             }
+
+            // 5️⃣ Get name & phone directly from UI (IMPORTANT)
+            val name = binding.editTextName.text.toString().trim()
+            val phone = binding.editTextPhoneNumber.text.toString().trim()
+
+            // 6️⃣ Build request
             val request = TicketPaymentRequest(
                 CompanyId = companyId,
                 UserId = userId,
-                Name = firstTicket?.daName.orEmpty(),
+                Name = name,
                 tTranscationId = generateNumericTransactionReferenceID(),
-                tCustRefNo = firstTicket?.daCustRefNo.orEmpty(),
-                tNpciTransId = firstTicket?.daNpciTransId.orEmpty(),
-                tIdProofNo = firstTicket?.daProofId.orEmpty(),
+                tCustRefNo = "",
+                tNpciTransId = "",
+                tIdProofNo = "",
                 tImage = imageBase64String,
-                PhoneNumber = firstTicket?.daPhoneNumber.orEmpty(),
+                PhoneNumber = phone,
                 tPaymentStatus = status,
                 tPaymentMode = "CASH",
                 tPaymentDes = statusDesc,
                 Items = itemsList
             )
 
+
+            Log.d("PAYMENT_DEBUG", "Posting ${itemsList.size} items")
+            itemsList.forEach {
+                Log.d("PAYMENT_DEBUG", "TicketId=${it.TicketId}, Qty=${it.Quantity}")
+            }
+
             try {
+                // 7️⃣ API call
                 val response = withContext(Dispatchers.IO) {
                     paymentRepository.postTicket(
                         bearerToken = "Bearer $token",
@@ -237,6 +273,7 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
                     )
                 }
 
+                // 8️⃣ Success handling
                 if (
                     response.status.equals("Success", ignoreCase = true) &&
                     !response.receipt.isNullOrBlank()
@@ -261,14 +298,9 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
             } catch (e: Exception) {
                 handleRetry(e, status, statusDesc, retryCount)
             }
-            catch (e: HttpException) {
-                val errorBody = e.response()?.errorBody()?.string()
-                Log.e("API_ERROR", "Code: ${e.code()}, Body: $errorBody", e)
-                handleRetry(e, status, statusDesc, retryCount)
-            }
-
         }
     }
+
 
     private fun handleRetry(
         e: Exception,
@@ -304,12 +336,13 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
             putExtra("orderID", orderId)
             putExtra("transID", "")
             putExtra("ticket", ticket)
+            putExtra("name", binding.editTextName.text.toString())
+            putExtra("phno", binding.editTextPhoneNumber.text.toString())
         }
 
         startActivity(intent)
         finish()
     }
-
 
     override fun onTicketClick(darshanItem: TicketDto) {
         TODO("Not yet implemented")
@@ -322,8 +355,6 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
     override fun onTicketAdded() {
         loadDarshanItems()
     }
-
-
 
     override fun onResume() {
         super.onResume()
@@ -350,5 +381,20 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
     override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
         loadDarshanItems()
         return super.dispatchTouchEvent(ev)
+    }
+    fun showMessage(msg: String) {
+        AlertDialog.Builder(this)
+            .setMessage(msg)
+            .setPositiveButton("OK", null)
+            .show()
+    }
+    override fun onBackPressed() {
+        val intent = Intent(this, Billin_Ticket_Activity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                    Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        startActivity(intent)
+        finish()
     }
 }

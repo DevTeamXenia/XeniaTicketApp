@@ -22,23 +22,19 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.scale
-import androidx.core.graphics.set
 import androidx.lifecycle.lifecycleScope
 import com.example.ticket.R
 import com.example.ticket.data.repository.CompanyRepository
 import com.example.ticket.data.repository.TicketRepository
 import com.example.ticket.data.room.entity.Ticket
 import com.example.ticket.databinding.ActivityPaymentBinding
-import com.example.ticket.utils.common.AESEncryptionUtil
 import com.example.ticket.utils.common.CommonMethod.setLocale
 import com.example.ticket.utils.common.CompanyKey
-import com.example.ticket.utils.common.Constants.SECRET_KEY
 import com.example.ticket.utils.common.SessionManager
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.WriterException
 import com.google.zxing.common.BitMatrix
 import com.google.zxing.qrcode.QRCodeWriter
-import com.urovo.sdk.print.PrinterProviderImpl
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -604,26 +600,19 @@ class PaymentActivity : AppCompatActivity() {
         paint.textSize = 22f
         paint.textAlign = Paint.Align.CENTER
 
-        val lines = listOf(
-            labelmessage
-        )
 
-        val padding = 30f
-        val textPadding = 65f
+        val padding = 20f
+        val textPadding = 20f
         val rectTop = yOffset
         val rectRight = width - padding
 
         var tempYOffset = yOffset + textPadding
 
-        tempYOffset += 35f
+        tempYOffset += 20f
         val imageSize = 100f
         val textHeight = 35f * 3
         tempYOffset += maxOf(imageSize, textHeight) + 20f
-
-
         val rectBottom = tempYOffset + textPadding
-
-
         paint.style = Paint.Style.STROKE
         paint.color = Color.BLACK
         paint.strokeWidth = 1f
@@ -636,13 +625,9 @@ class PaymentActivity : AppCompatActivity() {
         )
 
         yOffset += textPadding
-
-
-        yOffset += 35f
-
+        yOffset += 30f
         val textX = padding + 15f
         var textY = yOffset
-
         paint.textAlign = Paint.Align.LEFT
         paint.textSize = 20f
         paint.typeface = Typeface.DEFAULT
@@ -815,14 +800,14 @@ class PaymentActivity : AppCompatActivity() {
         tempCanvas.drawText("$labelUPI: $transID", width - 20f, yOffset, paint)
         yOffset += 35f
 
-        val padding = 30f
-        val textPadding = 45f
+        val padding = 15f
+        val textPadding = 15f
         val rectTop = yOffset
         val rectRight = width - padding
 
         var tempYOffset = yOffset + textPadding
 
-        tempYOffset += 35f
+        tempYOffset += 10f
         val imageSize = 100f
         val textHeight = 35f * 3
         tempYOffset += maxOf(imageSize, textHeight) + 20f
@@ -842,18 +827,19 @@ class PaymentActivity : AppCompatActivity() {
             paint
         )
 
-        val textX = padding + 15f
+        yOffset += textPadding
+        yOffset += 20f
+        val textX = padding + 25f
         var textY = yOffset
-
         paint.textAlign = Paint.Align.LEFT
         paint.textSize = 20f
         paint.typeface = Typeface.DEFAULT
-        textY += 25f
+
         tempCanvas.drawText("$labelName : $name", textX, textY, paint)
-        textY += 25f
+        textY += 30f
         tempCanvas.drawText("$labelPhonenumber: $phoneNo", textX, textY, paint)
 
-        yOffset = textY + 60f
+        yOffset = textY + 100f
 
         generateQRCode()?.let { qrBitmap ->
             val qrSize = 300
@@ -871,8 +857,6 @@ class PaymentActivity : AppCompatActivity() {
 
         val finalBitmap = createBitmap(width, (yOffset + 50f).toInt())
         Canvas(finalBitmap).drawBitmap(tempBitmap, 0f, 0f, null)
-
-
 
         tempBitmap.recycle()
 

@@ -17,7 +17,6 @@ import com.example.ticket.R
 import com.example.ticket.data.repository.CompanyRepository
 import com.example.ticket.ui.sreens.screen.LanguageActivity
 import com.example.ticket.utils.common.CommonMethod.setLocale
-import com.example.ticket.utils.common.CompanyKey
 import com.example.ticket.utils.common.Constants.LANGUAGE_ENGLISH
 import com.example.ticket.utils.common.SessionManager
 import kotlinx.coroutines.launch

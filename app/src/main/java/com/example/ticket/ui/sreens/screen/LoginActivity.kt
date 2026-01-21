@@ -36,7 +36,7 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLoginBinding
     private val sessionManager: SessionManager by inject()
     private val loginRepository: LoginRepository by inject()
-    private val companyRepository: CompanyRepository by inject()
+
     private var isPasswordVisible = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,36 +50,13 @@ class LoginActivity : AppCompatActivity() {
         if (sessionManager.isLoggedIn()) {
 
             val userType = UserType.fromValue(sessionManager.getUserType())
-            val selectedLanguage = sessionManager.getSelectedLanguage()
 
             lifecycleScope.launch {
-
-                when (userType) {
-
-                    UserType.COUNTER_USER -> {
-                        if (selectedLanguage.isNotEmpty()) {
-                            startActivity(
-                                Intent(this@LoginActivity, LanguageActivity::class.java)
-                            )
-                        } else {
-                            startActivity(
-                                Intent(this@LoginActivity, LanguageActivity::class.java)
-                            )
-                        }
-                    }
-
-                    else -> {
-                        startActivity(
-                            Intent(this@LoginActivity, LanguageActivity::class.java)
-                        )
-                    }
-                }
-
-                finish()
+                navigateAfterLogin(userType)
             }
-
             return
         }
+
 
 
         val sharedPref = getSharedPreferences("LoginPrefs", MODE_PRIVATE)
@@ -144,14 +121,58 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
     }
     return true
 }
+    private fun navigateAfterLogin(userType: UserType) {
+
+        val config = resources.configuration
+        val screenSizeMask = config.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK
+        val isLandscape = config.orientation == Configuration.ORIENTATION_LANDSCAPE
+        val isPortrait = config.orientation == Configuration.ORIENTATION_PORTRAIT
+
+        when (userType) {
+
+            UserType.COUNTER_USER -> {
+
+                val allowedForLarge =
+                    screenSizeMask == Configuration.SCREENLAYOUT_SIZE_LARGE
+                val allowedForXLarge =
+                    screenSizeMask == Configuration.SCREENLAYOUT_SIZE_XLARGE && isLandscape
+
+                if (!allowedForLarge && !allowedForXLarge) {
+                    dismissLoader()
+                    showSnackbar(
+                        binding.root,
+                        "COUNTER_USER has no permission for this device/orientation!"
+                    )
+                    return
+                }
+
+                startActivity(Intent(this, LanguageActivity::class.java))
+                finish()
+            }
+
+            else -> {
+
+                if (screenSizeMask != Configuration.SCREENLAYOUT_SIZE_XLARGE || !isPortrait) {
+                    dismissLoader()
+                    showSnackbar(
+                        binding.root,
+                        "NORMAL_USER has no permission for this device/orientation!"
+                    )
+                    return
+                }
+
+                sessionManager.saveSelectedPrinter(PRINTER_KIOSK)
+                startActivity(Intent(this, LanguageActivity::class.java))
+                finish()
+            }
+        }
+    }
 
     private fun performLogin(
         userId: String,
         password: String,
         sharedPref: android.content.SharedPreferences
     ) {
-
-
 
         if (!isInternetAvailable(applicationContext)) {
             hideKeyboard()
@@ -213,7 +234,7 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
                     else -> {
                         Log.d("LOGIN_DEBUG", "Entering NORMAL_USER block")
 
-                        if (screenSizeMask != Configuration.SCREENLAYOUT_SIZE_XLARGE || !isPortrait) {
+                        if (screenSizeMask != Configuration.SCREENLAYOUT_SIZE_XLARGE || !isPortrait && !UserType.CUSTOMER.equals("User")) {
                             dismissLoader()
                             showSnackbar(
                                 binding.root,

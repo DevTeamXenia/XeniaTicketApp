@@ -95,11 +95,12 @@ class TicketAdapter(
                                 }
                                 val qty = cartItem.daQty
                                 val ticketRate = ticketItem.ticketAmount
-                                Quantity.text = "Amount. $ticketRate * $qty/-"
 
+                                Quantity.text = "Amount  $ticketRate * $qty"
                                 txtTicketPrice2.text = "Rs. ${ticketItem.ticketAmount}"
-                                val formattedTotal = String.format("%.2f", cartItem.ticketTotalAmount*qty)
+                                val formattedTotal = String.format("%.2f", cartItem.ticketTotalAmount)
                                 txtTotalAmount.text = "$formattedTotal/-"
+
 
                             } else {
                                 relNoneCardItem.visibility = View.VISIBLE

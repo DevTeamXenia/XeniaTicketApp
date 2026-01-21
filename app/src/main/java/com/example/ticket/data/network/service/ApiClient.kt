@@ -11,7 +11,7 @@ import javax.net.ssl.X509TrustManager
 
 object ApiClient {
 
-    private const val BASE_URL = "https://192.168.1.35:8085/api/"
+    private const val BASE_URL = "https://192.168.1.36:8085/api/"
 
     private val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
         override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) {

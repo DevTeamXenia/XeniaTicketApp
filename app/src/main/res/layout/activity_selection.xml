@@ -17,7 +17,7 @@
                 android:id="@+id/layoutTop"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="45">
+                android:layout_weight="40">
 
                 <ImageView
                     android:id="@+id/img_background"
@@ -32,16 +32,16 @@
                 android:id="@+id/layoutMiddle"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_marginStart="10dp"
-                android:layout_marginEnd="10dp"
-                android:layout_weight="45"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
+                android:layout_weight="53"
                 android:orientation="vertical">
 
                 <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
-                    android:layout_marginBottom="20dp"
+                    android:layout_marginBottom="10dp"
                     android:gravity="center_horizontal">
 
                     <ImageView
@@ -49,6 +49,7 @@
                         android:layout_width="30dp"
                         android:layout_height="30dp"
                         android:layout_marginEnd="10dp"
+                        android:tint="#232E00"
                         android:contentDescription="@string/todo"
                         android:src="@drawable/ic_language" />
 
@@ -60,7 +61,7 @@
                         android:layout_toEndOf="@+id/language_icon"
                         android:fontFamily="@font/poppins_regular"
                         android:text="@string/choose_your_language"
-                        android:textColor="@color/secondaryColor"
+                        android:textColor="#232E00"
                         android:textSize="18sp" />
 
                 </RelativeLayout>
@@ -69,8 +70,8 @@
                     android:id="@+id/languageCardContainer"
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
-                    android:layout_marginStart="25dp"
-                    android:layout_marginEnd="25dp"
+                    android:layout_marginStart="35dp"
+                    android:layout_marginEnd="35dp"
                     android:layout_weight="1"
                     android:orientation="vertical">
 
@@ -340,10 +341,10 @@
 
                                 <ImageView
                                     android:layout_width="30dp"
-                                    android:layout_height="27dp"
+                                    android:layout_height="30dp"
                                     android:layout_gravity="center_horizontal"
-                                    android:contentDescription="@string/marathi"
-                                    android:src="@drawable/ic_mr" />
+                                    android:src="@drawable/ic_mr"
+                                    android:contentDescription="@string/marathi" />
 
                                 <TextView
                                     android:layout_width="wrap_content"
@@ -369,6 +370,7 @@
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
                             android:layout_weight="1"
+                            android:visibility="visible"
                             android:background="@drawable/card_background">
 
                             <LinearLayout
@@ -480,4 +482,5 @@
             </LinearLayout>
 
         </LinearLayout>
+
 </RelativeLayout>

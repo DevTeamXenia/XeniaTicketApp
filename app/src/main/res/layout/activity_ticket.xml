@@ -25,6 +25,7 @@
             app:cardElevation="4dp">
 
             <LinearLayout
+                android:id="@+id/linHome"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center"
@@ -57,7 +58,7 @@
             android:layout_alignParentBottom="true"
             android:layout_marginBottom="20dp"
             android:fontFamily="@font/segoe_ui_bold"
-            android:text="@string/darshan"
+            android:text="@string/ticket"
             android:textAlignment="center"
             android:textColor="@color/white"
             android:textSize="70sp" />

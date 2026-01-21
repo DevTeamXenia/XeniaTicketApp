@@ -5,7 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.sreens.screen.LanguageActivity">
+    tools:context=".ui.sreens.screen.TicketCartActivity">
 
     <LinearLayout
         android:id="@+id/linTop"
@@ -46,99 +46,69 @@
                 android:id="@+id/txtName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/pay_name"
+                android:layout_below="@+id/editTextId"
+                android:layout_marginTop="5dp"
+                android:fontFamily="@font/poppins_regular"
+                android:text="@string/name"
                 android:textColor="@color/black"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:fontFamily="@font/poppins_regular"/>
+                android:textSize="20sp" />
 
-            <TextView
-                android:id="@+id/txtValName"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text=""
-                android:textColor="@color/black"
-                android:layout_toEndOf="@+id/txtName"
-                android:textSize="20sp"
-                android:layout_marginStart="5dp"
-                android:textStyle="bold"
-                android:fontFamily="@font/poppins_regular"/>
 
-            <TextView
-                android:id="@+id/txtPhNo"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/pay_phone_number"
+            <EditText
+                android:id="@+id/editTextName"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
                 android:layout_below="@+id/txtName"
+                android:layout_marginBottom="10dp"
+                android:background="@drawable/edittext_bg"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:hint="@string/name"
+                android:imeOptions="actionNext"
+                android:inputType="text"
+                android:maxLength="25"
+                android:textAlignment="center"
                 android:textColor="@color/black"
-                android:layout_marginTop="10dp"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:fontFamily="@font/poppins_regular"/>
+                android:textSize="25sp"
+                tools:ignore="RtlSymmetry" />
 
             <TextView
-                android:id="@+id/txtValPhNo"
+                android:id="@+id/txtPhoneNumber"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text=""
-                android:layout_toEndOf="@+id/txtPhNo"
-                android:layout_below="@+id/txtValName"
+                android:layout_below="@+id/editTextName"
+                android:layout_marginTop="5dp"
+                android:fontFamily="@font/poppins_regular"
+                android:text="@string/phone_number"
                 android:textColor="@color/black"
-                android:textSize="20sp"
-                android:layout_marginStart="5dp"
-                android:layout_marginTop="10dp"
-                android:textStyle="bold"
-                android:fontFamily="@font/poppins_regular"/>
+                android:textSize="20sp" />
 
-            <TextView
-                android:id="@+id/txtIdNo"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/pay_id_no"
-                android:layout_below="@+id/txtPhNo"
-                android:textColor="@color/black"
-                android:layout_marginTop="10dp"
-                android:textSize="20sp"
-                android:visibility="visible"
-                android:textStyle="bold"
-                android:fontFamily="@font/poppins_regular"/>
 
-            <TextView
-                android:id="@+id/txtValIdNo"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text=""
-                android:layout_below="@+id/txtPhNo"
-                android:layout_toEndOf="@+id/txtIdNo"
+            <EditText
+                android:id="@+id/editTextPhoneNumber"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_below="@+id/txtPhoneNumber"
+                android:layout_marginBottom="10dp"
+                android:background="@drawable/edittext_bg"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:hint="@string/phone_number"
+                android:imeOptions="actionDone"
+                android:inputType="number"
+                android:maxLength="10"
+                android:textAlignment="center"
                 android:textColor="@color/black"
-                android:layout_marginTop="10dp"
-                android:textSize="20sp"
-                android:layout_marginStart="5dp"
-                android:textStyle="bold"
-                android:fontFamily="@font/poppins_regular"/>
+                android:textSize="25sp"
+                tools:ignore="RtlSymmetry" />
+
+
+
+
 
         </RelativeLayout>
-
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:layout_marginTop="20dp">
-
-            <ImageView
-                android:id="@+id/personImage"
-                android:layout_width="160dp"
-                android:layout_height="200dp"
-                android:layout_alignParentEnd="true"
-                android:layout_marginEnd="40dp"
-                android:contentDescription="@string/todo"/>
-
-        </RelativeLayout>
-
 
     </LinearLayout>
-
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/relTicketCart"

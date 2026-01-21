@@ -46,6 +46,7 @@
     <string name="report">റിപ്പോർട്ട്</string>
     <string name="report_generated_time">റിപ്പോർട്ട് സൃഷ്ടിച്ച സമയം</string>
     <string name="total_amount">ആകെ തുക</string>
+    <string name="ticket">ടിക്കറ്റ്</string>
 
     <string name="more_people">കൂടുതൽ ആളുകൾ</string>
     <string name="pay_vazhipadu">തുക: Rs.%1$s</string>

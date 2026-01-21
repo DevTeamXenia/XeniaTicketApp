@@ -63,6 +63,7 @@
                         app:cardElevation="4dp">
 
                         <LinearLayout
+                            android:id="@+id/linHome"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:gravity="center"
@@ -591,6 +592,7 @@
             android:layout_marginEnd="30dp"
             android:layout_marginBottom="20dp"
             android:layout_weight="8"
+            android:text="@string/proceed"
             android:backgroundTint="@color/light_grey"
             android:enabled="false"
             android:textColor="@color/white"

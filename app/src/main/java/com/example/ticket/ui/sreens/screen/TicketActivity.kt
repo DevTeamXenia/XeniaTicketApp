@@ -79,16 +79,23 @@ CustomInactivityDialog.InactivityCallback,CustomInternetAvailabilityDialog.Inter
 
 
 
-
-        binding.btnProceed.setOnClickListener {
-            val intent = Intent(applicationContext, IdProofActivity::class.java)
-            intent.putExtra("ITEM_TOTAL", formattedTotalAmount)
-            startActivity(intent)
-        }
     }
     private fun setupUI() {
         binding.txtHome?.text = getString(R.string.home)
         binding.txtselectTicket.text = getString(R.string.choose_your_tickets)
+        binding.btnProceed.text = getString(R.string.proceed)
+        binding.linHome?.setOnClickListener {
+            startActivity(Intent(applicationContext, LanguageActivity::class.java))
+            finish()
+
+
+        }
+
+        binding.btnProceed.setOnClickListener {
+            val intent = Intent(applicationContext, TicketCartActivity::class.java)
+            startActivity(intent)
+
+        }
 
     }
     @SuppressLint("NotifyDataSetChanged")
@@ -348,5 +355,14 @@ CustomInactivityDialog.InactivityCallback,CustomInternetAvailabilityDialog.Inter
     }
 
 
+    override fun onBackPressed() {
+        val intent = Intent(this, LanguageActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                    Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        startActivity(intent)
+        finish()
+    }
 
 }

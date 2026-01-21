@@ -4,16 +4,12 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.ImageView
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import com.example.ticket.R
 import com.example.ticket.databinding.ActivityPrinterSettingBinding
 import com.example.ticket.utils.common.CommonMethod.setLocale
 import com.example.ticket.utils.common.Constants.PRINTER_B200MAX
 import com.example.ticket.utils.common.Constants.PRINTER_FALCON
-import com.example.ticket.utils.common.Constants.PRINTER_I900
 import com.example.ticket.utils.common.Constants.PRINTER_KIOSK
 import com.example.ticket.utils.common.SessionManager
 import com.urovo.sdk.print.PrinterProviderImpl
@@ -102,7 +98,6 @@ class PrinterSettingActivity : AppCompatActivity() {
 //        }
 
     }
-
 
     private fun initUI() {
         binding.printerTitleTxt.text = getString(R.string.select_device_printer)

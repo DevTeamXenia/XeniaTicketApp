@@ -27,13 +27,6 @@
     <string name="home">Home</string>
 
 
-    //home_screen
-    <string name="kanika">E-Kanikka</string>
-    <string name="melkavu_devi">MELKAVU\nBHAGAVATI</string>
-    <string name="keezhkavu_devi">KEEZHKAVU\nBHAGAVATI</string>
-    <string name="ayyappa">AYYAPPAN\n</string>
-    <string name="shiva">SHIVAN\n</string>
-    <string name="nagam">NAGAM\n</string>
 
 
     //donation_screen
@@ -54,6 +47,7 @@
     <string name="expire">Scan this code to Pay</string>
     <string name="proceed">Proceed</string>
 
+    <string name="ticket">Ticket</string>
 
     //payment_Screen
     <string name="thank_you">Thank You!</string>

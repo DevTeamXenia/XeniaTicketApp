@@ -48,6 +48,9 @@ class CompanyRepository(
     suspend fun getCompany(): Company? {
         return companyDao.getCompany()
     }
+    suspend fun getGateway(): String? {
+        return getString(CompanyKey.ISPAYMENTGATEWAY)
+    }
 
     suspend fun getBoolean(key: CompanyKey): Boolean {
         return companyDao.getByKeyCode(key.code)
