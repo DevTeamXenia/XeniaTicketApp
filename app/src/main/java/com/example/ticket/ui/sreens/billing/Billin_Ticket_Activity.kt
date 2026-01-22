@@ -192,22 +192,14 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener,
                     return@launch
                 }
 
-                val isLoaded = withContext(Dispatchers.IO) {
+                // 🔹 Try API sync (do not block UI on failure)
+                withContext(Dispatchers.IO) {
                     categoryRepository.loadCategories(token)
                 }
 
-                if (!isLoaded) {
-                    binding.ticketCat.visibility = View.GONE
-                    return@launch
-                }
-
+                // 🔹 Always read from DB
                 val categoryEntities = withContext(Dispatchers.IO) {
                     categoryRepository.getAllCategory()
-                }
-
-                if (categoryEntities.isEmpty()) {
-                    binding.ticketCat.visibility = View.GONE
-                    return@launch
                 }
 
                 val activeCategories = categoryEntities.filter { it.categoryActive }
@@ -217,10 +209,12 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener,
                     return@launch
                 }
 
+                // 🔹 Respect company setting
                 binding.ticketCat.visibility =
                     if (companyRepository.getBoolean(CompanyKey.CATEGORY_ENABLE))
                         View.VISIBLE
-                    else View.GONE
+                    else
+                        View.GONE
 
                 val selectedCategory = activeCategories.first()
                 selectedCategoryId = selectedCategory.categoryId
@@ -245,8 +239,10 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener,
                         categoryActive = entity.categoryActive
                     )
                 }
+
                 categoryAdapter.updateCategories(categories)
                 getTickets(selectedCategoryId)
+
             } catch (e: Exception) {
                 Log.e("DEBUG", "Category load error", e)
                 binding.ticketCat.visibility = View.GONE
@@ -254,35 +250,44 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener,
         }
     }
 
+
     private fun getTickets(categoryId: Int) {
         lifecycleScope.launch {
             try {
                 val token = sessionManager.getToken()
                 if (token.isNullOrEmpty()) return@launch
 
-                val isLoaded = activeTicketRepository.loadTickets(token)
-                if (!isLoaded) {
-                    showSnackbar(binding.root, "No Tickets found")
-                    return@launch
+                // 🔹 Try API sync (do NOT block UI)
+                try {
+                    activeTicketRepository.loadTickets(token)
+                } catch (e: Exception) {
+                    Log.w("TICKET_SYNC", "Ticket sync failed, using local data", e)
                 }
 
-                val tickets =
-                    activeTicketRepository.getTicketsByCategory(categoryId)
-
-                val ticketDtos = tickets.map { it.toDto() }
-                ticketAdapter.updateTickets(ticketDtos)
-                val updatedMap = ticketRepository.getTicketsMapByIds()
-                ticketAdapter.updateDbItemsMap(updatedMap)
+                // 🔹 Always read from DB
+                val tickets = activeTicketRepository.getTicketsByCategory(categoryId)
 
                 if (tickets.isEmpty()) {
                     showSnackbar(binding.root, "No tickets for this category")
+                    ticketAdapter.updateTickets(emptyList())
+                    return@launch
                 }
+
+                val ticketDtos = tickets.map { it.toDto() }
+                ticketAdapter.updateTickets(ticketDtos)
+
+                val updatedMap = ticketRepository.getTicketsMapByIds()
+                ticketAdapter.updateDbItemsMap(updatedMap)
+
                 getCartTicket()
+
             } catch (e: Exception) {
-                showSnackbar(binding.root, "Error: ${e.message}")
+                showSnackbar(binding.root, "Error loading tickets")
+                Log.e("TICKET_LOAD", "Error", e)
             }
         }
     }
+
 
 
     override fun onTicketClick(ticketItem: TicketDto) {

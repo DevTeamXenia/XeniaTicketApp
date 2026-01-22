@@ -166,7 +166,7 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
             }
         }
     }
-    
+
     private fun isLargeOrXLargeLandscape(): Boolean {
         val config = resources.configuration
         val screenSizeMask = config.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK
@@ -244,11 +244,27 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
                             return@launch
                         }
 
-                        startActivity(
-                            Intent(this@LoginActivity, LanguageActivity::class.java)
-                        )
-                        finish()
+                        // Check for first login
+                        val isFirstLoginKey = "isFirstLogin_$userId"
+                        val isFirstLogin = sharedPref.getBoolean(isFirstLoginKey, true)
+
+                        if (isFirstLogin) {
+                            // Open printer setup
+                        openPrinterSetup()
+
+                            // Mark as not first login anymore
+                            sharedPref.edit {
+                                putBoolean(isFirstLoginKey, false)
+                            }
+                        } else {
+
+
+                            startActivity(Intent(this@LoginActivity, LanguageActivity::class.java))
+
+                            finish()
+                        }
                     }
+
 
                     UserType.PROCESS_USER -> {
 
@@ -272,9 +288,8 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
                         }
 
                         sessionManager.saveSelectedPrinter(PRINTER_KIOSK)
-                        startActivity(
-                            Intent(this@LoginActivity, LanguageActivity::class.java)
-                        )
+                        startActivity(Intent(this@LoginActivity, LanguageActivity::class.java))
+
                         finish()
                     }
 
@@ -283,7 +298,6 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
                         showSnackbar(binding.root, "Unknown user type!")
                     }
                 }
-
 
             } catch (e: HttpException) {
 
@@ -294,12 +308,11 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
                     else -> errorBody ?: e.message() ?: "Something went wrong!"
                 }
 
-                Log.e("LOGIN_ERROR", "Code: ${e.code()}, Body: $errorBody", e)
+
                 showSnackbar(binding.root, msg)
 
             } catch (e: Exception) {
 
-                Log.e("LOGIN_ERROR", "Unexpected error", e)
                 showSnackbar(
                     binding.root,
                     e.localizedMessage ?: "Something went wrong! Please try again."
@@ -308,6 +321,13 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
         }
     }
 
+    private fun openPrinterSetup() {
+        val intent = Intent(applicationContext, PrinterSettingActivity::class.java).apply {
+            putExtra("fromLogin", "Login")
+        }
+        startActivity(intent)
+        finish()
+    }
     private fun hideKeyboard() {
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         val view = currentFocus ?: View(this)

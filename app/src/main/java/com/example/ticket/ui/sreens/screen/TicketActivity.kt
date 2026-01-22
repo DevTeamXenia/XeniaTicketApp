@@ -245,27 +245,33 @@ CustomInactivityDialog.InactivityCallback,CustomInternetAvailabilityDialog.Inter
                 val token = sessionManager.getToken()
                 if (token.isNullOrEmpty()) return@launch
 
-                val isLoaded = activeTicketRepository.loadTickets(token)
-                if (!isLoaded) {
-                    showSnackbar(binding.root, "No Tickets found")
+
+                try {
+                    activeTicketRepository.loadTickets(token)
+                } catch (e: Exception) {
+                    Log.w("TICKET_SYNC", "Using cached tickets", e)
+                }
+
+
+                val tickets = activeTicketRepository.getTicketsByCategory(categoryId)
+
+                if (tickets.isEmpty()) {
+                    ticketAdapter.updateTickets(emptyList())
+                    showSnackbar(binding.root, "No tickets for this category")
                     return@launch
                 }
 
-                val tickets =
-                    activeTicketRepository.getTicketsByCategory(categoryId)
 
                 val ticketDtos = tickets.map { it.toDto() }
                 ticketAdapter.updateTickets(ticketDtos)
 
-                if (tickets.isEmpty()) {
-                    showSnackbar(binding.root, "No tickets for this category")
-                }
-
             } catch (e: Exception) {
-                showSnackbar(binding.root, "Error: ${e.message}")
+                showSnackbar(binding.root, "Error loading tickets")
+                Log.e("TICKET_LOAD", "Error", e)
             }
         }
     }
+
 
 
     override fun onTicketClick(ticketItem: TicketDto) {

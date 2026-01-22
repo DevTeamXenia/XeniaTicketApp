@@ -362,17 +362,17 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
 
     override fun onResume() {
         super.onResume()
-        loadDarshanItems()
+
     }
 
     override fun onPause() {
         super.onPause()
-        loadDarshanItems()
+        currentFocus?.clearFocus()
     }
+
 
     override fun onDestroy() {
         super.onDestroy()
-        loadDarshanItems()
     }
 
     override fun onRetryClicked() {
@@ -383,7 +383,6 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
-        loadDarshanItems()
         return super.dispatchTouchEvent(ev)
     }
     fun showMessage(msg: String) {

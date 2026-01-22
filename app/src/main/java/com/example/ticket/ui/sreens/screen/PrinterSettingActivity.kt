@@ -139,28 +139,6 @@ class PrinterSettingActivity : AppCompatActivity() {
                 finish()
             }
 
-            pss == "pdd" -> {
-                val printIntent = Intent(this, PaymentActivity::class.java).apply {
-                    putExtra("from", from)
-                    putExtra("status", status)
-                    putExtra("amount", amount)
-                    putExtra("transID", transID)
-                    putExtra("orderID", orderID)
-                    putExtra("phno", phoneNo)
-                    putExtra("prefix", prefix)
-                    putExtra("name", name)
-                    putExtra("star", star)
-                    putExtra("devatha ", devatha)
-                    putExtra("devathaEn", devathaEn)
-                    putExtra("devathaMl", devathaMl)
-                    putExtra("orderID ", orderID)
-                    putExtra("pss", "pdd")
-                }
-                startActivity(printIntent)
-                finish()
-            }
-
-
             else -> {
                 finish()
             }

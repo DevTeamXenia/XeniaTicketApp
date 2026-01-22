@@ -98,12 +98,10 @@ class TicketAdapter(
                                 val ticketRate = ticketItem.ticketAmount
 
                                 String.format(Locale.ENGLISH, "Amount %.2f*%d", ticketRate, qty)
-                                txtTicketPrice2.text =
-                                    String.format(Locale.ENGLISH, "Rs. %.2f", ticketItem.ticketAmount)
+                                Quantity.text = "Amount ${String.format("%.2f", ticketRate)}*${qty}"
+                                txtTicketPrice2.text = "Rs. ${String.format("%.2f", ticketItem.ticketAmount)}"
                                 val total = ticketRate * qty
                                 txtTotalAmount.text = String.format(Locale.ENGLISH, "%.2f/-", total)
-
-
 
 
                             } else {

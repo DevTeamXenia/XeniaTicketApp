@@ -186,76 +186,70 @@ class LanguageActivity : AppCompatActivity(),
 
 
 
-        private fun loadCompanyDetails() {
-            lifecycleScope.launch {
-                try {
-                    val token = sessionManager.getToken()
+    private fun loadCompanyDetails() {
+        lifecycleScope.launch {
+            try {
+                val token = sessionManager.getToken()
 
-                    if (token.isNullOrEmpty()) {
-                        dismissLoader()
-                        showSnackbar(binding.root, "Invalid session. Please login again.")
-                        return@launch
-                    }
-
-                    val isLoaded = withContext(Dispatchers.IO) {
-                        companyRepository.loadCompanySettings(token)
-                    }
-
-                    if (!isLoaded) {
-                        dismissLoader()
-                        showSnackbar(binding.root, "Company details not found!")
-                        return@launch
-                    }
-                    val company = withContext(Dispatchers.IO) {
-                        companyRepository.getCompany()
-                    }
-                    if (company == null) {
-                        dismissLoader()
-                        showSnackbar(binding.root, "Company data missing in database!")
-                        return@launch
-                    }
-
-
-                    enabledLanguages = companyRepository
-                        .getString(CompanyKey.COMPANY_LANGUAGES)
-                        ?.split(",")
-                        ?.map { it.trim() }
-                        ?: emptyList()
-
-                    setupBackgroundImage()
-                    setupLanguageButtons(enabledLanguages)
-                    setupCardPosition(enabledLanguages)
-
+                if (token.isNullOrEmpty()) {
                     dismissLoader()
-
-                    val bgImageUrl =
-                        companyRepository.getString(CompanyKey.COMPANYLOGO_L)
-
-                    if (!bgImageUrl.isNullOrEmpty()) {
-                        val bitmap = loadBitmapSafely(this@LanguageActivity, bgImageUrl)
-
-                        bitmap?.let {
-                            val file = saveBitmapToFile(
-                                context = this@LanguageActivity,
-                                bitmap = it,
-                                filename = "company_bg.png"
-                            )
-                            binding.root.background =
-                                Drawable.createFromPath(file.absolutePath)
-                        }
-                    }
-
-                    dismissLoader()
-
-                } catch (e: Exception) {
-                    dismissLoader()
-                    showSnackbar(binding.root, "Unable to load settings!")
-                    e.printStackTrace()
+                    showSnackbar(binding.root, "Invalid session. Please login again.")
+                    return@launch
                 }
+
+                // 🔹 Try API sync (do NOT fail UI if this fails)
+                withContext(Dispatchers.IO) {
+                    companyRepository.loadCompanySettings(token)
+                }
+
+                // 🔹 Always read from DB
+                val company = withContext(Dispatchers.IO) {
+                    companyRepository.getCompany()
+                }
+
+                if (company == null) {
+                    dismissLoader()
+                    showSnackbar(binding.root, "Company data missing in database!")
+                    return@launch
+                }
+
+                enabledLanguages = companyRepository
+                    .getString(CompanyKey.COMPANY_LANGUAGES)
+                    ?.split(",")
+                    ?.map { it.trim() }
+                    ?: emptyList()
+
+                setupBackgroundImage()
+                setupLanguageButtons(enabledLanguages)
+                setupCardPosition(enabledLanguages)
+
+                val bgImageUrl =
+                    companyRepository.getString(CompanyKey.COMPANYLOGO_L)
+
+                if (!bgImageUrl.isNullOrEmpty()) {
+                    val bitmap = loadBitmapSafely(this@LanguageActivity, bgImageUrl)
+                    bitmap?.let {
+                        val file = saveBitmapToFile(
+                            context = this@LanguageActivity,
+                            bitmap = it,
+                            filename = "company_bg.png"
+                        )
+                        binding.root.background =
+                            Drawable.createFromPath(file.absolutePath)
+                    }
+                }
+
+            } catch (e: Exception) {
+                showSnackbar(binding.root, "Unable to load settings!")
+                e.printStackTrace()
+            } finally {
+                dismissLoader()
             }
         }
+    }
 
-        private fun saveBitmapToFile(context: Context, bitmap: Bitmap, filename: String): File {
+
+    private fun saveBitmapToFile(context: Context, bitmap: Bitmap, filename: String): File {
             val file = File(context.cacheDir, filename)
             FileOutputStream(file).use { out ->
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
