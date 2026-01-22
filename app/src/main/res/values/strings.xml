@@ -68,14 +68,10 @@
     <string name="you_have_been_inactive_for_a_while_please_touch_the_screen_to_continue">Do you want to continue?</string>
     <string name="qr_expire">QR expires in :</string>
 
-    <string name="vazhipadu">Seva Particulars</string>
-    <string name="donation">E Hundi</string>
-    <string name="darshan">Ticket</string>
-    <string name="pooja_item">Pooja Item</string>
+
     <string name="welcome">Welcome!</string>
     <string name="more_people">More people</string>
-    <string name="pay_vazhipadu">PAY Rs.%1$s</string>
-    <string name="annadana">Annadana</string>
+
 
 
     <string name="transaction">Transaction</string>

@@ -3,13 +3,7 @@
     <string name="home">హోమ్</string>
 
 
-    //home_screen
-    <string name="kanika">ఈ కనికా</string>
-    <string name="melkavu_devi">మెల్కావిల\nభగవతి</string>
-    <string name="keezhkavu_devi">కీజ్‌కావిల్\nభగవతి</string>
-    <string name="ayyappa">అయ్యప్పన్\n</string>
-    <string name="shiva">శివన్\n</string>
-    <string name="nagam">నాగం\n</string>
+
     <string name="sync">సమన్వయం</string>
     donation_screen
     <string name="fill_out_your_details">మీ వివరాలను పూరించండి</string>
@@ -45,12 +39,9 @@
     <string name="qr_expire">క్యూఆర్ గడువు ముగియడానికి :</string>
     <string name="aadhaar_no">ఆధార్ సంఖ్య</string>
 
-    <string name="vazhipadu">వాజిపాడు</string>
-    <string name="donation">దానం</string>
     <string name="ticket">టికెట్</string>
 
-    <string name="pooja_item">పూజా వస్తువు</string>
-    <string name="annadana">అన్నదానం</string>
+
     <string name="welcome">స్వాగతం!</string>
     <string name="choose_your_tickets">మీ టికెట్లను ఎంచుకోండి</string>
 
@@ -63,7 +54,6 @@
     <string name="total_amount">మొత్తం మొత్తం</string>
 
     <string name="more_people">ఇంకా ఎక్కువ మంది</string>
-    <string name="pay_vazhipadu">చెల్లించు: Rs.%1$s</string>
     <string name="id_no">ఐడి నంబర్</string>
     <string name="_2018xxxx989">2018XXXX989</string>
     <string name="pay_phone_number">ఫోన్ నంబర్ :</string>

@@ -51,15 +51,12 @@
     <string name="qr_expire">QR कालबाह्य होतो :</string>
     <string name="aadhaar_no">आधार क्रमांक</string>
 
-    <string name="vazhipadu">सेवा तपशील</string>
-    <string name="donation">ई-हंडी</string>
+
     <string name="ticket">तिकीट</string>
 
-    <string name="pooja_item">पूजा साहित्य</string>
-    <string name="annadana">अन्नदान</string>
     <string name="welcome">स्वागत आहे!</string>
     <string name="more_people">अधिक लोक</string>
-    <string name="pay_vazhipadu">Rs.%1$s भरा</string>
+
 
     <string name="transaction">व्यवहार</string>
     <string name="summary">सारांश</string>

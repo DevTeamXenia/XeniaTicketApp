@@ -97,8 +97,9 @@ class TicketAdapter(
                                 val qty = cartItem.daQty
                                 val ticketRate = ticketItem.ticketAmount
 
-                                Quantity.text = "Amount  $ticketRate * $qty"
-                                txtTicketPrice2.text = "Rs. ${ticketItem.ticketAmount}"
+                                String.format(Locale.ENGLISH, "Amount %.2f*%d", ticketRate, qty)
+                                txtTicketPrice2.text =
+                                    String.format(Locale.ENGLISH, "Rs. %.2f", ticketItem.ticketAmount)
                                 val total = ticketRate * qty
                                 txtTotalAmount.text = String.format(Locale.ENGLISH, "%.2f/-", total)
 

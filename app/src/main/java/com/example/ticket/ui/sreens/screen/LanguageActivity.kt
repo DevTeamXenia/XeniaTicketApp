@@ -320,26 +320,17 @@ class LanguageActivity : AppCompatActivity(),
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                // Clear any previous ticket data
                 ticketRepository.clearAllData()
 
-                val gatewayValue = companyRepository.getGateway()
-
-                val isPaymentGatewayActive = gatewayValue?.toBoolean()
-
-
-                val logoRes = when (isPaymentGatewayActive) {
-                    true -> R.drawable.ic_can
-                    false -> R.drawable.ic_dhan
-                    null -> R.drawable.ic_sib
-                }
+                val gateway = companyRepository.getGateway()
 
                 withContext(Dispatchers.Main) {
                     setupBackgroundImage()
                     loadCompanyDetails()
-                    setBankLogo()
-                    val drawable = ContextCompat.getDrawable(this@LanguageActivity, logoRes)
-                    binding.bankLogo.setImageDrawable(drawable)
+
+                    if (!gateway.isNullOrEmpty()) {
+                        setBankLogo()
+                    }
                 }
 
             } catch (e: Exception) {
@@ -347,6 +338,7 @@ class LanguageActivity : AppCompatActivity(),
             }
         }
     }
+
 
     private suspend fun setBankLogo() {
         val gateway = withContext(Dispatchers.IO) {
@@ -363,19 +355,13 @@ class LanguageActivity : AppCompatActivity(),
 
         }
     }
-
     override fun onPause() {
             super.onPause()
-
         }
-
 
         override fun onDestroy() {
             super.onDestroy()
-
-
         }
-
         private fun requestOverlayPermission() {
             if (!Settings.canDrawOverlays(this)) {
                 val intent = Intent(
@@ -384,7 +370,6 @@ class LanguageActivity : AppCompatActivity(),
                 )
                 overlayPermissionLauncher.launch(intent)
             }
-
         }
 
         private val overlayPermissionLauncher = registerForActivityResult(
@@ -404,5 +389,4 @@ class LanguageActivity : AppCompatActivity(),
 
             }
         }
-
     }

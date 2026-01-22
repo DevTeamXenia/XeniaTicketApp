@@ -60,7 +60,7 @@ class PaymentActivity : AppCompatActivity() {
     private val ticketRepository: TicketRepository by inject()
     private val companyRepository: CompanyRepository by inject()
     private var curConnect: IDeviceConnection? = null
-
+    private var prefix: String? = null
     private var status: String? = null
     private var amount: String? = null
     private var transID: String? = null
@@ -85,6 +85,7 @@ class PaymentActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         from = intent.getStringExtra("from")
+        prefix = intent.getStringExtra("prefix")
         ticket = intent.getStringExtra("ticket")
         status = intent.getStringExtra("status")
         amount = intent.getStringExtra("amount")
@@ -486,7 +487,7 @@ class PaymentActivity : AppCompatActivity() {
         paint.textAlign = Paint.Align.LEFT
         paint.textSize = 22f
 
-        tempCanvas.drawText("$labelReceiptNo($labelDReceiptNo): $orderID", 20f, yOffset, paint)
+        tempCanvas.drawText("$labelReceiptNo($labelDReceiptNo): ${prefix}$orderID", 20f, yOffset, paint)
         yOffset += 35f
         tempCanvas.drawText("$labelDate($labelDDate): $currentDate", 20f, yOffset, paint)
         yOffset += 35f
@@ -615,6 +616,7 @@ class PaymentActivity : AppCompatActivity() {
         val rectBottom = tempYOffset + textPadding
         paint.style = Paint.Style.STROKE
         paint.color = Color.BLACK
+        val innerPadding = 30f
         paint.strokeWidth = 1f
         val cornerRadius = 20f
 
@@ -625,13 +627,11 @@ class PaymentActivity : AppCompatActivity() {
         )
 
         yOffset += textPadding
-        yOffset += 30f
-        val textX = padding + 15f
-        var textY = yOffset
         paint.textAlign = Paint.Align.LEFT
         paint.textSize = 20f
         paint.typeface = Typeface.DEFAULT
-
+        val textX = padding + innerPadding
+        var textY = rectTop + innerPadding - paint.fontMetrics.ascent
         tempCanvas.drawText("$labelName : $name", textX, textY, paint)
         textY += 25f
         tempCanvas.drawText(labelDName, textX, textY, paint)
@@ -719,7 +719,7 @@ class PaymentActivity : AppCompatActivity() {
         paint.textAlign = Paint.Align.LEFT
         paint.textSize = 22f
 
-        tempCanvas.drawText("$labelReceiptNo: $orderID", 20f, yOffset, paint)
+        tempCanvas.drawText("$labelReceiptNo: ${prefix}$orderID", 20f, yOffset, paint)
         yOffset += 35f
         tempCanvas.drawText("$labelDate: $currentDate", 20f, yOffset, paint)
         yOffset += 35f
@@ -801,7 +801,7 @@ class PaymentActivity : AppCompatActivity() {
         yOffset += 35f
 
         val padding = 15f
-        val textPadding = 15f
+        val textPadding = 0f
         val rectTop = yOffset
         val rectRight = width - padding
 
@@ -818,9 +818,9 @@ class PaymentActivity : AppCompatActivity() {
 
         paint.style = Paint.Style.STROKE
         paint.color = Color.BLACK
-        paint.strokeWidth = 1f
+        val innerPadding = 30f
         val cornerRadius = 20f
-
+        paint.strokeWidth = 1.5f
         tempCanvas.drawRoundRect(
             padding, rectTop, rectRight, rectBottom,
             cornerRadius, cornerRadius,
@@ -829,12 +829,13 @@ class PaymentActivity : AppCompatActivity() {
 
         yOffset += textPadding
         yOffset += 20f
-        val textX = padding + 25f
-        var textY = yOffset
+//        val textX = padding + 25f
+//        var textY = yOffset
         paint.textAlign = Paint.Align.LEFT
         paint.textSize = 20f
         paint.typeface = Typeface.DEFAULT
-
+        val textX = padding + innerPadding
+        var textY = rectTop + innerPadding - paint.fontMetrics.ascent
         tempCanvas.drawText("$labelName : $name", textX, textY, paint)
         textY += 30f
         tempCanvas.drawText("$labelPhonenumber: $phoneNo", textX, textY, paint)

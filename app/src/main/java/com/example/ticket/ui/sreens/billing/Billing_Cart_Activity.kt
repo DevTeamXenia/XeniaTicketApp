@@ -33,6 +33,7 @@ import com.example.ticket.utils.common.CommonMethod.generateNumericTransactionRe
 import com.example.ticket.utils.common.CommonMethod.isInternetAvailable
 import com.example.ticket.utils.common.CommonMethod.setLocale
 import com.example.ticket.utils.common.CommonMethod.showSnackbar
+import com.example.ticket.utils.common.CompanyKey
 import com.example.ticket.utils.common.JwtUtils
 import com.example.ticket.utils.common.SessionManager
 
@@ -202,14 +203,14 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
     ) {
         lifecycleScope.launch {
 
-            // 1️⃣ Get cart tickets
+
             val cartTickets = ticketRepository.getAllTicketsInCart()
             if (cartTickets.isEmpty()) {
                 binding.btnPay.isEnabled = true
                 return@launch
             }
 
-            // 2️⃣ Split quantity -> each ticket Quantity = 1
+
             val itemsList = cartTickets.flatMap { item ->
                 (1..item.daQty).map {
                     TicketPaymentRequest.Item(
@@ -221,14 +222,13 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
                 }
             }
 
-            // 3️⃣ Take image from first ticket
             val firstTicket = cartTickets.first()
             val imageBase64String = Base64.encodeToString(
                 firstTicket.daImg ?: ByteArray(0),
                 Base64.NO_WRAP
             )
 
-            // 4️⃣ Get required data
+
             val companyId = companyRepository.getCompany()?.companyId ?: 0
             val token = sessionManager.getToken()
 
@@ -238,11 +238,11 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
                 return@launch
             }
 
-            // 5️⃣ Get name & phone directly from UI (IMPORTANT)
+
             val name = binding.editTextName.text.toString().trim()
             val phone = binding.editTextPhoneNumber.text.toString().trim()
 
-            // 6️⃣ Build request
+
             val request = TicketPaymentRequest(
                 CompanyId = companyId,
                 UserId = userId,
@@ -266,7 +266,7 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
             }
 
             try {
-                // 7️⃣ API call
+
                 val response = withContext(Dispatchers.IO) {
                     paymentRepository.postTicket(
                         bearerToken = "Bearer $token",
@@ -274,7 +274,7 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
                     )
                 }
 
-                // 8️⃣ Success handling
+
                 if (
                     response.status.equals("Success", ignoreCase = true) &&
                     !response.receipt.isNullOrBlank()
@@ -286,7 +286,8 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
                         status = "S",
                         orderId = response.receipt,
                         ticket = response.ticket,
-                        totalAmount = totalAmount.toDouble()
+                        totalAmount = totalAmount.toDouble(),
+                        companyRepository.getString(CompanyKey.PREFIX) ?: ""
                     )
 
                 } else {
@@ -327,7 +328,8 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
         status: String,
         orderId: String,
         ticket: String?,
-        totalAmount: Double
+        totalAmount: Double,
+        receiptPrefix: String?
     ) {
 
         val intent = Intent(this, PaymentActivity::class.java).apply {
@@ -337,6 +339,7 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
             putExtra("orderID", orderId)
             putExtra("transID", "")
             putExtra("ticket", ticket)
+            putExtra("prefix", receiptPrefix)
             putExtra("name", binding.editTextName.text.toString())
             putExtra("phno", binding.editTextPhoneNumber.text.toString())
         }

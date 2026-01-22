@@ -131,7 +131,7 @@ class TicketCartAdapter(
                 LANGUAGE_MARATHI -> ticketItem.ticketNameMr
                 else -> ticketItem.ticketName
             }
-
+            txtQty.text = ticketItem.daQty.toString()
             txtRate.text = "Rs. ${String.format(Locale.ENGLISH, "%.0f", ticketItem.daRate)}"  // Use %.0f to truncate decimals like toInt(), but with English digits
             totalAmount.text = "Rs. ${String.format(Locale.ENGLISH, "%.0f", ticketItem.daTotalAmount)}/-"
             totalAmount.text = "Rs. ${ticketItem.daTotalAmount.toInt()}/-"

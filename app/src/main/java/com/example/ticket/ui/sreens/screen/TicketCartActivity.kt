@@ -34,6 +34,7 @@ import com.example.ticket.utils.common.CommonMethod.enableInactivityReset
 import com.example.ticket.utils.common.CommonMethod.generateNumericTransactionReferenceID
 import com.example.ticket.utils.common.CommonMethod.setLocale
 import com.example.ticket.utils.common.CommonMethod.showSnackbar
+import com.example.ticket.utils.common.CompanyKey
 import com.example.ticket.utils.common.InactivityHandler
 import com.example.ticket.utils.common.JwtUtils
 import com.example.ticket.utils.common.SessionManager
@@ -289,7 +290,8 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                         status = "S",
                         orderId = response.receipt,
                         ticket = response.ticket,
-                        totalAmount = totalAmount.toDouble()
+                        totalAmount = totalAmount.toDouble(),
+                        companyRepository.getString(CompanyKey.PREFIX) ?: ""
                     )
 
                 } else {
@@ -310,7 +312,8 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
         e: Exception,
         status: String,
         statusDesc: String,
-        retryCount: Int
+        retryCount: Int,
+
     ) {
         if (e is HttpException && e.code() == 401) {
             binding.btnPay.isEnabled = true
@@ -330,7 +333,8 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
         status: String,
         orderId: String,
         ticket: String?,
-        totalAmount: Double
+        totalAmount: Double,
+        receiptPrefix: String?
     ) {
 
         val intent = Intent(this, PaymentActivity::class.java).apply {
@@ -340,6 +344,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
             putExtra("orderID", orderId)
             putExtra("transID", "")
             putExtra("ticket", ticket)
+            putExtra("prefix", receiptPrefix)
             putExtra("name", binding.editTextName.text.toString())
             putExtra("phno", binding.editTextPhoneNumber.text.toString())
 

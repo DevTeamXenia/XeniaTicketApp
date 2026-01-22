@@ -35,13 +35,11 @@
     <string name="qr_expire"> ಕ್ಯೂಆರ್ ಅವಧಿ ಮುಗಿಯಲು :</string>
     <string name="aadhaar_no">ಆಧಾರ್ ಸಂಖ್ಯೆ</string>
 
-    <string name="vazhipadu">ಸೇವಾ ವಿವರಗಳು</string>
-    <string name="donation">ಇ ಹುಂಡಿ</string>
+
     <string name="ticket">ಟಿಕೆಟ್</string>
 
-    <string name="pooja_item">ಪೂಜಾ ಐಟಂ</string>
+
     <string name="welcome">ಸ್ವಾಗತ!</string>
-    <string name="annadana">ಅನ್ನದಾನ</string>
     <string name="choose_your_tickets">ನಿಮ್ಮ ಟಿಕೆಟ್‌ಗಳನ್ನು ಆಯ್ಕೆಮಾಡಿ</string>
 
 
@@ -52,7 +50,6 @@
     <string name="total_amount">ಒಟ್ಟು ಮೊತ್ತ</string>
 
     <string name="more_people">ಹೆಚ್ಚು ಜನರು</string>
-    <string name="pay_vazhipadu">ಪಾವತಿಸಿ: Rs.%1$s</string>
     <string name="id_no">ಐಡಿ ಸಂಖ್ಯೆ</string>
     <string name="_2018xxxx989">2018XXXX989</string>
     <string name="pay_phone_number">ಫೋನ್ ಸಂಖ್ಯೆ :</string>

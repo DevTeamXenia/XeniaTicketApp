@@ -28,11 +28,7 @@
     <string name="you_have_been_inactive_for_a_while_please_touch_the_screen_to_continue">आप कुछ समय से निष्क्रिय हैं। कृपया जारी रखने के लिए स्क्रीन को स्पर्श करें।</string>
     <string name="qr_expire">क्यूआर समाप्त होने में :</string>
     <string name="aadhaar_no">आधार संख्या</string>
-    <string name="vazhipadu">वाजिपाडु</string>
-    <string name="donation">दान</string>
-    <string name="ticket">Ticket</string>
-    <string name="pooja_item">पूजा की वस्तु</string>
-    <string name="annadana">अन्नदान</string>
+    <string name="ticket">टिकट</string>
     <string name="welcome">स्वागत है!</string>
 
     <string name="transaction">लेन-देन</string>
