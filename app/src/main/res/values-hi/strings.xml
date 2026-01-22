@@ -30,13 +30,14 @@
     <string name="aadhaar_no">आधार संख्या</string>
     <string name="ticket">टिकट</string>
     <string name="welcome">स्वागत है!</string>
-
+    <string name="no_of_tickets">टिकटों की संख्या</string>
     <string name="transaction">लेन-देन</string>
     <string name="summary">सारांश</string>
     <string name="report">प्रतिवेदन</string>
     <string name="report_generated_time">रिपोर्ट तैयार होने का समय</string>
     <string name="total_amount">कुल राशि</string>
     <string name="choose_your_tickets">अपने टिकट चुनें</string>
+    <string name="proceed">आगे बढ़ें</string>
 
     <string name="do_you_want_to_logout">क्या आप लॉगआउट करना चाहते हैं?</string>
     <string name="choose_item">आइटम चुनें</string>

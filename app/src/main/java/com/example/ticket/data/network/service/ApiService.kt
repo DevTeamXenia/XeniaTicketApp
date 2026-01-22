@@ -2,6 +2,7 @@ package com.example.ticket.data.network.service
 
 import com.example.ticket.data.network.model.CategoryResponse
 import com.example.ticket.data.network.model.CompanyResponse
+import com.example.ticket.data.network.model.LabelSettingsResponse
 import com.example.ticket.data.network.model.LoginRequest
 import com.example.ticket.data.network.model.LoginResponse
 import com.example.ticket.data.network.model.OrderResponse
@@ -25,6 +26,12 @@ interface ApiService {
     suspend fun getCompanySettings(
         @Header("Authorization") bearerToken: String
     ): List<CompanyResponse>
+
+    @GET("Company/label")
+    suspend fun getCompanyLabel(
+        @Header("Authorization") bearerToken: String
+    ):List<LabelSettingsResponse>
+
 
     @GET("Category/sync")
     suspend fun getCategory(

@@ -29,6 +29,8 @@ import com.example.ticket.utils.common.Constants.LANGUAGE_ENGLISH
 import com.example.ticket.utils.common.Constants.LANGUAGE_HINDI
 import com.example.ticket.utils.common.Constants.LANGUAGE_KANNADA
 import com.example.ticket.utils.common.Constants.LANGUAGE_MALAYALAM
+import com.example.ticket.utils.common.Constants.LANGUAGE_MARATHI
+import com.example.ticket.utils.common.Constants.LANGUAGE_PUNJABI
 import com.example.ticket.utils.common.Constants.LANGUAGE_SINHALA
 import com.example.ticket.utils.common.Constants.LANGUAGE_TAMIL
 import com.example.ticket.utils.common.Constants.LANGUAGE_TELUGU
@@ -176,6 +178,8 @@ class CustomTicketPopupDialogue : DialogFragment() {
             LANGUAGE_TELUGU -> ticketNameTe
             LANGUAGE_HINDI -> ticketNameHi
             LANGUAGE_SINHALA-> ticketNameSi
+            LANGUAGE_PUNJABI -> ticketNamePa
+            LANGUAGE_MARATHI -> ticketNameMr
             else -> ticketName
         }
         txtTicketName.text = when (sessionManager.getSelectedLanguage()) {
@@ -186,6 +190,8 @@ class CustomTicketPopupDialogue : DialogFragment() {
             LANGUAGE_TELUGU -> ticketNameTe
             LANGUAGE_HINDI -> ticketNameHi
             LANGUAGE_SINHALA-> ticketNameSi
+            LANGUAGE_PUNJABI -> ticketNamePa
+            LANGUAGE_MARATHI -> ticketNameMr
             else -> ticketName
         }
 
@@ -265,7 +271,6 @@ class CustomTicketPopupDialogue : DialogFragment() {
             val cartItem = Ticket(
                 ticketId = ticketId,
                 ticketName = ticketName,
-
                 ticketNameMa = ticketNameMa,
                 ticketNameTa = ticketNameTa,
                 ticketNameTe = ticketNameTe,

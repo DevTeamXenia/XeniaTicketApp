@@ -48,14 +48,13 @@ class LoginActivity : AppCompatActivity() {
 
         if (sessionManager.isLoggedIn()) {
 
-            val userType = UserType.fromValue(sessionManager.getUserType())
+            val userType = UserType.fromValue(
+                sessionManager.getUserType()
+            )
 
-            lifecycleScope.launch {
-                navigateAfterLogin(userType)
-            }
+            navigateAfterLogin(userType)
             return
         }
-
 
 
         val sharedPref = getSharedPreferences("LoginPrefs", MODE_PRIVATE)
@@ -122,21 +121,10 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
 }
     private fun navigateAfterLogin(userType: UserType) {
 
-        val config = resources.configuration
-        val screenSizeMask = config.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK
-        val isLandscape = config.orientation == Configuration.ORIENTATION_LANDSCAPE
-        val isPortrait = config.orientation == Configuration.ORIENTATION_PORTRAIT
-
         when (userType) {
 
             UserType.COUNTER_USER -> {
-
-                val allowedForLarge =
-                    screenSizeMask == Configuration.SCREENLAYOUT_SIZE_LARGE
-                val allowedForXLarge =
-                    screenSizeMask == Configuration.SCREENLAYOUT_SIZE_XLARGE && isLandscape
-
-                if (!allowedForLarge && !allowedForXLarge) {
+                if (!isLargeOrXLargeLandscape()) {
                     dismissLoader()
                     showSnackbar(
                         binding.root,
@@ -155,11 +143,10 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
                     binding.root,
                     "PROCESS_USER is not allowed to login on this device!"
                 )
-                return
             }
 
             UserType.CUSTOMER -> {
-                if (screenSizeMask != Configuration.SCREENLAYOUT_SIZE_XLARGE || !isPortrait) {
+                if (!isXLargePortrait()) {
                     dismissLoader()
                     showSnackbar(
                         binding.root,
@@ -179,7 +166,23 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
             }
         }
     }
+    
+    private fun isLargeOrXLargeLandscape(): Boolean {
+        val config = resources.configuration
+        val screenSizeMask = config.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK
+        val isLandscape = config.orientation == Configuration.ORIENTATION_LANDSCAPE
 
+        return screenSizeMask == Configuration.SCREENLAYOUT_SIZE_LARGE ||
+                (screenSizeMask == Configuration.SCREENLAYOUT_SIZE_XLARGE && isLandscape)
+    }
+
+    private fun isXLargePortrait(): Boolean {
+        val config = resources.configuration
+        val screenSizeMask = config.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK
+        val isPortrait = config.orientation == Configuration.ORIENTATION_PORTRAIT
+
+        return screenSizeMask == Configuration.SCREENLAYOUT_SIZE_XLARGE && isPortrait
+    }
 
     private fun performLogin(
         userId: String,
@@ -218,11 +221,11 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
                 val isLandscape = config.orientation == Configuration.ORIENTATION_LANDSCAPE
                 val isPortrait = config.orientation == Configuration.ORIENTATION_PORTRAIT
 
-                val jwtPayload = JwtUtils.decodeJwt(token)
-                val userTypeValue = jwtPayload.getString("UserType")
-                val userType = UserType.fromValue(userTypeValue)
 
-              
+                val userType = UserType.fromValue(
+                    JwtUtils.getUserType(token)
+                )
+
                 when (userType) {
 
                     UserType.COUNTER_USER -> {
@@ -257,7 +260,8 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
                         return@launch
                     }
 
-                    else -> {
+                    UserType.CUSTOMER -> {
+
                         if (screenSizeMask != Configuration.SCREENLAYOUT_SIZE_XLARGE || !isPortrait) {
                             dismissLoader()
                             showSnackbar(
@@ -273,7 +277,13 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
                         )
                         finish()
                     }
+
+                    UserType.UNKNOWN -> {
+                        dismissLoader()
+                        showSnackbar(binding.root, "Unknown user type!")
+                    }
                 }
+
 
             } catch (e: HttpException) {
 

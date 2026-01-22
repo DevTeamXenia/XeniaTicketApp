@@ -4,6 +4,7 @@ import androidx.room.Room
 import com.example.ticket.data.repository.ActiveTicketRepository
 import com.example.ticket.data.repository.CategoryRepository
 import com.example.ticket.data.repository.CompanyRepository
+import com.example.ticket.data.repository.LabelSettingsRepository
 import com.example.ticket.data.repository.LoginRepository
 import com.example.ticket.data.repository.PaymentRepository
 import com.example.ticket.data.repository.TicketRepository
@@ -26,6 +27,7 @@ val roomModule = module {
             .build()
     }
     single { get<AppDatabase>().companyDao() }
+    single { get<AppDatabase>().labelSettingsDao() }
     single { get<AppDatabase>().categoryDao() }
     single { get<AppDatabase>().activeTicketDao() }
     single { get<AppDatabase>().ticketDao() }
@@ -33,6 +35,7 @@ val roomModule = module {
     single { SessionManager(androidContext()) }
     single { LoginRepository() }
     single { CompanyRepository(get()) }
+    single { LabelSettingsRepository(get()) }
     single { CategoryRepository(get()) }
     single { ActiveTicketRepository(get()) }
     single { TicketRepository(get()) }

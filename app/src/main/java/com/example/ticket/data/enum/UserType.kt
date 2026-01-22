@@ -5,9 +5,14 @@ enum class UserType(val value: String) {
     UNKNOWN("unknown");
 
     companion object {
+
         fun fromValue(value: String?): UserType {
-            return entries.find {
-                it.value.equals(value, ignoreCase = true)
+            if (value.isNullOrBlank()) return UNKNOWN
+
+            val normalized = value.trim()
+
+            return entries.firstOrNull {
+                it.value.equals(normalized, ignoreCase = true)
             } ?: UNKNOWN
         }
     }

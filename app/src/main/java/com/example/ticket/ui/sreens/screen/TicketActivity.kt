@@ -1,6 +1,7 @@
 package com.example.ticket.ui.sreens.screen
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -8,7 +9,9 @@ import android.view.MotionEvent
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.ticket.R
@@ -18,9 +21,11 @@ import com.example.ticket.data.network.model.TicketDto
 import com.example.ticket.data.repository.ActiveTicketRepository
 import com.example.ticket.data.repository.CategoryRepository
 import com.example.ticket.data.repository.CompanyRepository
+import com.example.ticket.data.repository.LabelSettingsRepository
 import com.example.ticket.data.repository.TicketRepository
 import com.example.ticket.data.room.entity.ActiveTicket
 import com.example.ticket.data.room.entity.Category
+import com.example.ticket.data.room.entity.LabelSettings
 import com.example.ticket.databinding.ActivityTicketBinding
 import com.example.ticket.ui.adapter.CategoryAdapter
 import com.example.ticket.ui.adapter.TicketAdapter
@@ -47,6 +52,7 @@ CustomInactivityDialog.InactivityCallback,CustomInternetAvailabilityDialog.Inter
     private val ticketRepository: TicketRepository by inject()
     private val activeTicketRepository: ActiveTicketRepository by inject()
     private val categoryRepository: CategoryRepository by inject()
+    private val labelSettingsRepository: LabelSettingsRepository by inject()
 
     private val sessionManager: SessionManager by inject()
     private val companyRepository: CompanyRepository by inject()
@@ -76,13 +82,56 @@ CustomInactivityDialog.InactivityCallback,CustomInternetAvailabilityDialog.Inter
         lifecycleScope.launch {
             updateCartUI()
         }
-
+        getLabel()
     }
+    private fun getLabel() {
+        lifecycleScope.launch {
+
+            labelSettingsRepository.loadLabelSettings(sessionManager.getToken().toString())
+
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                labelSettingsRepository
+                    .getLabelSettingsFromDb()
+                    .collect { labels ->
+
+                        val ticketLabel = labels.find {
+                            it.settingKey.equals("ticket", ignoreCase = true)
+                        }
+
+                        ticketLabel?.let {
+                            binding.texthead1.text =
+                                it.getDisplayNameByLanguage(this@TicketActivity)
+                        }
+                    }
+            }
+        }
+    }
+    fun LabelSettings.getDisplayNameByLanguage(context: Context): String {
+        val lang = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            context.resources.configuration.locales[0].language
+        } else {
+            @Suppress("DEPRECATION")
+            context.resources.configuration.locale.language
+        }
+        val display = when (lang) {
+            "ml" -> displayNameMa
+            "hi" -> displayNameHi
+            "ta" -> displayNameTa
+            "te" -> displayNameTe
+            "kn" -> displayNameKa
+            "pa" -> displayNamePa
+            "mr" -> displayNameMr
+            "si" -> displayNameSi
+            else -> displayName
+        }
+
+        return display?.takeIf { it.isNotBlank() } ?: displayName
+    }
+
     private fun setupUI() {
         binding.txtHome?.text = getString(R.string.home)
         binding.txtselectTicket.text = getString(R.string.choose_your_tickets)
         binding.btnProceed.text = getString(R.string.proceed)
-        binding.texthead1.text = getString(R.string.ticket)
         binding.linHome?.setOnClickListener {
             startActivity(Intent(applicationContext, LanguageActivity::class.java))
             finish()
@@ -362,5 +411,6 @@ CustomInactivityDialog.InactivityCallback,CustomInternetAvailabilityDialog.Inter
         startActivity(intent)
         finish()
     }
+
 
 }

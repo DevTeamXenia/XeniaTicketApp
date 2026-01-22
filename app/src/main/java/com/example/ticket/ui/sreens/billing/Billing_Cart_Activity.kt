@@ -289,7 +289,7 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
                         totalAmount = totalAmount.toDouble(),
                         companyRepository.getString(CompanyKey.PREFIX) ?: ""
                     )
-
+                    Log.d("ticket", response.ticket.toString())
                 } else {
                     binding.btnPay.isEnabled = true
                     showSnackbar(binding.root, "Failed to post order")
