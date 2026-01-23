@@ -1,5 +1,6 @@
 package com.example.ticket.data.repository
 
+import androidx.room.Query
 import com.example.ticket.data.network.model.CategoryItem
 import com.example.ticket.data.network.service.ApiClient
 import com.example.ticket.data.room.dao.CategoryDao
@@ -37,7 +38,9 @@ class CategoryRepository(
     suspend fun getAllCategory(): List<Category> {
         return categoryDao.getAllCategory()
     }
-
+    suspend fun clearAllData() = withContext(Dispatchers.IO) {
+        categoryDao.truncateTable()
+    }
     private fun CategoryItem.toEntity() = Category(
         categoryId = categoryId,
         categoryName = categoryName,

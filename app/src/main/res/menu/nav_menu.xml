@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:showIn="navigation_view">
+
+    <group
+        android:id="@+id/main_group"
+        android:checkableBehavior="single">
+
+        <item
+            android:id="@+id/nav_language"
+            android:icon="@drawable/ic_language"
+            android:title="@string/language_settings" />
+    </group>
+
+    <item android:title="">
+        <menu>
+            <item
+                android:enabled="false"
+                android:title=""
+                android:visible="false" />
+        </menu>
+    </item>
+
+
+
+
+    <!-- Profile Section -->
+    <item android:title="@string/profile">
+        <menu>
+            <group
+                android:id="@+id/profile_group"
+                android:checkableBehavior="single">
+
+                <item
+                    android:id="@+id/nav_settings"
+                    android:icon="@drawable/ic_settings"
+                    android:title="@string/settings" />
+
+                <!-- Reports Section -->
+            </group>
+            <group android:checkableBehavior="single">
+
+                <!-- Parent item -->
+                <item
+                    android:id="@+id/nav_reports"
+                    android:icon="@drawable/report"
+                android:title="@string/reports"
+                app:actionLayout="@layout/nav_dropdown_action" />
+
+
+                 Child items (hidden initially)
+                <item
+                    android:id="@+id/nav_detailed"
+                    android:title="@string/detailed_report"
+                    android:visible="false" />
+
+                <item
+                    android:id="@+id/nav_summary"
+                    android:title="@string/summary_report"
+                    android:visible="false" />
+
+
+<!--            <item-->
+<!--                    android:id="@+id/nav_delete_account"-->
+<!--                    android:icon="@drawable/ic_delete"-->
+<!--                    android:title="@string/delete_account" />-->
+
+                <item
+                    android:id="@+id/nav_logout"
+                    android:icon="@drawable/ic_logout"
+                    android:title="@string/logout" />
+            </group>
+
+        </menu>
+    </item>
+
+</menu>

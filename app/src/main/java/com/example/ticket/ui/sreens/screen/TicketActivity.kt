@@ -45,7 +45,7 @@ import java.util.Locale
 import kotlin.getValue
 
 class TicketActivity : AppCompatActivity(), OnTicketClickListener,
-CustomInactivityDialog.InactivityCallback,CustomInternetAvailabilityDialog.InternetAvailabilityListener,
+    CustomInactivityDialog.InactivityCallback,CustomInternetAvailabilityDialog.InternetAvailabilityListener,
     InactivityHandlerActivity,  CategoryAdapter.OnCategoryClickListener{
 
     private lateinit var binding: ActivityTicketBinding
@@ -78,7 +78,7 @@ CustomInactivityDialog.InactivityCallback,CustomInternetAvailabilityDialog.Inter
         setupUI()
         setContentView(binding.root)
         setupRecyclerViews()
-        getCategory()
+        fetchDetails()
         lifecycleScope.launch {
             updateCartUI()
         }
@@ -144,6 +144,18 @@ CustomInactivityDialog.InactivityCallback,CustomInternetAvailabilityDialog.Inter
 
         }
 
+    }
+    private fun fetchDetails() {
+        lifecycleScope.launch {
+            val isCategoryEnabled =
+                companyRepository.getString(CompanyKey.CATEGORY_ENABLE)
+                    ?.equals("true", true) == true
+            if (isCategoryEnabled) {
+                getCategory()
+            } else {
+                getTickets()
+            }
+        }
     }
     @SuppressLint("NotifyDataSetChanged")
     private fun setupRecyclerViews() {
@@ -273,7 +285,38 @@ CustomInactivityDialog.InactivityCallback,CustomInternetAvailabilityDialog.Inter
     }
 
 
+    private fun getTickets() {
+        lifecycleScope.launch {
+            try {
+                val token = sessionManager.getToken()
+                if (token.isNullOrEmpty()) return@launch
 
+
+                try {
+                    activeTicketRepository.loadTickets(token)
+                } catch (e: Exception) {
+                    Log.w("TICKET_SYNC", "Using cached tickets", e)
+                }
+
+
+                val tickets = activeTicketRepository.getAllTickets()
+
+                if (tickets.isEmpty()) {
+                    ticketAdapter.updateTickets(emptyList())
+                    showSnackbar(binding.root, "No tickets for this category")
+                    return@launch
+                }
+
+
+                val ticketDtos = tickets.map { it.toDto() }
+                ticketAdapter.updateTickets(ticketDtos)
+
+            } catch (e: Exception) {
+                showSnackbar(binding.root, "Error loading tickets")
+                Log.e("TICKET_LOAD", "Error", e)
+            }
+        }
+    }
     override fun onTicketClick(ticketItem: TicketDto) {
 
         val dialog = CustomTicketPopupDialogue()
@@ -303,14 +346,14 @@ CustomInactivityDialog.InactivityCallback,CustomInternetAvailabilityDialog.Inter
     override fun onTicketClear(darshanItem: TicketDto) {
         lifecycleScope.launch {
             ticketRepository.deleteTicketById(darshanItem.ticketId)
-            getTickets(selectedCategoryId)
+            fetchDetails()
             updateCartUI()
         }
     }
 
     override fun onTicketAdded() {
         lifecycleScope.launch {
-            getTickets(selectedCategoryId)
+            fetchDetails()
             updateCartUI()
         }
     }
@@ -318,7 +361,7 @@ CustomInactivityDialog.InactivityCallback,CustomInternetAvailabilityDialog.Inter
     override fun onRestart() {
         super.onRestart()
         setupRecyclerViews()
-        getTickets(selectedCategoryId)
+        fetchDetails()
         lifecycleScope.launch {
             updateCartUI()
         }

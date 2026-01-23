@@ -451,12 +451,13 @@
                     android:contentDescription="@string/todo">
 
                     <ImageView
+                        android:id="@+id/bankLogo"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_centerInParent="true"
                         android:adjustViewBounds="true"
                         android:contentDescription="@string/todo"
-                        android:src="@drawable/ic_xenia"
+                        android:src="@drawable/ic_fed"
                         tools:ignore="ImageContrastCheck" />
 
                 </RelativeLayout>
@@ -469,11 +470,11 @@
                     android:contentDescription="@string/todo">
 
                     <ImageView
-                        android:id="@+id/bankLogo"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_centerInParent="true"
                         android:adjustViewBounds="true"
+                        android:src="@drawable/ic_xenia"
                         android:contentDescription="@string/todo"
                         tools:ignore="ImageContrastCheck" />
 

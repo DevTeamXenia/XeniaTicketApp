@@ -30,6 +30,7 @@ import com.example.ticket.utils.common.CommonMethod.showSnackbar
 import com.example.ticket.utils.common.CompanyKey
 import com.example.ticket.utils.common.Constants.COMPANY_GATEWAY_CAN
 import com.example.ticket.utils.common.Constants.COMPANY_GATEWAY_DHANLAXMI
+import com.example.ticket.utils.common.Constants.COMPANY_GATEWAY_FEDERAL
 import com.example.ticket.utils.common.Constants.LANGUAGE_ENGLISH
 import com.example.ticket.utils.common.Constants.LANGUAGE_HINDI
 import com.example.ticket.utils.common.Constants.LANGUAGE_KANNADA
@@ -74,115 +75,115 @@ class LanguageActivity : AppCompatActivity(),
         requestOverlayPermission()
         loadCompanyDetails()
     }
-        private fun setupBackgroundImage() {
-            lifecycleScope.launch {
-                val fileName =
-                    if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                        companyRepository.getString(CompanyKey.COMPANYLOGO_L)
-                    } else {
-                        companyRepository.getString(CompanyKey.COMPANYLOGO_P)
-                    }
+    private fun setupBackgroundImage() {
+        lifecycleScope.launch {
+            val fileName =
+                if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                    companyRepository.getString(CompanyKey.COMPANYLOGO_L)
+                } else {
+                    companyRepository.getString(CompanyKey.COMPANYLOGO_P)
+                }
 
-                if (fileName.isNullOrEmpty()) return@launch
+            if (fileName.isNullOrEmpty()) return@launch
 
-                val imageUrl = "https://apiimage.xeniapos.com/Temple/assest/uploads?fileName=$fileName"
+            val imageUrl = "https://apiimage.xeniapos.com/Temple/assest/uploads?fileName=$fileName"
 
-                Glide.with(binding.imgBackground.context)
-                    .load(imageUrl)
-                    .into(binding.imgBackground)
-            }
+            Glide.with(binding.imgBackground.context)
+                .load(imageUrl)
+                .into(binding.imgBackground)
+        }
+    }
+
+
+    private fun getLanguageCardMap(): Map<String, View> {
+        return mapOf(
+            LANGUAGE_ENGLISH to binding.cardEnglish,
+            LANGUAGE_MALAYALAM to binding.cardMalayalam,
+            LANGUAGE_TAMIL to binding.cardTamil,
+            LANGUAGE_KANNADA to binding.cardKannada,
+            LANGUAGE_TELUGU to binding.cardTelugu,
+            LANGUAGE_HINDI to binding.cardHindi,
+            LANGUAGE_PUNJABI to binding.cardPunjabi,
+            LANGUAGE_MARATHI to binding.cardMarathi,
+            LANGUAGE_SINHALA to binding.cardSinhala
+        ).filterValues { it != null }
+            .mapValues { it.value!! }
+    }
+
+
+    private fun setupLanguageButtons(enabledLanguages: List<String>) {
+
+        val languageCardMap = getLanguageCardMap()
+
+        languageCardMap.values.forEach { it.visibility = View.GONE }
+
+        binding.cardEnglish.apply {
+            visibility = View.VISIBLE
+            setOnClickListener { selectLanguage(LANGUAGE_ENGLISH) }
         }
 
-
-        private fun getLanguageCardMap(): Map<String, View> {
-            return mapOf(
-                LANGUAGE_ENGLISH to binding.cardEnglish,
-                LANGUAGE_MALAYALAM to binding.cardMalayalam,
-                LANGUAGE_TAMIL to binding.cardTamil,
-                LANGUAGE_KANNADA to binding.cardKannada,
-                LANGUAGE_TELUGU to binding.cardTelugu,
-                LANGUAGE_HINDI to binding.cardHindi,
-                LANGUAGE_PUNJABI to binding.cardPunjabi,
-                LANGUAGE_MARATHI to binding.cardMarathi,
-                LANGUAGE_SINHALA to binding.cardSinhala
-            ).filterValues { it != null }
-                .mapValues { it.value!! }
-        }
-
-
-        private fun setupLanguageButtons(enabledLanguages: List<String>) {
-
-            val languageCardMap = getLanguageCardMap()
-
-            languageCardMap.values.forEach { it.visibility = View.GONE }
-
-            binding.cardEnglish.apply {
+        enabledLanguages.forEach { lang ->
+            languageCardMap[lang]?.apply {
                 visibility = View.VISIBLE
-                setOnClickListener { selectLanguage(LANGUAGE_ENGLISH) }
-            }
-
-            enabledLanguages.forEach { lang ->
-                languageCardMap[lang]?.apply {
-                    visibility = View.VISIBLE
-                    setOnClickListener { selectLanguage(lang) }
-                }
-            }
-
-
-            lifecycleScope.launch {
-                setupCardPosition(enabledLanguages)
+                setOnClickListener { selectLanguage(lang) }
             }
         }
 
-        private suspend fun setupCardPosition(enabledLanguages: List<String>) {
 
-            val container = binding.languageCardContainer ?: return
-            if (container.childCount < 5) return
+        lifecycleScope.launch {
+            setupCardPosition(enabledLanguages)
+        }
+    }
 
-            val languageCardMap = getLanguageCardMap()
-            val defaultLanguage = companyRepository.getDefaultLanguage()
+    private suspend fun setupCardPosition(enabledLanguages: List<String>) {
 
-            val orderedCards = mutableListOf<View>()
+        val container = binding.languageCardContainer ?: return
+        if (container.childCount < 5) return
 
-            binding.cardEnglish?.let { orderedCards.add(it) }
+        val languageCardMap = getLanguageCardMap()
+        val defaultLanguage = companyRepository.getDefaultLanguage()
 
-            if (defaultLanguage != LANGUAGE_ENGLISH) {
-                languageCardMap[defaultLanguage]?.let { orderedCards.add(it) }
-            }
+        val orderedCards = mutableListOf<View>()
 
-            enabledLanguages.forEach { lang ->
-                languageCardMap[lang]?.let { card ->
-                    if (card !in orderedCards) orderedCards.add(card)
-                }
-            }
+        binding.cardEnglish?.let { orderedCards.add(it) }
 
-            val rows = (0 until 5).mapNotNull {
-                container.getChildAt(it) as? LinearLayout
-            }
+        if (defaultLanguage != LANGUAGE_ENGLISH) {
+            languageCardMap[defaultLanguage]?.let { orderedCards.add(it) }
+        }
 
-            if (rows.size < 5) return
-
-            rows.forEach { it.removeAllViews() }
-
-            orderedCards.forEachIndexed { index, card ->
-                (card.parent as? LinearLayout)?.removeView(card)
-                rows[index / 2].addView(card)
-            }
-
-            rows.forEach { row ->
-                if (row.childCount == 1) {
-                    row.addView(
-                        View(this).apply {
-                            layoutParams = LinearLayout.LayoutParams(
-                                0,
-                                LinearLayout.LayoutParams.WRAP_CONTENT,
-                                1f
-                            )
-                        }
-                    )
-                }
+        enabledLanguages.forEach { lang ->
+            languageCardMap[lang]?.let { card ->
+                if (card !in orderedCards) orderedCards.add(card)
             }
         }
+
+        val rows = (0 until 5).mapNotNull {
+            container.getChildAt(it) as? LinearLayout
+        }
+
+        if (rows.size < 5) return
+
+        rows.forEach { it.removeAllViews() }
+
+        orderedCards.forEachIndexed { index, card ->
+            (card.parent as? LinearLayout)?.removeView(card)
+            rows[index / 2].addView(card)
+        }
+
+        rows.forEach { row ->
+            if (row.childCount == 1) {
+                row.addView(
+                    View(this).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            0,
+                            LinearLayout.LayoutParams.WRAP_CONTENT,
+                            1f
+                        )
+                    }
+                )
+            }
+        }
+    }
 
 
 
@@ -250,64 +251,64 @@ class LanguageActivity : AppCompatActivity(),
 
 
     private fun saveBitmapToFile(context: Context, bitmap: Bitmap, filename: String): File {
-            val file = File(context.cacheDir, filename)
-            FileOutputStream(file).use { out ->
-                bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+        val file = File(context.cacheDir, filename)
+        FileOutputStream(file).use { out ->
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+        }
+        return file
+    }
+
+    private suspend fun loadBitmapSafely(context: Context, url: String): Bitmap? =
+        withContext(Dispatchers.IO) {
+            try {
+                Glide.with(context)
+                    .asBitmap()
+                    .load(url)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .submit()
+                    .get()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                null
             }
-            return file
         }
 
-        private suspend fun loadBitmapSafely(context: Context, url: String): Bitmap? =
-            withContext(Dispatchers.IO) {
-                try {
-                    Glide.with(context)
-                        .asBitmap()
-                        .load(url)
-                        .diskCacheStrategy(DiskCacheStrategy.ALL)
-                        .submit()
-                        .get()
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    null
-                }
-            }
+    private fun selectLanguage(language: String) {
+        lifecycleScope.launch {
 
-        private fun selectLanguage(language: String) {
-            lifecycleScope.launch {
+            if (UserType.fromValue(sessionManager.getUserType()) == UserType.COUNTER_USER) {
 
-                if (UserType.fromValue(sessionManager.getUserType()) == UserType.COUNTER_USER) {
+                sessionManager.saveBillingSelectedLanguage(language)
+                startActivity(
+                    Intent(this@LanguageActivity, Billin_Ticket_Activity::class.java)
+                )
+                finish()
 
-                    sessionManager.saveBillingSelectedLanguage(language)
-                    startActivity(
-                        Intent(this@LanguageActivity, Billin_Ticket_Activity::class.java)
+            } else {
+
+                sessionManager.saveSelectedLanguage(language)
+
+                val categoryValue = companyRepository.getString(CompanyKey.CATEGORY_ENABLE)
+                val isCategoryEnabled = categoryValue?.let {
+                    it.equals("true", ignoreCase = true) || it == "1" || it.equals(
+                        "yes",
+                        ignoreCase = true
                     )
-                    finish()
+                } ?: false
 
+                if (isCategoryEnabled) {
+                    startActivity(
+                        Intent(this@LanguageActivity, TicketActivity::class.java)
+                    )
                 } else {
-
-                    sessionManager.saveSelectedLanguage(language)
-
-                    val categoryValue = companyRepository.getString(CompanyKey.CATEGORY_ENABLE)
-                    val isCategoryEnabled = categoryValue?.let {
-                        it.equals("true", ignoreCase = true) || it == "1" || it.equals(
-                            "yes",
-                            ignoreCase = true
-                        )
-                    } ?: false
-
-                    if (isCategoryEnabled) {
-                        startActivity(
-                            Intent(this@LanguageActivity, TicketActivity::class.java)
-                        )
-                    } else {
-                        // fallback if category not enabled
-                        // startActivity(Intent(this@LanguageActivity, HomeActivity::class.java))
-                    }
-
-                    finish()
+                    // fallback if category not enabled
+                    // startActivity(Intent(this@LanguageActivity, HomeActivity::class.java))
                 }
+
+                finish()
             }
         }
+    }
 
     override fun onResume() {
         super.onResume()
@@ -341,7 +342,7 @@ class LanguageActivity : AppCompatActivity(),
         val logo = when (gateway) {
             COMPANY_GATEWAY_CAN -> R.drawable.ic_can
             COMPANY_GATEWAY_DHANLAXMI -> R.drawable.ic_dhan
-            else -> R.drawable.ic_sib
+            else -> R.drawable.ic_fed
         }
         val drawable = ContextCompat.getDrawable(this@LanguageActivity, logo)
         if (drawable != null) {
@@ -350,37 +351,37 @@ class LanguageActivity : AppCompatActivity(),
         }
     }
     override fun onPause() {
-            super.onPause()
-        }
+        super.onPause()
+    }
 
-        override fun onDestroy() {
-            super.onDestroy()
-        }
-        private fun requestOverlayPermission() {
-            if (!Settings.canDrawOverlays(this)) {
-                val intent = Intent(
-                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                    "package:$packageName".toUri()
-                )
-                overlayPermissionLauncher.launch(intent)
-            }
-        }
-
-        private val overlayPermissionLauncher = registerForActivityResult(
-            ActivityResultContracts.StartActivityForResult()
-        ) { /* No action needed after permission request */ }
-
-        override fun onRetryClicked() {
-            loadCompanyDetails()
-        }
-
-        override fun onDialogInactive() {
-            TODO("Not yet implemented")
-        }
-
-        override fun resetInactivityTimer() {
-            lifecycleScope.launch {
-
-            }
+    override fun onDestroy() {
+        super.onDestroy()
+    }
+    private fun requestOverlayPermission() {
+        if (!Settings.canDrawOverlays(this)) {
+            val intent = Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                "package:$packageName".toUri()
+            )
+            overlayPermissionLauncher.launch(intent)
         }
     }
+
+    private val overlayPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { /* No action needed after permission request */ }
+
+    override fun onRetryClicked() {
+        loadCompanyDetails()
+    }
+
+    override fun onDialogInactive() {
+        TODO("Not yet implemented")
+    }
+
+    override fun resetInactivityTimer() {
+        lifecycleScope.launch {
+
+        }
+    }
+}

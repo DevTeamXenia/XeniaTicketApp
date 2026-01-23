@@ -78,6 +78,7 @@ class TicketBookingAdapter(
     @SuppressLint("NotifyDataSetChanged")
     fun updateTickets(newTickets: List<TicketDto>) {
         this.ticketItems = newTickets
+
         notifyDataSetChanged()
     }
 

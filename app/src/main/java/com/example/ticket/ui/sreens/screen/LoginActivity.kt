@@ -5,17 +5,16 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import android.provider.Settings
-import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import androidx.core.net.toUri
-import androidx.lifecycle.lifecycleScope
 import com.example.ticket.R
 import com.example.ticket.data.repository.LoginRepository
 import com.example.ticket.databinding.ActivityLoginBinding
+import com.example.ticket.ui.sreens.billing.Billin_Ticket_Activity
 import com.example.ticket.utils.common.CommonMethod.dismissLoader
 import com.example.ticket.utils.common.CommonMethod.isInternetAvailable
 import com.example.ticket.utils.common.CommonMethod.showSnackbar
@@ -133,7 +132,7 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
                     return
                 }
 
-                startActivity(Intent(this, LanguageActivity::class.java))
+                startActivity(Intent(this, Billin_Ticket_Activity::class.java))
                 finish()
             }
 
@@ -265,7 +264,6 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
                         }
                     }
 
-
                     UserType.PROCESS_USER -> {
 
                         dismissLoader()
@@ -280,11 +278,7 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
 
                         if (screenSizeMask != Configuration.SCREENLAYOUT_SIZE_XLARGE || !isPortrait) {
                             dismissLoader()
-                            showSnackbar(
-                                binding.root,
-                                "User has no permission for this device/orientation!"
-                            )
-                            return@launch
+                            startActivity(Intent(this@LoginActivity, LanguageActivity::class.java))
                         }
 
                         sessionManager.saveSelectedPrinter(PRINTER_KIOSK)

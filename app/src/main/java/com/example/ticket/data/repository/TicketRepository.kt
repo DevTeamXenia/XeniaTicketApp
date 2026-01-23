@@ -1,5 +1,8 @@
 package com.example.ticket.data.repository
 
+
+import com.example.ticket.data.network.model.LogoutResponse
+import com.example.ticket.data.network.service.ApiClient.apiService
 import com.example.ticket.data.room.dao.TicketDao
 import com.example.ticket.data.room.entity.Ticket
 import kotlinx.coroutines.Dispatchers
@@ -57,7 +60,7 @@ class TicketRepository(private val ticketDao: TicketDao) {
 
     suspend fun getCartStatus(): Pair<Double, Boolean> = withContext(Dispatchers.IO) {
         val totalAmount = ticketDao.getCartTotalAmount() ?: 0.0
-        val hasData = totalAmount > 0
+        val hasData = ticketDao.getCartCount() > 0
         Pair(totalAmount, hasData)
     }
 
@@ -82,7 +85,6 @@ class TicketRepository(private val ticketDao: TicketDao) {
         )
     }
 
-
     suspend fun deleteTicketById(ticketId: Int) {
         ticketDao.deleteByTicketId(ticketId)
     }
@@ -90,4 +92,9 @@ class TicketRepository(private val ticketDao: TicketDao) {
     suspend fun clearAllData() = withContext(Dispatchers.IO) {
         ticketDao.truncateTable()
     }
+
+    suspend fun logout(token: String): LogoutResponse {
+        return apiService.logout(token)
+    }
+
 }

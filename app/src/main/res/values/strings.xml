@@ -27,8 +27,6 @@
     <string name="home">Home</string>
 
 
-
-
     //donation_screen
     <string name="fill_out_your_details">Fill out your details</string>
     <string name="donation_amount">E Hundi Amount</string>
@@ -71,7 +69,6 @@
 
     <string name="welcome">Welcome!</string>
     <string name="more_people">More people</string>
-
 
 
     <string name="transaction">Transaction</string>

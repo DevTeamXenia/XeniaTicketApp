@@ -48,7 +48,7 @@ import kotlin.getValue
 
 class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCartClickListener,
     OnTicketClickListener,
-     CustomInternetAvailabilityDialog.InternetAvailabilityListener{
+    CustomInternetAvailabilityDialog.InternetAvailabilityListener{
 
     private lateinit var binding: ActivityBillingCartBinding
     private val ticketRepository: TicketRepository by inject()

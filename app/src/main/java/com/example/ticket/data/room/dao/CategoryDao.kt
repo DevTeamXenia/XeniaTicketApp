@@ -17,5 +17,7 @@ interface CategoryDao {
 
     @Query("SELECT * FROM category WHERE categoryActive = 1")
     suspend fun getAllCategory(): List<Category>
+    @Query("DELETE FROM category")
+    suspend fun truncateTable()
     }
 

@@ -7,10 +7,11 @@ import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.widget.Toast
-import androidx.activity.OnBackPressedCallback
+import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.view.GravityCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -33,19 +34,26 @@ import com.example.ticket.databinding.ActivityBillinTicketBinding
 import com.example.ticket.ui.adapter.CategoryAdapter
 import com.example.ticket.ui.adapter.TicketBookingAdapter
 import com.example.ticket.ui.adapter.TicketCartAdapter
+import com.example.ticket.ui.dialog.CustomLogoutPopupDialog
 import com.example.ticket.ui.dialog.CustomTicketPopupDialogue
 import com.example.ticket.ui.sreens.screen.LanguageActivity
+import com.example.ticket.ui.sreens.screen.LoginActivity
+import com.example.ticket.ui.sreens.screen.PrinterSettingActivity
+import com.example.ticket.utils.common.ApiResponseHandler
 import com.example.ticket.utils.common.CommonMethod.getScreenSize
 import com.example.ticket.utils.common.CommonMethod.isLandscapeScreen
 import com.example.ticket.utils.common.CommonMethod.setLocale
 import com.example.ticket.utils.common.CommonMethod.showSnackbar
 import com.example.ticket.utils.common.CompanyKey
 import com.example.ticket.utils.common.SessionManager
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONObject
 import org.koin.android.ext.android.inject
 import java.util.Locale
+import retrofit2.HttpException
 import kotlin.getValue
 
 class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener,
@@ -61,15 +69,13 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener,
     private val labelSettingsRepository: LabelSettingsRepository by inject()
 
     private lateinit var categoryAdapter: CategoryAdapter
-
     private val customTicketPopupDialogue: CustomTicketPopupDialogue by inject()
     private lateinit var ticketAdapter: TicketBookingAdapter
     private var selectedProofMode: String = ""
     private var selectedLanguage: String? = ""
     private var selectedCategoryId: Int = 0
-    private var backPressedTime: Long = 0
-    private var toast: Toast? = null
 
+    private var reportsExpanded = false
     private lateinit var ticketItemsItems: TicketDto
     private var formattedTotalAmount: String = ""
 
@@ -86,17 +92,39 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener,
         selectedLanguage = sessionManager.getBillingSelectedLanguage()
         setLocale(this, selectedLanguage)
         setupUI()
+        fetchDetails()
         setContentView(binding.root)
         setupRecyclerViews()
+        setupListener()
         lifecycleScope.launch {
             updateCartUI()
         }
-        getCategory()
+
         getLabel()
     }
+    private fun setupUI() {
+        binding.txtHome?.text = getString(R.string.home)
+        binding.txtselectTicket.text = getString(R.string.choose_your_tickets)
+        binding.btnProceed.text = getString(R.string.proceed)
+        val menu = binding.navView.menu
+        menu.findItem(R.id.nav_language).title = getString(R.string.language_settings)
+        menu.findItem(R.id.nav_logout).title = getString(R.string.logout)
+        val headerView = binding.navView.getHeaderView(0)
+        val txtTop = headerView.findViewById<TextView>(R.id.txtTop)
+        txtTop.text = getString(R.string.dashboard)
+        binding.btnProceed.setOnClickListener {
+            val intent = Intent(applicationContext, Billing_Cart_Activity::class.java)
 
-
-
+            startActivity(intent)
+        }
+        binding.imgMenu.setOnClickListener {
+            if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                binding.drawerLayout.closeDrawer(GravityCompat.START)
+            } else {
+                binding.drawerLayout.openDrawer(GravityCompat.START)
+            }
+        }
+    }
     private fun getLabel() {
         lifecycleScope.launch {
 
@@ -140,22 +168,62 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener,
 
         return display?.takeIf { it.isNotBlank() } ?: displayName
     }
+    private fun setupListener() {
 
-    private fun setupUI() {
-        binding.txtHome?.text = getString(R.string.home)
-        binding.txtselectTicket.text = getString(R.string.choose_your_tickets)
-        binding.btnProceed.text = getString(R.string.proceed)
-        binding.btnProceed.setOnClickListener {
-            val intent = Intent(applicationContext, Billing_Cart_Activity::class.java)
+        binding.navView.setNavigationItemSelectedListener { item ->
+            val menu = binding.navView.menu
 
-            startActivity(intent)
-        }
-        binding.linHome?.setOnClickListener {
-            startActivity(Intent(applicationContext, LanguageActivity::class.java))
-            finish()
+            when (item.itemId) {
+                R.id.nav_language -> {
+                    startActivity(Intent(applicationContext, LanguageActivity::class.java))
+                    finish()
+                    false
+                }
+                R.id.nav_settings -> {
+                    startActivity(Intent(applicationContext, PrinterSettingActivity::class.java))
+                    binding.drawerLayout.closeDrawer(GravityCompat.START)
+                    true
+                }
 
+                R.id.nav_reports -> {
+                    reportsExpanded = !reportsExpanded
+                    menu.findItem(R.id.nav_detailed).isVisible = reportsExpanded
+                    menu.findItem(R.id.nav_summary).isVisible = reportsExpanded
+                    true
+                }
+
+                R.id.nav_detailed -> {
+
+                    startActivity(Intent(applicationContext, DetailedReportActivity::class.java))
+                    binding.drawerLayout.closeDrawer(GravityCompat.START)
+                    true
+                }
+
+                R.id.nav_summary -> {
+
+                    startActivity(Intent(applicationContext, SummaryReportActivity::class.java))
+                    binding.drawerLayout.closeDrawer(GravityCompat.START)
+                    true
+                }
+                R.id.nav_logout -> {
+                    binding.drawerLayout.closeDrawer(GravityCompat.START)
+
+                    val customPopupDialog = CustomLogoutPopupDialog()
+                    customPopupDialog.show(supportFragmentManager, "Logout")
+
+                    true
+                }
+
+
+                else -> {
+                    binding.drawerLayout.closeDrawer(GravityCompat.START)
+                    true
+                }
+            }
         }
     }
+
+
     @SuppressLint("NotifyDataSetChanged")
     private fun setupRecyclerViews() {
         categoryAdapter = CategoryAdapter(this, selectedLanguage!!, this)
@@ -179,7 +247,18 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener,
         binding.relCart.layoutManager = LinearLayoutManager(this)
         ticketCartAdapter = TicketCartAdapter(this, selectedLanguage!!, "Booking", this)
         binding.relCart.adapter = ticketCartAdapter
-        getCategory()
+
+    }
+
+    private fun fetchDetails() {
+        lifecycleScope.launch {
+            val isCategoryEnabled = companyRepository.getString(CompanyKey.CATEGORY_ENABLE)?.toBoolean() ?: false
+            if (isCategoryEnabled) {
+                getCategory()
+            } else {
+                getTickets()
+            }
+        }
     }
 
     private fun getCategory() {
@@ -192,14 +271,22 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener,
                     return@launch
                 }
 
-                // 🔹 Try API sync (do not block UI on failure)
-                withContext(Dispatchers.IO) {
+                val isLoaded = withContext(Dispatchers.IO) {
                     categoryRepository.loadCategories(token)
                 }
 
-                // 🔹 Always read from DB
+                if (!isLoaded) {
+                    binding.ticketCat.visibility = View.GONE
+                    return@launch
+                }
+
                 val categoryEntities = withContext(Dispatchers.IO) {
                     categoryRepository.getAllCategory()
+                }
+
+                if (categoryEntities.isEmpty()) {
+                    binding.ticketCat.visibility = View.GONE
+                    return@launch
                 }
 
                 val activeCategories = categoryEntities.filter { it.categoryActive }
@@ -209,12 +296,10 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener,
                     return@launch
                 }
 
-                // 🔹 Respect company setting
                 binding.ticketCat.visibility =
                     if (companyRepository.getBoolean(CompanyKey.CATEGORY_ENABLE))
                         View.VISIBLE
-                    else
-                        View.GONE
+                    else View.GONE
 
                 val selectedCategory = activeCategories.first()
                 selectedCategoryId = selectedCategory.categoryId
@@ -242,44 +327,67 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener,
 
                 categoryAdapter.updateCategories(categories)
                 getTickets(selectedCategoryId)
+            } catch (e: HttpException) {
+                if (e.code() == 401) {
+                    val errorBody = e.response()?.errorBody()?.string().orEmpty()
+                    val message = try { JSONObject(errorBody).optString("message") } catch (ex: Exception) { null }
+                    val displayMessage = message?.ifBlank { "Your session has expired. Please login again." }
 
+                    // Show dialog safely
+                    runOnUiThread {
+                        AlertDialog.Builder(this@Billin_Ticket_Activity)
+                            .setTitle("Session Expired")
+                            .setMessage(displayMessage)
+                            .setCancelable(false)
+                            .setPositiveButton("Logout") { _, _ ->
+                                sessionManager.clearSession()
+                                startActivity(
+                                    Intent(this@Billin_Ticket_Activity, LoginActivity::class.java).apply {
+                                        flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                                                Intent.FLAG_ACTIVITY_NEW_TASK or
+                                                Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                    }
+                                )
+                                finish()
+                            }
+                            .show()
+                    }
+                } else {
+                    throw e
+                }
             } catch (e: Exception) {
-                Log.e("DEBUG", "Category load error", e)
-                binding.ticketCat.visibility = View.GONE
+                e.printStackTrace()
             }
         }
     }
 
 
-    private fun getTickets(categoryId: Int) {
+
+    private fun getTickets(categoryId: Int? = null) {
         lifecycleScope.launch {
             try {
                 val token = sessionManager.getToken()
                 if (token.isNullOrEmpty()) return@launch
 
-                // 🔹 Try API sync (do NOT block UI)
                 try {
                     activeTicketRepository.loadTickets(token)
                 } catch (e: Exception) {
                     Log.w("TICKET_SYNC", "Ticket sync failed, using local data", e)
                 }
-
-                // 🔹 Always read from DB
-                val tickets = activeTicketRepository.getTicketsByCategory(categoryId)
+                val tickets = if (categoryId != null) {
+                    activeTicketRepository.getTicketsByCategory(categoryId)
+                } else {
+                    activeTicketRepository.getAllTickets()
+                }
 
                 if (tickets.isEmpty()) {
-                    showSnackbar(binding.root, "No tickets for this category")
                     ticketAdapter.updateTickets(emptyList())
+                    showSnackbar(binding.root, "No tickets available")
                     return@launch
                 }
 
                 val ticketDtos = tickets.map { it.toDto() }
                 ticketAdapter.updateTickets(ticketDtos)
-
-                val updatedMap = ticketRepository.getTicketsMapByIds()
-                ticketAdapter.updateDbItemsMap(updatedMap)
-
-                getCartTicket()
 
             } catch (e: Exception) {
                 showSnackbar(binding.root, "Error loading tickets")
@@ -288,6 +396,34 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener,
         }
     }
 
+    override fun onCategoryClick(category: Category) {
+        selectedCategoryId = category.categoryId
+        getTickets(selectedCategoryId) // only reload tickets for clicked category
+    }
+
+    private fun getTickets() {
+        lifecycleScope.launch {
+            try {
+                val token = sessionManager.getToken()
+                if (token.isNullOrEmpty()) return@launch
+                try {
+                    activeTicketRepository.loadTickets(token)
+                } catch (e: Exception) {
+                    Log.w("TICKET_SYNC", "Ticket sync failed, using local data", e)
+                }
+                val tickets = activeTicketRepository.getAllTickets()
+                if (tickets.isEmpty()) {
+                    ticketAdapter.updateTickets(emptyList())
+                    return@launch
+                }
+                val ticketDtos = tickets.map { it.toDto() }
+                ticketAdapter.updateTickets(ticketDtos)
+
+            } catch (e: Exception) {
+                showSnackbar(binding.root, "Something went wrong: ${e.localizedMessage}")
+            }
+        }
+    }
 
 
     override fun onTicketClick(ticketItem: TicketDto) {
@@ -325,14 +461,14 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener,
         lifecycleScope.launch {
             ticketItemsItems = ticketItem
             ticketRepository.deleteTicketById(ticketItem.ticketId)
-            getTickets(selectedCategoryId)
+            fetchDetails()
             updateCartUI()
         }
     }
 
     override fun onTicketAdded() {
         lifecycleScope.launch {
-            getTickets(selectedCategoryId)
+           fetchDetails()
             updateCartUI()
         }
     }
@@ -340,13 +476,11 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener,
     override fun onRestart() {
         super.onRestart()
         setupRecyclerViews()
-        getCategory()
-        getTickets(selectedCategoryId)
+        fetchDetails()
         lifecycleScope.launch {
             updateCartUI()
         }
     }
-
     fun ActiveTicket.toDto() = TicketDto(
         ticketId = ticketId,
         ticketName = ticketName,
@@ -366,10 +500,6 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener,
         ticketActive = ticketActive
     )
 
-    override fun onCategoryClick(category: Category) {
-        selectedCategoryId = category.categoryId
-        getTickets(selectedCategoryId)
-    }
 
     override fun onTicketMinusClick(ticketItem: TicketDto) {
         lifecycleScope.launch {

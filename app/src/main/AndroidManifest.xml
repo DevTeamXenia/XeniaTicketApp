@@ -32,6 +32,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Ticket">
         <activity
+            android:name=".ui.sreens.billing.SummaryReportActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.sreens.billing.DetailedReportActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.sreens.screen.LanguageActivity"
             android:exported="false" />
         <activity
@@ -40,20 +46,18 @@
         <activity
             android:name=".ui.sreens.billing.Billing_Cart_Activity"
             android:exported="false" />
-
         <activity
             android:name=".ui.sreens.billing.Billin_Ticket_Activity"
             android:exported="false" />
-
         <activity
             android:name=".ui.sreens.screen.PaymentActivity"
             android:exported="false" />
         <activity
             android:name=".ui.sreens.screen.TicketCartActivity"
-            android:launchMode="singleTop"
-            android:exported="false" />
+            android:exported="false"
+            android:launchMode="singleTop" />
         <activity
-            android:name=".ui.sreens.screen.IdProofActivity"
+            android:name=".ui.sreens.screen.SyncActivity"
             android:exported="false" />
         <activity
             android:name=".ui.sreens.screen.TicketActivity"

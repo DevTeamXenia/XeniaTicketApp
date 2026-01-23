@@ -26,6 +26,8 @@ interface TicketDao {
 
     @Query("SELECT * FROM tickets WHERE ticketId = :ticketId")
     suspend fun getCartItemByTicketId(ticketId: Int): Ticket?
+    @Query("SELECT COUNT(*) FROM tickets")
+    suspend fun getCartCount(): Int
 
     @Query("SELECT SUM(daTotalAmount) FROM tickets")
     suspend fun getCartTotalAmount(): Double?

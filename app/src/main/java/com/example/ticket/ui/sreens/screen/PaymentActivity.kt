@@ -28,6 +28,7 @@ import com.example.ticket.data.repository.CompanyRepository
 import com.example.ticket.data.repository.TicketRepository
 import com.example.ticket.data.room.entity.Ticket
 import com.example.ticket.databinding.ActivityPaymentBinding
+import com.example.ticket.ui.sreens.billing.Billin_Ticket_Activity
 import com.example.ticket.utils.common.CommonMethod.setLocale
 import com.example.ticket.utils.common.CompanyKey
 import com.example.ticket.utils.common.SessionManager
@@ -421,30 +422,19 @@ class PaymentActivity : AppCompatActivity() {
         val labelAmount = getLocalizedString("Amount", selectedLanguage)
         val labelUPI = getLocalizedString("UPI Reference No", selectedLanguage)
         val labelQty = getLocalizedString("Qty", selectedLanguage)
-        val labelDevooteDetails = getLocalizedString("Devotees Details", selectedLanguage)
-        val labelIdNumber = getLocalizedString("ID No", selectedLanguage)
         val labelPhonenumber = getLocalizedString("Phone No", selectedLanguage)
         val labelTotalAmount = getLocalizedString("Total Amount", selectedLanguage)
         val labelName = getLocalizedString("Name", selectedLanguage)
-        val labelmessage =
-            getLocalizedString("There is NO Prasadam for Sheeghra Darshan", selectedLanguage)
 
         val labelDReceiptNo = getLocalizedString("Receipt No", defaultlang)
         val labelDDate = getLocalizedString("Date", defaultlang)
         val labelDItem = getLocalizedString("Item", defaultlang)
         val labelDPrice = getLocalizedString("Price", defaultlang)
         val labelDAmount = getLocalizedString("Amount", defaultlang)
-        val labelDUPI = getLocalizedString("UPI Reference No", defaultlang)
         val labelDQty = getLocalizedString("Qty", defaultlang)
-        val labelDDevooteDetails = getLocalizedString("Devotees Details", defaultlang)
         val labelDPhonenumber = getLocalizedString("Phone No", defaultlang)
         val labelDTotalAmount = getLocalizedString("Total Amount", defaultlang)
         val labelDName = getLocalizedString("Name", defaultlang)
-        val labelDmessage =
-            getLocalizedString("There is NO Prasadam for Sheeghra Darshan", defaultlang)
-        val firstItem =
-            ticket.firstOrNull() ?: return createBitmap(1, 1)
-
         val tempBitmap = createBitmap(width, 10000)
         val tempCanvas = Canvas(tempBitmap)
 
@@ -462,8 +452,6 @@ class PaymentActivity : AppCompatActivity() {
             "mr" -> "तिकीट "
             "si" -> "ටිකට් "
             else -> "Ticket"
-
-
         }
 
         val receiptDTitle = when (defaultlang) {
@@ -477,7 +465,6 @@ class PaymentActivity : AppCompatActivity() {
             "mr" -> "तिकीट "
             "si" -> "ටිකට් "
             else -> "Ticket"
-
         }
 
         tempCanvas.drawText(receiptTitle, width / 2f, 40f, paint)
@@ -491,16 +478,6 @@ class PaymentActivity : AppCompatActivity() {
         yOffset += 35f
         tempCanvas.drawText("$labelDate($labelDDate): $currentDate", 20f, yOffset, paint)
         yOffset += 35f
-
-
-//        paint.textSize = 24f
-//        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
-//        tempCanvas.drawText("$labelItem", 20f, yOffset, paint)
-//        paint.textAlign = Paint.Align.CENTER
-//        tempCanvas.drawText("$labelPrice", width * 0.5f, yOffset, paint)
-//        tempCanvas.drawText("$labelQty", width * 0.65f, yOffset, paint)
-//        paint.textAlign = Paint.Align.RIGHT
-//        tempCanvas.drawText("$labelAmount", width - 30f, yOffset, paint)
 
         yOffset += 30f
         paint.textAlign = Paint.Align.LEFT
@@ -647,14 +624,6 @@ class PaymentActivity : AppCompatActivity() {
             tempCanvas.drawBitmap(qrBitmap, qrX, yOffset, paint)
             yOffset += qrSize + 50f
         }
-
-        paint.textAlign = Paint.Align.CENTER
-        paint.textSize = 20f
-        tempCanvas.drawText("Thank You!", width / 2f, yOffset, paint)
-        yOffset += 30f
-        paint.textSize = 16f
-        tempCanvas.drawText("Powered by www.xenionline.in", width / 2f, yOffset, paint)
-
         val finalBitmap = createBitmap(width, (yOffset + 50f).toInt())
         Canvas(finalBitmap).drawBitmap(tempBitmap, 0f, 0f, null)
 
@@ -828,9 +797,6 @@ class PaymentActivity : AppCompatActivity() {
         )
 
         yOffset += textPadding
-        yOffset += 20f
-//        val textX = padding + 25f
-//        var textY = yOffset
         paint.textAlign = Paint.Align.LEFT
         paint.textSize = 20f
         paint.typeface = Typeface.DEFAULT
@@ -848,14 +814,6 @@ class PaymentActivity : AppCompatActivity() {
             tempCanvas.drawBitmap(qrBitmap, qrX, yOffset, paint)
             yOffset += qrSize + 50f
         }
-
-        paint.textAlign = Paint.Align.CENTER
-        paint.textSize = 20f
-        tempCanvas.drawText("Thank You!", width / 2f, yOffset, paint)
-        yOffset += 30f
-        paint.textSize = 16f
-        tempCanvas.drawText("Powered by www.xenionline.in", width / 2f, yOffset, paint)
-
         val finalBitmap = createBitmap(width, (yOffset + 50f).toInt())
         Canvas(finalBitmap).drawBitmap(tempBitmap, 0f, 0f, null)
 
@@ -1044,7 +1002,7 @@ class PaymentActivity : AppCompatActivity() {
                 ticketRepository.clearAllData()
             }
             val targetActivity = if (from == "billing") {
-                LanguageActivity::class.java
+                Billin_Ticket_Activity::class.java
             } else {
                 LanguageActivity::class.java
             }
