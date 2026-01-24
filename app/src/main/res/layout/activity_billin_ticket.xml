@@ -49,14 +49,14 @@
 
                 <RelativeLayout
                     android:layout_width="match_parent"
-                    android:layout_height="150dp"
+                    android:layout_height="75dp"
                     android:background="@drawable/homebackground">
 
                     <LinearLayout
                         android:id="@+id/left_home"
-                        android:layout_width="110dp"
-                        android:layout_height="50dp"
-                        android:layout_marginStart="30dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
                         android:layout_marginTop="20dp"
                         android:gravity="center"
                         android:orientation="horizontal"
@@ -71,14 +71,6 @@
                             android:src="@drawable/ic_menu"
                             app:tint="@color/white" />
 
-                        <TextView
-                            android:id="@+id/txt_home"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:fontFamily="@font/poppins_regular"
-                            android:textColor="@color/secondaryColor"
-                            android:textSize="14sp" />
 
                     </LinearLayout>
 
@@ -88,10 +80,11 @@
                         android:layout_height="wrap_content"
                         android:layout_alignParentBottom="true"
                         android:layout_marginBottom="20dp"
+                        android:layout_marginTop="@dimen/dp20"
                         android:fontFamily="@font/segoe_ui_bold"
                         android:textAlignment="center"
                         android:textColor="@color/white"
-                        android:textSize="70sp" />
+                        android:textSize="30sp" />
 
                 </RelativeLayout>
 
@@ -122,12 +115,11 @@
                                     android:id="@+id/txtselect_ticket"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginBottom="30dp"
                                     android:fontFamily="@font/poppins_regular"
                                     android:text="@string/choose_your_tickets"
                                     android:textAlignment="center"
                                     android:textColor="@color/black"
-                                    android:textSize="25sp"
+                                    android:textSize="20sp"
                                     android:textStyle="bold" />
 
                                 <LinearLayout

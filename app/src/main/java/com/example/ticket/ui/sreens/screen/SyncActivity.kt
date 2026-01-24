@@ -15,7 +15,7 @@ import com.example.ticket.data.local.InitialSyncManager
 import com.example.ticket.data.local.SyncResult
 import com.example.ticket.data.repository.LoginRepository
 import com.example.ticket.databinding.ActivitySyncBinding
-import com.example.ticket.ui.sreens.billing.Billin_Ticket_Activity
+import com.example.ticket.ui.sreens.billing.BillingTicketActivity
 import com.example.ticket.utils.common.CommonMethod
 import com.example.ticket.utils.common.CommonMethod.showSnackbar
 import com.example.ticket.utils.common.Constants.PRINTER_KIOSK
@@ -122,7 +122,7 @@ class SyncActivity : AppCompatActivity() {
                     } else {
 
 
-                        startActivity(Intent(this@SyncActivity, Billin_Ticket_Activity::class.java))
+                        startActivity(Intent(this@SyncActivity, BillingTicketActivity::class.java))
 
                         finish()
                     }

@@ -35,45 +35,46 @@ class TicketBookingAdapter(
 
     @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: TicketViewHolder, position: Int) {
-        val ticketItems = ticketItems[position]
+        val ticketItem = ticketItems[position]
         val binding = holder.binding
 
         binding.txtDharshanName.text = when (selectedLanguage) {
-            "ml" -> ticketItems.ticketNameMa ?: ticketItems.ticketName
-            "ta" -> ticketItems.ticketNameTa ?: ticketItems.ticketName
-            "te" -> ticketItems.ticketNameTe ?: ticketItems.ticketName
-            "kn" -> ticketItems.ticketNameKa ?: ticketItems.ticketName
-            "hi" -> ticketItems.ticketNameHi ?: ticketItems.ticketName
-            "si" -> ticketItems.ticketNameSi ?: ticketItems.ticketName
-            "mr" -> ticketItems.ticketNameMr ?: ticketItems.ticketName
-            "pa" -> ticketItems.ticketNamePa ?: ticketItems.ticketName
-            else -> ticketItems.ticketName
+            "ml" -> ticketItem.ticketNameMa ?: ticketItem.ticketName
+            "ta" -> ticketItem.ticketNameTa ?: ticketItem.ticketName
+            "te" -> ticketItem.ticketNameTe ?: ticketItem.ticketName
+            "kn" -> ticketItem.ticketNameKa ?: ticketItem.ticketName
+            "hi" -> ticketItem.ticketNameHi ?: ticketItem.ticketName
+            "si" -> ticketItem.ticketNameSi ?: ticketItem.ticketName
+            "mr" -> ticketItem.ticketNameMr ?: ticketItem.ticketName
+            "pa" -> ticketItem.ticketNamePa ?: ticketItem.ticketName
+            else -> ticketItem.ticketName
         }
 
-        binding.txtDharshanPrice.text = "Rs. ${String.format(Locale.ENGLISH, "%.2f", ticketItems.ticketAmount)}"
-
-        val dbItem = dbItemsMap[ticketItems.ticketId]
+        val dbItem = dbItemsMap[ticketItem.ticketId]
         val qty = dbItem?.daQty ?: 0
-        val total = ticketItems.ticketAmount * qty
 
         binding.txtQty.text = qty.toString()
-        if(qty != 0){
-            binding.txtDharshanPrice.text = "Rs. ${String.format(Locale.ENGLISH, "%.2f", total)}"
-        }
+
+        val priceToShow =
+            if (qty > 0) ticketItem.ticketAmount * qty
+            else ticketItem.ticketAmount
+
+        binding.txtDharshanPrice.text =
+            "Rs. ${String.format(Locale.ENGLISH, "%.2f", priceToShow)}"
 
         binding.relPlus.setOnClickListener {
-            onBookingTicketClick.onTicketPlusClick(ticketItems)
+            onBookingTicketClick.onTicketPlusClick(ticketItem)
         }
 
         binding.relMinus.setOnClickListener {
-            onBookingTicketClick.onTicketMinusClick(ticketItems)
+            onBookingTicketClick.onTicketMinusClick(ticketItem)
         }
 
         binding.relNoneCardItem.setOnClickListener {
-            onTicketClickListener.onTicketClick(ticketItems)
+            onTicketClickListener.onTicketClick(ticketItem)
         }
-
     }
+
 
     @SuppressLint("NotifyDataSetChanged")
     fun updateTickets(newTickets: List<TicketDto>) {

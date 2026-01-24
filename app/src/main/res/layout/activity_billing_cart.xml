@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/light_green"
-    tools:context=".ui.sreens.billing.Billing_Cart_Activity">
+    tools:context=".ui.sreens.billing.BillingCartActivity">
 
     <LinearLayout
         android:id="@+id/linTop"
@@ -48,7 +48,6 @@
                 android:id="@+id/txtName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/editTextId"
                 android:layout_marginTop="5dp"
                 android:fontFamily="@font/poppins_regular"
                 android:text="@string/name"

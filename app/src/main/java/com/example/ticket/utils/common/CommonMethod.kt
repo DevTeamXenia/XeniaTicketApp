@@ -33,8 +33,8 @@ object CommonMethod {
         builder.setView(view)
         builder.setCancelable(false)
 
-        com.example.ticket.utils.common.CommonMethod.loader = builder.create()
-        com.example.ticket.utils.common.CommonMethod.loader?.show()
+        loader = builder.create()
+        loader?.show()
     }
     fun dismissLoader() {
         loader?.dismiss()

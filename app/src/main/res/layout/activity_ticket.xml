@@ -11,7 +11,7 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="20"
+        android:layout_weight="15"
         android:background="@drawable/homebackground">
 
         <androidx.cardview.widget.CardView
@@ -60,7 +60,7 @@
             android:fontFamily="@font/segoe_ui_bold"
             android:textAlignment="center"
             android:textColor="@color/white"
-            android:textSize="60sp" />
+            android:textSize="50sp" />
     </RelativeLayout>
 
     <LinearLayout
@@ -73,7 +73,8 @@
             android:id="@+id/txtselect_ticket"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="60dp"
+            android:layout_marginBottom="20dp"
+            android:layout_marginTop="10dp"
             android:fontFamily="@font/poppins_regular"
             android:text="@string/choose_your_tickets"
             android:textAlignment="center"
@@ -97,6 +98,7 @@
                     android:layout_weight="3"
                     android:layout_marginTop="30dp"
                     android:orientation="vertical"
+                    android:visibility="visible"
                     tools:ignore="NestedWeights">
 
                     <androidx.recyclerview.widget.RecyclerView

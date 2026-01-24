@@ -28,7 +28,7 @@ import com.example.ticket.data.repository.CompanyRepository
 import com.example.ticket.data.repository.TicketRepository
 import com.example.ticket.data.room.entity.Ticket
 import com.example.ticket.databinding.ActivityPaymentBinding
-import com.example.ticket.ui.sreens.billing.Billin_Ticket_Activity
+import com.example.ticket.ui.sreens.billing.BillingTicketActivity
 import com.example.ticket.utils.common.CommonMethod.setLocale
 import com.example.ticket.utils.common.CompanyKey
 import com.example.ticket.utils.common.SessionManager
@@ -248,94 +248,51 @@ class PaymentActivity : AppCompatActivity() {
                 Locale.ENGLISH
             ).format(Date())
 
-            val headerFileName = companyRepository.getString(CompanyKey.COMPANYPRINT_H)
-            val footerFileName = companyRepository.getString(CompanyKey.COMPANYPRINT_F)
+            val headerUrl = companyRepository.getString(CompanyKey.COMPANYPRINT_H)
+            val footerUrl = companyRepository.getString(CompanyKey.COMPANYPRINT_F)
+
+            Log.d("ReceiptPrint", "Full Header URL: $headerUrl")
+            Log.d("ReceiptPrint", "Full Footer URL: $footerUrl")
 
             val (headerBitmap, footerBitmap) = withContext(Dispatchers.IO) {
-                val headerUrl =
-                    headerFileName?.let { "https://apiimage.xeniapos.com/Temple/assest/uploads?fileName=$it" }
-                val footerUrl =
-                    footerFileName?.let { "https://apiimage.xeniapos.com/Temple/assest/uploads?fileName=$it" }
-
-
-                Log.d("ReceiptPrint", "Header URL: $headerUrl")
-                Log.d("ReceiptPrint", "Footer URL: $footerUrl")
-
-                val header = headerUrl?.let {
-                    try {
-                        loadBitmapFromUrl(it)
-                    } catch (e: Exception) {
-                        Log.e("ReceiptPrint", "Error loading header bitmap: ${e.message}")
-                        null
-                    }
-                }
-
-                val footer = footerUrl?.let {
-                    try {
-                        loadBitmapFromUrl(it)
-                    } catch (e: Exception) {
-                        Log.e("ReceiptPrint", "Error loading footer bitmap: ${e.message}")
-                        null
-                    }
-                }
-
+                val header = headerUrl?.let { safeLoadBitmap(it) }
+                val footer = footerUrl?.let { safeLoadBitmap(it) }
                 header to footer
             }
-
-
-            val receiptBitmap: Bitmap = when {
-                companyRepository.getDefaultLanguage() == selectedLanguage -> {
-                    generateReceiptBitmapDefault(
-                        currentDate,
-                        transID,
-                        orderID.toString(),
-                        allVazhipaduItems,
-                        selectedLanguage!!
-                    )
-                }
-
-                else -> {
-                    generateReceiptBitmap(
-                        currentDate,
-                        transID,
-                        orderID.toString(),
-                        allVazhipaduItems,
-                        selectedLanguage!!
-                    )
-
-                }
+            val receiptBitmap: Bitmap = if (companyRepository.getDefaultLanguage() == selectedLanguage) {
+                generateReceiptBitmapDefault(
+                    currentDate,
+                    transID,
+                    orderID.toString(),
+                    allVazhipaduItems,
+                    selectedLanguage!!
+                )
+            } else {
+                generateReceiptBitmap(
+                    currentDate,
+                    transID,
+                    orderID.toString(),
+                    allVazhipaduItems,
+                    selectedLanguage!!
+                )
             }
 
             if (isB1008) {
                 try {
-                    headerBitmap?.let { bmp ->
-                        val scaledHeader = bmp.scale(550, 200)
-                        printerService?.printBitmap(
-                            scaledHeader,
-                            0, // type
-                            POSConst.ALIGNMENT_CENTER
-                        )
-                        scaledHeader.recycle()
+                    headerBitmap?.scale(550, 200)?.let { scaled ->
+                        printerService?.printBitmap(scaled, 0, POSConst.ALIGNMENT_CENTER)
+                        scaled.recycle()
                     }
 
-                    printerService?.printBitmap(
-                        receiptBitmap,
-                        0,
-                        POSConst.ALIGNMENT_CENTER
-                    )
+                    printerService?.printBitmap(receiptBitmap, 0, POSConst.ALIGNMENT_CENTER)
                     printerService?.printText("\n\n", null)
 
-                    footerBitmap?.let { bmp ->
-                        val scaledFooter = bmp.scale(500, 100)
-                        printerService?.printBitmap(
-                            scaledFooter,
-                            0,
-                            POSConst.ALIGNMENT_CENTER
-                        )
-                        scaledFooter.recycle()
+                    footerBitmap?.scale(500, 100)?.let { scaled ->
+                        printerService?.printBitmap(scaled, 0, POSConst.ALIGNMENT_CENTER)
+                        scaled.recycle()
                     }
 
-                    printerService!!.printEndAutoOut()
+                    printerService?.printEndAutoOut()
                 } catch (e: RemoteException) {
                     Log.e("PrinterService", "Printing error: ${e.message}")
                 }
@@ -343,31 +300,22 @@ class PaymentActivity : AppCompatActivity() {
             } else {
                 val printer = POSPrinter(curConnect)
 
-
-                headerBitmap?.let {
-                    val compressedHeader = it.scale(550, 200)
-                    printer.printBitmap(compressedHeader, POSConst.ALIGNMENT_CENTER, 500)
-                        .feedLine(2)
-                    compressedHeader.recycle()
+                headerBitmap?.scale(550, 200)?.let { scaled ->
+                    printer.printBitmap(scaled, POSConst.ALIGNMENT_CENTER, 500).feedLine(2)
+                    scaled.recycle()
                 }
 
-                printer.printBitmap(receiptBitmap, POSConst.ALIGNMENT_CENTER, 600)
-                    .feedLine(2)
-
+                printer.printBitmap(receiptBitmap, POSConst.ALIGNMENT_CENTER, 600).feedLine(2)
                 delay(100)
 
                 try {
-                    footerBitmap?.let {
-                        val compressedFooter = it.scale(550, 100)
-                        printer.printBitmap(compressedFooter, POSConst.ALIGNMENT_CENTER, 500)
+                    footerBitmap?.scale(550, 100)?.let { scaled ->
+                        printer.printBitmap(scaled, POSConst.ALIGNMENT_CENTER, 500)
                         printer.feedLine(3)
                         delay(300)
                         printer.cutHalfAndFeed(1)
-
-                        compressedFooter.recycle()
-                    } ?: run {
-                        printer.cutHalfAndFeed(1)
-                    }
+                        scaled.recycle()
+                    } ?: printer.cutHalfAndFeed(1)
                 } catch (e: Exception) {
                     Log.e("ReceiptPrint", "Footer printing error: ${e.message}")
                     printer.cutHalfAndFeed(1)
@@ -376,9 +324,16 @@ class PaymentActivity : AppCompatActivity() {
 
             receiptBitmap.recycle()
             delay(2000)
-        }
 
-        redirect()
+            redirect()
+        }
+    }
+
+    private suspend fun safeLoadBitmap(url: String): Bitmap? = try {
+        loadBitmapFromUrl(url)
+    } catch (e: Exception) {
+        Log.e("ReceiptPrint", "Error loading bitmap from $url: ${e.message}")
+        null
     }
 
     private suspend fun loadBitmapFromUrl(url: String): Bitmap? = withContext(Dispatchers.IO) {
@@ -386,15 +341,15 @@ class PaymentActivity : AppCompatActivity() {
             val connection = URL(url).openConnection() as HttpURLConnection
             connection.doInput = true
             connection.connect()
-            val inputStream = connection.inputStream
-            val bitmap = BitmapFactory.decodeStream(inputStream)
-            inputStream.close()
+            val bitmap = BitmapFactory.decodeStream(connection.inputStream)
+            connection.inputStream.close()
             bitmap
         } catch (e: Exception) {
             Log.e("ImageLoad", "Error loading image from URL: ${e.message}")
             null
         }
     }
+
 
     private fun Bitmap.scaleToWidth(newWidth: Int): Bitmap {
         val ratio = newWidth.toFloat() / this.width
@@ -417,7 +372,7 @@ class PaymentActivity : AppCompatActivity() {
 
         val labelReceiptNo = getLocalizedString("Receipt No", selectedLanguage)
         val labelDate = getLocalizedString("Date", selectedLanguage)
-        val labelItem = getLocalizedString("Item", selectedLanguage)
+        val labelItem = getLocalizedString("Ticket", selectedLanguage)
         val labelPrice = getLocalizedString("Price", selectedLanguage)
         val labelAmount = getLocalizedString("Amount", selectedLanguage)
         val labelUPI = getLocalizedString("UPI Reference No", selectedLanguage)
@@ -443,28 +398,30 @@ class PaymentActivity : AppCompatActivity() {
         paint.textAlign = Paint.Align.CENTER
 
         val receiptTitle = when (selectedLanguage) {
-            "ml" -> "ടിക്കറ്റ്"
-            "kn" -> "ಟಿಕೆಟ್"
-            "ta" -> "டிக்கெட் "
-            "te" -> "టికెట్ "
-            "hi" -> "टिकट "
-            "pa" -> "ਟਿਕਟ "
-            "mr" -> "तिकीट "
-            "si" -> "ටිකට් "
-            else -> "Ticket"
+            "ml" -> "പ്രവേശന ടിക്കറ്റ്"
+            "kn" -> "ಪ್ರವೇಶ ಟಿಕೆಟ್"
+            "ta" -> "நுழைவு டிக்கெட்"
+            "te" -> "ప్రవేశ టికెట్"
+            "hi" -> "प्रवेश टिकट"
+            "pa" -> "ਪ੍ਰਵੇਸ਼ ਟਿਕਟ"
+            "mr" -> "प्रवेश तिकीट"
+            "si" -> "ප්‍රවේශ ටිකට්"
+            else -> "Entry Ticket"
+
         }
 
         val receiptDTitle = when (defaultlang) {
 
-            "ml" -> "ടിക്കറ്റ്"
-            "kn" -> "ಟಿಕೆಟ್ "
-            "ta" -> "டிக்கெட் "
-            "te" -> "టికెట్ "
-            "hi" -> "टिकट "
-            "pa" -> "ਟਿਕਟ "
-            "mr" -> "तिकीट "
-            "si" -> "ටිකට් "
-            else -> "Ticket"
+            "ml" -> "പ്രവേശന ടിക്കറ്റ്"
+            "kn" -> "ಪ್ರವೇಶ ಟಿಕೆಟ್"
+            "ta" -> "நுழைவு டிக்கெட்"
+            "te" -> "ప్రవేశ టికెట్"
+            "hi" -> "प्रवेश टिकट"
+            "pa" -> "ਪ੍ਰਵੇਸ਼ ਟਿਕਟ"
+            "mr" -> "प्रवेश तिकीट"
+            "si" -> "ප්‍රවේශ ටිකට්"
+            else -> "Entry Ticket"
+
         }
 
         tempCanvas.drawText(receiptTitle, width / 2f, 40f, paint)
@@ -488,16 +445,6 @@ class PaymentActivity : AppCompatActivity() {
         tempCanvas.drawText(labelQty, width * 0.65f, yOffset, paint)
         paint.textAlign = Paint.Align.RIGHT
         tempCanvas.drawText(labelAmount, width - 30f, yOffset, paint)
-        yOffset += 30f
-        paint.textAlign = Paint.Align.LEFT
-        tempCanvas.drawText(labelDItem, 20f, yOffset, paint)
-
-        paint.textAlign = Paint.Align.CENTER
-        tempCanvas.drawText(labelDPrice, width * 0.5f, yOffset, paint)
-        tempCanvas.drawText(labelDQty, width * 0.65f, yOffset, paint)
-        paint.textAlign = Paint.Align.RIGHT
-        tempCanvas.drawText(labelDAmount, width - 30f, yOffset, paint)
-
         yOffset += 30f
         paint.strokeWidth = 2f
         tempCanvas.drawLine(20f, yOffset, width - 20f, yOffset, paint)
@@ -568,13 +515,6 @@ class PaymentActivity : AppCompatActivity() {
             paint
         )
         yOffset += 35f
-
-
-        paint.textSize = 22f
-        tempCanvas.drawText("$labelUPI: $transID", width - 20f, yOffset, paint)
-        yOffset += 35f
-
-
         paint.textSize = 22f
         paint.textAlign = Paint.Align.CENTER
 
@@ -616,25 +556,21 @@ class PaymentActivity : AppCompatActivity() {
         tempCanvas.drawText("$labelPhonenumber: $phoneNo", textX, textY, paint)
         textY += 25f
         tempCanvas.drawText(labelDPhonenumber, textX, textY, paint)
-        yOffset = textY + 60f
-
-        generateQRCode()?.let { qrBitmap ->
-            val qrSize = 300
-            val qrX = (width - qrSize) / 2f
-            tempCanvas.drawBitmap(qrBitmap, qrX, yOffset, paint)
-            yOffset += qrSize + 50f
-        }
-        val finalBitmap = createBitmap(width, (yOffset + 0f).toInt())
+        yOffset = textY + 20f
+//
+//        generateQRCode()?.let { qrBitmap ->
+//            val qrSize = 300
+//            val qrX = (width - qrSize) / 2f
+//            tempCanvas.drawBitmap(qrBitmap, qrX, yOffset, paint)
+//            yOffset += qrSize + 50f
+//        }
+        yOffset += 35f
+        val finalBitmap = createBitmap(width, (yOffset + 20f).toInt())
         Canvas(finalBitmap).drawBitmap(tempBitmap, 0f, 0f, null)
-
-
-
         tempBitmap.recycle()
 
         return finalBitmap
     }
-
-
     @SuppressLint("DefaultLocale")
     private fun generateReceiptBitmapDefault(
         currentDate: String,
@@ -648,7 +584,7 @@ class PaymentActivity : AppCompatActivity() {
 
         val labelReceiptNo = getLocalizedString("Receipt No", selectedLanguage)
         val labelDate = getLocalizedString("Date", selectedLanguage)
-        val labelItem = getLocalizedString("Item", selectedLanguage)
+        val labelItem = getLocalizedString("Ticket", selectedLanguage)
         val labelPrice = getLocalizedString("Price", selectedLanguage)
         val labelAmount = getLocalizedString("Amount", selectedLanguage)
         val labelUPI = getLocalizedString("UPI Reference No", selectedLanguage)
@@ -668,21 +604,17 @@ class PaymentActivity : AppCompatActivity() {
 
         val receiptTitle = when (selectedLanguage) {
 
-            "ml" -> "ടിക്കറ്റ് "
-            "kn" -> "ಟಿಕೆಟ್ "
-            "ta" -> "டிக்கெட் "
-            "te" -> "టికెట్ "
-            "hi" -> "टिकट "
-            "pa" -> "ਟਿਕਟ "
-            "mr" -> "तिकीट "
-            "si" -> "ටිකට් "
-            else -> "Ticket "
-
-
+            "ml" -> "പ്രവേശന ടിക്കറ്റ്"
+            "kn" -> "ಪ್ರವೇಶ ಟಿಕೆಟ್"
+            "ta" -> "நுழைவு டிக்கெட்"
+            "te" -> "ప్రవేశ టికెట్"
+            "hi" -> "प्रवेश टिकट"
+            "pa" -> "ਪ੍ਰਵੇਸ਼ ਟਿਕਟ"
+            "mr" -> "प्रवेश तिकीट"
+            "si" -> "ප්‍රවේශ ටිකට්"
+            else -> "Entry Ticket"
         }
-
         tempCanvas.drawText(receiptTitle, width / 2f, 40f, paint)
-
 
         var yOffset = 130f
         paint.textAlign = Paint.Align.LEFT
@@ -743,8 +675,6 @@ class PaymentActivity : AppCompatActivity() {
             paint.textAlign = Paint.Align.RIGHT
             tempCanvas.drawText(amountStr, width - 40f, yOffset, paint)
 
-
-
             yOffset += 45f
         }
 
@@ -761,21 +691,12 @@ class PaymentActivity : AppCompatActivity() {
             yOffset,
             paint
         )
-
         yOffset += 35f
-
-
-        paint.textSize = 22f
-        tempCanvas.drawText("$labelUPI: $transID", width - 20f, yOffset, paint)
-        yOffset += 35f
-
         val padding = 15f
         val textPadding = 0f
         val rectTop = yOffset
         val rectRight = width - padding
-
         var tempYOffset = yOffset + textPadding
-
         tempYOffset += 10f
         val imageSize = 100f
         val textHeight = 35f * 3
@@ -806,14 +727,15 @@ class PaymentActivity : AppCompatActivity() {
         textY += 30f
         tempCanvas.drawText("$labelPhonenumber: $phoneNo", textX, textY, paint)
 
-        yOffset = textY + 100f
-
-        generateQRCode()?.let { qrBitmap ->
-            val qrSize = 300
-            val qrX = (width - qrSize) / 2f
-            tempCanvas.drawBitmap(qrBitmap, qrX, yOffset, paint)
-            yOffset += qrSize + 50f
-        }
+        yOffset = textY + 20f
+//
+//        generateQRCode()?.let { qrBitmap ->
+//            val qrSize = 300
+//            val qrX = (width - qrSize) / 2f
+//            tempCanvas.drawBitmap(qrBitmap, qrX, yOffset, paint)
+//            yOffset += qrSize + 50f
+//        }
+        yOffset += 35f
         val finalBitmap = createBitmap(width, (yOffset + 50f).toInt())
         Canvas(finalBitmap).drawBitmap(tempBitmap, 0f, 0f, null)
 
@@ -821,7 +743,6 @@ class PaymentActivity : AppCompatActivity() {
 
         return finalBitmap
     }
-
     private fun generateQRCode(): Bitmap? {
         val data = ticket?.toString().orEmpty()
         val qrCodeWriter = QRCodeWriter()
@@ -847,7 +768,6 @@ class PaymentActivity : AppCompatActivity() {
             null
         }
     }
-
     private fun getLocalizedString(key: String, languageCode: String): String {
         return when (languageCode.lowercase()) {
 
@@ -857,7 +777,7 @@ class PaymentActivity : AppCompatActivity() {
             "ml" -> when (key) {
                 "Receipt No" -> "രസീത് നമ്പർ"
                 "Date" -> "തീയതി"
-                "Item" -> "വസ്തു"
+                "Ticket" -> "ടിക്കറ്റ്"
                 "Name" -> "പേര്"
                 "Phone No" -> "ഫോൺ നമ്പർ"
                 "ID No" -> "ഐഡി നമ്പർ"
@@ -875,7 +795,7 @@ class PaymentActivity : AppCompatActivity() {
             "hi" -> when (key) {
                 "Receipt No" -> "रसीद संख्या"
                 "Date" -> "तारीख"
-                "Item" -> "वस्तु"
+                "Item" -> "टिकट"
                 "Name" -> "नाम"
                 "Phone No" -> "फ़ोन नंबर"
                 "ID No" -> "पहचान संख्या"
@@ -892,7 +812,7 @@ class PaymentActivity : AppCompatActivity() {
             "si" -> when (key) {
                 "Receipt No" -> "රිසිට්පත අංකය"
                 "Date" -> "දිනය"
-                "Item" -> "වස්තුව"
+                "Item" -> "ටිකට්"
                 "Name" -> "නම"
                 "Phone No" -> "දුරකථන අංකය"
                 "ID No" -> "හැඳුනුම් අංකය"
@@ -909,7 +829,7 @@ class PaymentActivity : AppCompatActivity() {
             "kn" -> when (key) {
                 "Receipt No" -> "ರಸೀದಿ ಸಂಖ್ಯೆ"
                 "Date" -> "ದಿನಾಂಕ"
-                "Item" -> "ವಸ್ತು"
+                "Item" -> "ಟಿಕೆಟ್"
                 "Name" -> "ಹೆಸರು"
                 "Phone No" -> "ಫೋನ್ ನಂಬರ"
                 "ID No" -> "ಐಡಿ ಸಂಖ್ಯೆ"
@@ -926,7 +846,7 @@ class PaymentActivity : AppCompatActivity() {
             "ta" -> when (key) {
                 "Receipt No" -> "ரசீது எண்"
                 "Date" -> "தேதி"
-                "Item" -> "பொருள்"
+                "Item" -> "டிக்கெட்"
                 "Name" -> "பெயர்"
                 "Phone No" -> "தொலைபேசி எண்"
                 "ID No" -> "அடையாள எண்"
@@ -943,7 +863,7 @@ class PaymentActivity : AppCompatActivity() {
             "te" -> when (key) {
                 "Receipt No" -> "రశీదు సంఖ్య"
                 "Date" -> "తేదీ"
-                "Item" -> "వస్తువు"
+                "Item" -> "టికెట్"
                 "Name" -> "పేరు"
                 "Phone No" -> "ఫోన్ నంబర్"
                 "ID No" -> "ఐడి నంబర్"
@@ -960,7 +880,7 @@ class PaymentActivity : AppCompatActivity() {
             "pa" -> when (key) {
                 "Receipt No" -> "ਰਸੀਦ ਨੰਬਰ"
                 "Date" -> "ਤਾਰੀਖ਼"
-                "Item" -> "ਵਸਤੂ"
+                "Item" -> "ਟਿਕਟ"
                 "Name" -> "ਨਾਮ"
                 "Phone No" -> "ਫ਼ੋਨ ਨੰਬਰ"
                 "ID No" -> "ਆਈਡੀ ਨੰਬਰ"
@@ -977,7 +897,7 @@ class PaymentActivity : AppCompatActivity() {
             "mr" -> when (key) {
                 "Receipt No" -> "पावती क्रमांक"
                 "Date" -> "तारीख"
-                "Item" -> "वस्तू"
+                "Item" -> "तिकीट"
                 "Name" -> "नाव"
                 "Phone No" -> "फोन नंबर"
                 "ID No" -> "ओळख क्रमांक"
@@ -1002,7 +922,7 @@ class PaymentActivity : AppCompatActivity() {
                 ticketRepository.clearAllData()
             }
             val targetActivity = if (from == "billing") {
-                Billin_Ticket_Activity::class.java
+                BillingTicketActivity::class.java
             } else {
                 LanguageActivity::class.java
             }

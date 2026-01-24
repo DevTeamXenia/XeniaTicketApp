@@ -14,7 +14,7 @@ import androidx.core.net.toUri
 import com.example.ticket.R
 import com.example.ticket.data.repository.LoginRepository
 import com.example.ticket.databinding.ActivityLoginBinding
-import com.example.ticket.ui.sreens.billing.Billin_Ticket_Activity
+import com.example.ticket.ui.sreens.billing.BillingTicketActivity
 import com.example.ticket.utils.common.CommonMethod.dismissLoader
 import com.example.ticket.utils.common.CommonMethod.isInternetAvailable
 import com.example.ticket.utils.common.CommonMethod.showSnackbar
@@ -132,7 +132,7 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
                     return
                 }
 
-                startActivity(Intent(this, Billin_Ticket_Activity::class.java))
+                startActivity(Intent(this, BillingTicketActivity::class.java))
                 finish()
             }
 

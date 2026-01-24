@@ -297,7 +297,6 @@ class CustomTicketPopupDialogue : DialogFragment() {
                 daCustRefNo = "",
                 daNpciTransId = ""
             )
-
             lifecycleScope.launch {
                 ticketRepository.insertCartItem(cartItem)
                 listener?.onTicketAdded()

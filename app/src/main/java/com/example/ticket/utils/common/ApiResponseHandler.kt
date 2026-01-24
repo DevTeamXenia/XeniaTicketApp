@@ -42,7 +42,7 @@ object ApiResponseHandler {
                     if (!message.isNullOrBlank()) {
                             android.util.Log.d("ApiResponseHandler", "Showing dialog for other 401")
                             AlertDialog.Builder(activity)
-                                .setTitle("Session Expired")
+                                .setTitle("Logout !!")
                                 .setMessage(message)
                                 .setCancelable(false)
                                 .setPositiveButton("Logout") { _, _ ->

@@ -457,7 +457,6 @@
                         android:layout_centerInParent="true"
                         android:adjustViewBounds="true"
                         android:contentDescription="@string/todo"
-                        android:src="@drawable/ic_fed"
                         tools:ignore="ImageContrastCheck" />
 
                 </RelativeLayout>

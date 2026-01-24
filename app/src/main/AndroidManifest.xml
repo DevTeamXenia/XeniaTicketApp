@@ -44,10 +44,10 @@
             android:name=".ui.sreens.screen.PrinterSettingActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.sreens.billing.Billing_Cart_Activity"
+            android:name=".ui.sreens.billing.BillingCartActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.sreens.billing.Billin_Ticket_Activity"
+            android:name=".ui.sreens.billing.BillingTicketActivity"
             android:exported="false" />
         <activity
             android:name=".ui.sreens.screen.PaymentActivity"

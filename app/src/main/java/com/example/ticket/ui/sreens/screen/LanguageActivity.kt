@@ -4,13 +4,11 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Bitmap
-import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.view.View
 import android.widget.LinearLayout
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -27,14 +25,12 @@ import com.example.ticket.data.repository.TicketRepository
 import com.example.ticket.databinding.ActivitySelectionBinding
 import com.example.ticket.ui.dialog.CustomInactivityDialog
 import com.example.ticket.ui.dialog.CustomInternetAvailabilityDialog
-import com.example.ticket.ui.sreens.billing.Billin_Ticket_Activity
+import com.example.ticket.ui.sreens.billing.BillingTicketActivity
 import com.example.ticket.utils.common.ApiResponseHandler
 import com.example.ticket.utils.common.CommonMethod.dismissLoader
+import com.example.ticket.utils.common.CommonMethod.showLoader
 import com.example.ticket.utils.common.CommonMethod.showSnackbar
 import com.example.ticket.utils.common.CompanyKey
-import com.example.ticket.utils.common.Constants.COMPANY_GATEWAY_CAN
-import com.example.ticket.utils.common.Constants.COMPANY_GATEWAY_DHANLAXMI
-import com.example.ticket.utils.common.Constants.COMPANY_GATEWAY_FEDERAL
 import com.example.ticket.utils.common.Constants.LANGUAGE_ENGLISH
 import com.example.ticket.utils.common.Constants.LANGUAGE_HINDI
 import com.example.ticket.utils.common.Constants.LANGUAGE_KANNADA
@@ -48,7 +44,6 @@ import com.example.ticket.utils.common.SessionManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.json.JSONObject
 import org.koin.android.ext.android.inject
 import java.io.File
 import java.io.FileOutputStream
@@ -82,23 +77,26 @@ class LanguageActivity : AppCompatActivity(),
     }
     private fun setupBackgroundImage() {
         lifecycleScope.launch {
-            val fileName =
-                if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                    companyRepository.getString(CompanyKey.COMPANYLOGO_L)
-                } else {
-                    companyRepository.getString(CompanyKey.COMPANYLOGO_P)
-                }
+            val isLandscape =
+                resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-            if (fileName.isNullOrEmpty()) return@launch
+            val fileName = if (isLandscape) {
+                companyRepository.getString(CompanyKey.COMPANYLOGO_L)
+                    ?: companyRepository.getString(CompanyKey.COMPANYLOGO_P)
+            } else {
+                companyRepository.getString(CompanyKey.COMPANYLOGO_P)
+                    ?: companyRepository.getString(CompanyKey.COMPANYLOGO_L)
+            }
 
-            val imageUrl = "https://apiimage.xeniapos.com/Temple/assest/uploads?fileName=$fileName"
+            if (fileName.isNullOrBlank()) return@launch
 
-            Glide.with(binding.imgBackground.context)
-                .load(imageUrl)
+            val fullUrl = "https://apiimage.xeniapos.com/Temple/assest/uploads?fileName=$fileName"
+
+            Glide.with(binding.imgBackground)
+                .load(fullUrl)
                 .into(binding.imgBackground)
         }
     }
-
 
     private fun getLanguageCardMap(): Map<String, View> {
         return mapOf(
@@ -111,10 +109,9 @@ class LanguageActivity : AppCompatActivity(),
             LANGUAGE_PUNJABI to binding.cardPunjabi,
             LANGUAGE_MARATHI to binding.cardMarathi,
             LANGUAGE_SINHALA to binding.cardSinhala
-        ).filterValues { it != null }
-            .mapValues { it.value!! }
+        ).filterValues { true }
+            .mapValues { it.value }
     }
-
 
     private fun setupLanguageButtons(enabledLanguages: List<String>) {
 
@@ -128,21 +125,17 @@ class LanguageActivity : AppCompatActivity(),
         }
 
         enabledLanguages.forEach { lang ->
-            languageCardMap[lang]?.apply {
-                visibility = View.VISIBLE
-                setOnClickListener { selectLanguage(lang) }
+            languageCardMap[lang]?.let { card ->
+                card.visibility = View.VISIBLE
+                card.setOnClickListener { selectLanguage(lang) }
             }
-        }
-
-
-        lifecycleScope.launch {
-            setupCardPosition(enabledLanguages)
         }
     }
 
+
     private suspend fun setupCardPosition(enabledLanguages: List<String>) {
 
-        val container = binding.languageCardContainer ?: return
+        val container = binding.languageCardContainer
         if (container.childCount < 5) return
 
         val languageCardMap = getLanguageCardMap()
@@ -150,7 +143,7 @@ class LanguageActivity : AppCompatActivity(),
 
         val orderedCards = mutableListOf<View>()
 
-        binding.cardEnglish?.let { orderedCards.add(it) }
+        binding.cardEnglish.let { orderedCards.add(it) }
 
         if (defaultLanguage != LANGUAGE_ENGLISH) {
             languageCardMap[defaultLanguage]?.let { orderedCards.add(it) }
@@ -193,89 +186,46 @@ class LanguageActivity : AppCompatActivity(),
 
 
     private fun loadCompanyDetails() {
-        lifecycleScope.launch {
-            Log.d("loadCompanyDetails", "Starting loadCompanyDetails")
+//        showLoader(this@LanguageActivity, "Loading Company Settings...")
 
+        lifecycleScope.launch {
             try {
                 val token = sessionManager.getToken()
-
                 if (token.isNullOrEmpty()) {
-                    dismissLoader()
                     showSnackbar(binding.root, "Invalid session. Please login again.")
+                    dismissLoader()
+                    return@launch
+                }
+                val loadResult = withContext(Dispatchers.IO) {
+                    companyRepository.loadCompanySettings(token)
+                }
+                if (!loadResult) {
+                    showSnackbar(binding.root, "Company settings sync failed, using local data")
+                }
+
+                val company = companyRepository.getCompany()
+                if (company == null) {
+                    showSnackbar(binding.root, "Company data missing in database!")
+                    dismissLoader()
                     return@launch
                 }
 
-                // 🔹 Call API
-                ApiResponseHandler.handleApiCall(
-                    activity = this@LanguageActivity,
-                    apiCall = {
-                        withContext(Dispatchers.IO) {
-                            companyRepository.loadCompanySettings(token)
-                        }
-                    },
-                    onSuccess = { loadResult ->
+                // setup UI sequentially
+                enabledLanguages = companyRepository
+                    .getString(CompanyKey.COMPANY_LANGUAGES)
+                    ?.split(",")
+                    ?.map { it.trim() }
+                    ?: emptyList()
 
-                        if (!loadResult) {
-                            showSnackbar(
-                                binding.root,
-                                "Company settings sync failed, using local data"
-                            )
-                        }
-
-                        lifecycleScope.launch {
-
-                            val company = companyRepository.getCompany()
-
-                            if (company == null) {
-                                dismissLoader()
-                                showSnackbar(binding.root, "Company data missing in database!")
-                                return@launch
-                            }
-
-                            enabledLanguages = companyRepository
-                                .getString(CompanyKey.COMPANY_LANGUAGES)
-                                ?.split(",")
-                                ?.map { it.trim() }
-                                ?: emptyList()
-
-                            setupBackgroundImage()
-                            setupLanguageButtons(enabledLanguages)
-                            setupCardPosition(enabledLanguages)
-
-                            val bgImageUrl =
-                                companyRepository.getString(CompanyKey.COMPANYLOGO_L)
-
-                            if (!bgImageUrl.isNullOrEmpty()) {
-                                withContext(Dispatchers.IO) {
-                                    val bitmap =
-                                        loadBitmapSafely(this@LanguageActivity, bgImageUrl)
-                                    bitmap?.let {
-                                        val file = saveBitmapToFile(
-                                            context = this@LanguageActivity,
-                                            bitmap = it,
-                                            filename = "company_bg.png"
-                                        )
-                                        withContext(Dispatchers.Main) {
-                                            binding.root.background =
-                                                Drawable.createFromPath(file.absolutePath)
-                                        }
-                                    }
-                                }
-                            }
-
-                            dismissLoader()
-                        }
-                    }
-                )
+                setupBackgroundImage()
+                setupLanguageButtons(enabledLanguages)
+                setupCardPosition(enabledLanguages)
 
             } catch (e: HttpException) {
-
                 if (e.code() == 401) {
                     AlertDialog.Builder(this@LanguageActivity)
                         .setTitle("Logout !!")
-                        .setMessage(
-                            "You have been logged out because your account was used on another device."
-                        )
+                        .setMessage("You have been logged out because your account was used on another device.")
                         .setCancelable(false)
                         .setPositiveButton("Logout") { _, _ ->
                             ApiResponseHandler.logoutUser(this@LanguageActivity)
@@ -284,16 +234,16 @@ class LanguageActivity : AppCompatActivity(),
                 } else {
                     showSnackbar(binding.root, "Unable to load settings!")
                 }
-
-                dismissLoader()
-
             } catch (e: Exception) {
                 Log.e("loadCompanyDetails", "Other exception caught", e)
                 showSnackbar(binding.root, "Unable to load settings!")
+            } finally {
                 dismissLoader()
             }
         }
     }
+
+
     private fun saveBitmapToFile(context: Context, bitmap: Bitmap, filename: String): File {
         val file = File(context.cacheDir, filename)
         FileOutputStream(file).use { out ->
@@ -316,37 +266,16 @@ class LanguageActivity : AppCompatActivity(),
                 null
             }
         }
-
     private fun selectLanguage(language: String) {
         lifecycleScope.launch {
-
             if (UserType.fromValue(sessionManager.getUserType()) == UserType.COUNTER_USER) {
-
                 sessionManager.saveBillingSelectedLanguage(language)
-                startActivity(
-                    Intent(this@LanguageActivity, Billin_Ticket_Activity::class.java)
-                )
+                startActivity(Intent(this@LanguageActivity, BillingTicketActivity::class.java))
                 finish()
 
             } else {
-
                 sessionManager.saveSelectedLanguage(language)
-
-                val categoryValue = companyRepository.getString(CompanyKey.CATEGORY_ENABLE)
-                val isCategoryEnabled = categoryValue?.let {
-                    it.equals("true", ignoreCase = true) || it == "1" || it.equals(
-                        "yes",
-                        ignoreCase = true
-                    )
-                } ?: false
-
-                if (isCategoryEnabled) {
-                    startActivity(
-                        Intent(this@LanguageActivity, TicketActivity::class.java)
-                    )
-                } else {
-                }
-
+                startActivity(Intent(this@LanguageActivity, TicketActivity::class.java))
                 finish()
             }
         }
@@ -375,22 +304,20 @@ class LanguageActivity : AppCompatActivity(),
             }
         }
     }
-
-
     private suspend fun setBankLogo() {
-        val gateway = withContext(Dispatchers.IO) {
-            companyRepository.getBoolean(CompanyKey.is)
-        }
+        val gateway = companyRepository.getString(CompanyKey.PAYMENT_GATEWAY)
         val logo = when (gateway) {
-
+            "FederalBank" -> R.drawable.ic_fed
+            "CanaraBank" -> R.drawable.ic_can
             else -> R.drawable.ic_sib
         }
-
         val drawable = ContextCompat.getDrawable(this@LanguageActivity, logo)
-        if (drawable != null) {
-            binding.bankLogo.setImageDrawable(drawable)
+        drawable?.let {
+            binding.bankLogo.setImageDrawable(it)
         }
     }
+
+
 
     override fun onPause() {
         super.onPause()
