@@ -624,7 +624,7 @@ class PaymentActivity : AppCompatActivity() {
             tempCanvas.drawBitmap(qrBitmap, qrX, yOffset, paint)
             yOffset += qrSize + 50f
         }
-        val finalBitmap = createBitmap(width, (yOffset + 50f).toInt())
+        val finalBitmap = createBitmap(width, (yOffset + 0f).toInt())
         Canvas(finalBitmap).drawBitmap(tempBitmap, 0f, 0f, null)
 
 

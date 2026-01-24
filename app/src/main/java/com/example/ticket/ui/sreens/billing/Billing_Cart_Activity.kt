@@ -27,8 +27,8 @@ import com.example.ticket.ui.dialog.CustomInternetAvailabilityDialog
 import com.example.ticket.ui.dialog.CustomTicketPopupDialogue
 import com.example.ticket.ui.sreens.screen.PaymentActivity
 import com.example.ticket.ui.sreens.screen.TicketActivity
+import com.example.ticket.utils.common.ApiResponseHandler
 import com.example.ticket.utils.common.CommonMethod.dismissLoader
-import com.example.ticket.utils.common.CommonMethod.enableInactivityReset
 import com.example.ticket.utils.common.CommonMethod.generateNumericTransactionReferenceID
 import com.example.ticket.utils.common.CommonMethod.isInternetAvailable
 import com.example.ticket.utils.common.CommonMethod.setLocale
@@ -40,6 +40,7 @@ import com.example.ticket.utils.common.SessionManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONObject
 import org.koin.android.ext.android.inject
 import retrofit2.HttpException
 import java.util.Locale
@@ -131,7 +132,12 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
                 return@setOnClickListener
             }
             binding.btnPay.isEnabled = false
-            postTicketPaymentHistory("S", "Successful")
+            lifecycleScope.launch {
+                postTicketPaymentHistory(
+                    status = "S",
+                    statusDesc = "Payment Success"
+                )
+            }
         }
     }
     @SuppressLint("SetTextI18n", "DefaultLocale")
@@ -196,20 +202,21 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
             )
         }
     }
-    private fun postTicketPaymentHistory(
+    private suspend fun postTicketPaymentHistory(
         status: String,
         statusDesc: String,
         retryCount: Int = 0
     ) {
-        lifecycleScope.launch {
+        try {
 
 
             val cartTickets = ticketRepository.getAllTicketsInCart()
             if (cartTickets.isEmpty()) {
-                binding.btnPay.isEnabled = true
-                return@launch
+                withContext(Dispatchers.Main) {
+                    binding.btnPay.isEnabled = true
+                }
+                return
             }
-
 
             val itemsList = cartTickets.flatMap { item ->
                 (1..item.daQty).map {
@@ -228,20 +235,20 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
                 Base64.NO_WRAP
             )
 
-
+            // ✅ suspend call – now valid
             val companyId = companyRepository.getCompany()?.companyId ?: 0
             val token = sessionManager.getToken()
 
             if (token.isNullOrBlank()) {
-                binding.btnPay.isEnabled = true
-                showSnackbar(binding.root, "Authorization token missing")
-                return@launch
+                withContext(Dispatchers.Main) {
+                    binding.btnPay.isEnabled = true
+                    showSnackbar(binding.root, "Authorization token missing")
+                }
+                return
             }
-
 
             val name = binding.editTextName.text.toString().trim()
             val phone = binding.editTextPhoneNumber.text.toString().trim()
-
 
             val request = TicketPaymentRequest(
                 CompanyId = companyId,
@@ -259,49 +266,67 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
                 Items = itemsList
             )
 
-
             Log.d("PAYMENT_DEBUG", "Posting ${itemsList.size} items")
-            itemsList.forEach {
-                Log.d("PAYMENT_DEBUG", "TicketId=${it.TicketId}, Qty=${it.Quantity}")
+
+            ApiResponseHandler.handleApiCall(
+                activity = this@Billing_Cart_Activity,
+                apiCall = {
+                    withContext(Dispatchers.IO) {
+                        paymentRepository.postTicket(
+                            bearerToken = "Bearer $token",
+                            request = request
+                        )
+                    }
+                },
+                onSuccess = { response ->
+                    if (response.status.equals("Success", ignoreCase = true)
+                        && !response.receipt.isNullOrBlank()
+                    ) {
+
+                        lifecycleScope.launch {
+                            val (totalAmount) = ticketRepository.getCartStatus()
+
+                            handleTicketTransactionStatus(
+                                status = "S",
+                                orderId = response.receipt,
+                                ticket = response.ticket,
+                                totalAmount = totalAmount.toDouble(),
+                                companyRepository.getString(CompanyKey.PREFIX) ?: ""
+                            )
+                        }
+
+                    } else {
+                        binding.btnPay.isEnabled = true
+                        showSnackbar(binding.root, "Failed to post order")
+                    }
+                }
+            )
+
+        } catch (e: HttpException) {
+
+            withContext(Dispatchers.Main) {
+                if (e.code() == 401) {
+                    AlertDialog.Builder(this@Billing_Cart_Activity)
+                        .setTitle("Logout !!")
+                        .setMessage("You have been logged out because your account was used on another device.")
+                        .setCancelable(false)
+                        .setPositiveButton("Logout") { _, _ ->
+                            ApiResponseHandler.logoutUser(this@Billing_Cart_Activity)
+                        }
+                        .show()
+                } else {
+                    handleRetry(e, status, statusDesc, retryCount)
+                }
             }
 
-            try {
-
-                val response = withContext(Dispatchers.IO) {
-                    paymentRepository.postTicket(
-                        bearerToken = "Bearer $token",
-                        request = request
-                    )
-                }
-
-
-                if (
-                    response.status.equals("Success", ignoreCase = true) &&
-                    !response.receipt.isNullOrBlank()
-                ) {
-
-                    val (totalAmount) = ticketRepository.getCartStatus()
-
-                    handleTicketTransactionStatus(
-                        status = "S",
-                        orderId = response.receipt,
-                        ticket = response.ticket,
-                        totalAmount = totalAmount.toDouble(),
-                        companyRepository.getString(CompanyKey.PREFIX) ?: ""
-                    )
-                    Log.d("ticket", response.ticket.toString())
-                } else {
-                    binding.btnPay.isEnabled = true
-                    showSnackbar(binding.root, "Failed to post order")
-                }
-
-            } catch (e: HttpException) {
-                handleRetry(e, status, statusDesc, retryCount)
-            } catch (e: Exception) {
-                handleRetry(e, status, statusDesc, retryCount)
+        } catch (e: Exception) {
+            withContext(Dispatchers.Main) {
+                binding.btnPay.isEnabled = true
+                showSnackbar(binding.root, "Something went wrong")
             }
         }
     }
+
 
 
     private fun handleRetry(
@@ -317,7 +342,10 @@ class Billing_Cart_Activity : AppCompatActivity(), TicketCartAdapter.OnTicketCar
         }
 
         if (retryCount < 3) {
-            postTicketPaymentHistory(status, statusDesc, retryCount + 1)
+            lifecycleScope.launch {
+                postTicketPaymentHistory(status, statusDesc, retryCount + 1)
+            }
+
         } else {
             binding.btnPay.isEnabled = true
             showSnackbar(binding.root, "Failed: ${e.message}")

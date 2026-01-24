@@ -1,5 +1,6 @@
 package com.example.ticket.ui.sreens.billing
 
+import android.R.id.message
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
@@ -8,6 +9,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -101,6 +103,7 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener,
         }
 
         getLabel()
+
     }
     private fun setupUI() {
         binding.txtHome?.text = getString(R.string.home)
@@ -233,14 +236,6 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener,
 
         ticketAdapter =
             TicketBookingAdapter(selectedLanguage!!, this, this)
-        val spanCount = if (isLandscapeScreen(applicationContext)) {
-            8
-        } else {
-            val screenSize = getScreenSize(applicationContext)
-            if (screenSize == "Small") 2 else 2
-        }
-        binding.ticketRecycler.layoutManager =
-            GridLayoutManager(this@Billin_Ticket_Activity, spanCount)
         binding.ticketRecycler.adapter = ticketAdapter
 
 
@@ -249,7 +244,6 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener,
         binding.relCart.adapter = ticketCartAdapter
 
     }
-
     private fun fetchDetails() {
         lifecycleScope.launch {
             val isCategoryEnabled = companyRepository.getString(CompanyKey.CATEGORY_ENABLE)?.toBoolean() ?: false
@@ -257,173 +251,223 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener,
                 getCategory()
             } else {
                 getTickets()
+                binding.ticketCategory.visibility= View.GONE
             }
         }
     }
 
     private fun getCategory() {
-        lifecycleScope.launch {
-            try {
-                val token = sessionManager.getToken()
+        try {
+            val token = sessionManager.getToken()
 
-                if (token.isNullOrEmpty()) {
-                    binding.ticketCat.visibility = View.GONE
-                    return@launch
-                }
-
-                val isLoaded = withContext(Dispatchers.IO) {
-                    categoryRepository.loadCategories(token)
-                }
-
-                if (!isLoaded) {
-                    binding.ticketCat.visibility = View.GONE
-                    return@launch
-                }
-
-                val categoryEntities = withContext(Dispatchers.IO) {
-                    categoryRepository.getAllCategory()
-                }
-
-                if (categoryEntities.isEmpty()) {
-                    binding.ticketCat.visibility = View.GONE
-                    return@launch
-                }
-
-                val activeCategories = categoryEntities.filter { it.categoryActive }
-
-                if (activeCategories.isEmpty()) {
-                    binding.ticketCat.visibility = View.GONE
-                    return@launch
-                }
-
-                binding.ticketCat.visibility =
-                    if (companyRepository.getBoolean(CompanyKey.CATEGORY_ENABLE))
-                        View.VISIBLE
-                    else View.GONE
-
-                val selectedCategory = activeCategories.first()
-                selectedCategoryId = selectedCategory.categoryId
-
-                val categories = activeCategories.map { entity ->
-                    Category(
-                        categoryId = entity.categoryId,
-                        categoryName = entity.categoryName,
-                        categoryNameMa = entity.categoryNameMa,
-                        categoryNameTa = entity.categoryNameTa,
-                        categoryNameTe = entity.categoryNameTe,
-                        categoryNameKa = entity.categoryNameKa,
-                        categoryNameHi = entity.categoryNameHi,
-                        categoryNameMr = entity.categoryNameMr,
-                        categoryNamePa = entity.categoryNamePa,
-                        categoryNameSi = entity.categoryNameSi,
-                        CategoryCompanyId = entity.CategoryCompanyId,
-                        categoryCreatedDate = entity.categoryCreatedDate,
-                        categoryCreatedBy = entity.categoryCreatedBy,
-                        categoryModifiedDate = entity.categoryModifiedDate,
-                        categoryModifiedBy = entity.categoryModifiedBy,
-                        categoryActive = entity.categoryActive
-                    )
-                }
-
-                categoryAdapter.updateCategories(categories)
-                getTickets(selectedCategoryId)
-            } catch (e: HttpException) {
-                if (e.code() == 401) {
-                    val errorBody = e.response()?.errorBody()?.string().orEmpty()
-                    val message = try { JSONObject(errorBody).optString("message") } catch (ex: Exception) { null }
-                    val displayMessage = message?.ifBlank { "Your session has expired. Please login again." }
-
-                    // Show dialog safely
-                    runOnUiThread {
-                        AlertDialog.Builder(this@Billin_Ticket_Activity)
-                            .setTitle("Session Expired")
-                            .setMessage(displayMessage)
-                            .setCancelable(false)
-                            .setPositiveButton("Logout") { _, _ ->
-                                sessionManager.clearSession()
-                                startActivity(
-                                    Intent(this@Billin_Ticket_Activity, LoginActivity::class.java).apply {
-                                        flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                                                Intent.FLAG_ACTIVITY_NEW_TASK or
-                                                Intent.FLAG_ACTIVITY_CLEAR_TASK
-                                    }
-                                )
-                                finish()
-                            }
-                            .show()
-                    }
-                } else {
-                    throw e
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
+            if (token.isNullOrEmpty()) {
+                binding.ticketCat.visibility = View.GONE
+                return
             }
+
+
+            ApiResponseHandler.handleApiCall(
+                activity = this@Billin_Ticket_Activity,
+                apiCall = {
+                    withContext(Dispatchers.IO) {
+                        categoryRepository.loadCategories(token)
+                    }
+                },
+                onSuccess = { isLoaded ->
+                    if (!isLoaded) {
+                        showSnackbar(binding.root, "Category sync failed, using local data")
+                        binding.ticketCat.visibility = View.GONE
+                        return@handleApiCall
+                    }
+
+                    lifecycleScope.launch {
+                        val categoryEntities = withContext(Dispatchers.IO) {
+                            categoryRepository.getAllCategory()
+                        }
+
+                        if (categoryEntities.isEmpty()) {
+                            binding.ticketCat.visibility = View.GONE
+                            return@launch
+                        }
+
+                        val activeCategories = categoryEntities.filter { it.categoryActive }
+
+                        if (activeCategories.isEmpty()) {
+                            binding.ticketCat.visibility = View.GONE
+                            return@launch
+                        }
+
+                        binding.ticketCat.visibility =
+                            if (companyRepository.getBoolean(CompanyKey.CATEGORY_ENABLE))
+                                View.VISIBLE
+                            else View.GONE
+
+                        val selectedCategory = activeCategories.first()
+                        selectedCategoryId = selectedCategory.categoryId
+
+                        val categories = activeCategories.map { entity ->
+                            Category(
+                                categoryId = entity.categoryId,
+                                categoryName = entity.categoryName,
+                                categoryNameMa = entity.categoryNameMa,
+                                categoryNameTa = entity.categoryNameTa,
+                                categoryNameTe = entity.categoryNameTe,
+                                categoryNameKa = entity.categoryNameKa,
+                                categoryNameHi = entity.categoryNameHi,
+                                categoryNameMr = entity.categoryNameMr,
+                                categoryNamePa = entity.categoryNamePa,
+                                categoryNameSi = entity.categoryNameSi,
+                                CategoryCompanyId = entity.CategoryCompanyId,
+                                categoryCreatedDate = entity.categoryCreatedDate,
+                                categoryCreatedBy = entity.categoryCreatedBy,
+                                categoryModifiedDate = entity.categoryModifiedDate,
+                                categoryModifiedBy = entity.categoryModifiedBy,
+                                categoryActive = entity.categoryActive
+                            )
+                        }
+                        categoryAdapter.updateCategories(categories)
+                        getTickets(selectedCategoryId)
+                    }
+                }
+            )
+        } catch (e: HttpException) {
+            if (e.code() == 401) {
+                AlertDialog.Builder(this@Billin_Ticket_Activity)
+                    .setTitle("Logout !!")
+                    .setMessage("You have been logged out because your account was used on another device.")
+                    .setCancelable(false)
+                    .setPositiveButton("Logout") { _, _ ->
+                        ApiResponseHandler.logoutUser(this@Billin_Ticket_Activity)
+                    }
+                    .show()
+
+            } else {
+                throw e
+            }
+        } catch (e: Exception) {
+            showSnackbar(binding.root, "Error loading tickets")
         }
     }
-
-
-
     private fun getTickets(categoryId: Int? = null) {
-        lifecycleScope.launch {
-            try {
-                val token = sessionManager.getToken()
-                if (token.isNullOrEmpty()) return@launch
 
-                try {
-                    activeTicketRepository.loadTickets(token)
-                } catch (e: Exception) {
-                    Log.w("TICKET_SYNC", "Ticket sync failed, using local data", e)
-                }
-                val tickets = if (categoryId != null) {
-                    activeTicketRepository.getTicketsByCategory(categoryId)
-                } else {
-                    activeTicketRepository.getAllTickets()
-                }
-
-                if (tickets.isEmpty()) {
-                    ticketAdapter.updateTickets(emptyList())
-                    showSnackbar(binding.root, "No tickets available")
-                    return@launch
-                }
-
-                val ticketDtos = tickets.map { it.toDto() }
-                ticketAdapter.updateTickets(ticketDtos)
-
-            } catch (e: Exception) {
-                showSnackbar(binding.root, "Error loading tickets")
-                Log.e("TICKET_LOAD", "Error", e)
+        try {
+            val token = sessionManager.getToken()
+            if (token.isNullOrEmpty()) {
+                return
             }
+
+            ApiResponseHandler.handleApiCall(
+                activity = this@Billin_Ticket_Activity,
+                apiCall = {
+                    withContext(Dispatchers.IO) {
+                        activeTicketRepository.loadTickets(token)
+                    }
+                },
+                onSuccess = { loadResult ->
+                    if (!loadResult) {
+                        showSnackbar(binding.root, "Ticket sync failed, using local data")
+                    }
+                    lifecycleScope.launch {
+                        val tickets = if (categoryId != null) {
+                            activeTicketRepository.getTicketsByCategory(categoryId)
+                        } else {
+                            activeTicketRepository.getAllTickets()
+                        }
+
+                        if (tickets.isEmpty()) {
+                            ticketAdapter.updateTickets(emptyList())
+                            showSnackbar(binding.root, "No tickets available")
+                            return@launch
+                        }
+
+                        val ticketDtos = tickets.map { it.toDto() }
+                        ticketAdapter.updateTickets(ticketDtos)
+                    }
+                    binding.ticketRecycler.layoutManager = GridLayoutManager(
+                        this@Billin_Ticket_Activity,
+                        2
+                    )
+                    binding.ticketRecycler.adapter = ticketAdapter
+                }
+            )
+        } catch (e: HttpException) {
+            if (e.code() == 401) {
+                AlertDialog.Builder(this@Billin_Ticket_Activity)
+                    .setTitle("Logout !!")
+                    .setMessage("Your session has expired. Please login again.")
+                    .setCancelable(false)
+                    .setPositiveButton("Logout") { _, _ ->
+                        ApiResponseHandler.logoutUser(this@Billin_Ticket_Activity)
+                    }
+                    .show()
+
+            } else {
+                throw e
+            }
+        } catch (e: Exception) {
+            showSnackbar(binding.root, "Error loading tickets")
         }
     }
 
     override fun onCategoryClick(category: Category) {
         selectedCategoryId = category.categoryId
-        getTickets(selectedCategoryId) // only reload tickets for clicked category
+        getTickets(selectedCategoryId)
     }
 
     private fun getTickets() {
-        lifecycleScope.launch {
-            try {
-                val token = sessionManager.getToken()
-                if (token.isNullOrEmpty()) return@launch
-                try {
-                    activeTicketRepository.loadTickets(token)
-                } catch (e: Exception) {
-                    Log.w("TICKET_SYNC", "Ticket sync failed, using local data", e)
-                }
-                val tickets = activeTicketRepository.getAllTickets()
-                if (tickets.isEmpty()) {
-                    ticketAdapter.updateTickets(emptyList())
-                    return@launch
-                }
-                val ticketDtos = tickets.map { it.toDto() }
-                ticketAdapter.updateTickets(ticketDtos)
+        try {
+            val token = sessionManager.getToken()
+            if (token.isNullOrEmpty()) {
+                return
+            }
 
+            ApiResponseHandler.handleApiCall(
+                activity = this@Billin_Ticket_Activity,
+                apiCall = {
+                    withContext(Dispatchers.IO) {
+                        activeTicketRepository.loadTickets(token)
+                    }
+                },
+                onSuccess = { loadResult ->
+                    if (!loadResult) {
+                        showSnackbar(binding.root, "Ticket sync failed, using local data")
+                    }
+                    lifecycleScope.launch {
+                        val tickets = activeTicketRepository.getAllTickets()
+                        if (tickets.isEmpty()) {
+                            ticketAdapter.updateTickets(emptyList())
+                            return@launch
+                        }
+                        val ticketDtos = tickets.map { it.toDto() }
+                        ticketAdapter.updateTickets(ticketDtos)
+                    }
+                    binding.ticketRecycler.layoutManager = GridLayoutManager(
+                        this@Billin_Ticket_Activity,
+                        3
+                    )
+                    binding.ticketRecycler.adapter = ticketAdapter
+                }
+            )
+            } catch (e: HttpException) {
+                if (e.code() == 401) {
+                    AlertDialog.Builder(this@Billin_Ticket_Activity)
+                        .setTitle("Logout !!")
+                        .setMessage("Your session has expired. Please login again.")
+                        .setCancelable(false)
+                        .setPositiveButton("Logout") { _, _ ->
+                            ApiResponseHandler.logoutUser(this@Billin_Ticket_Activity)
+                        }
+                        .show()
+
+                } else {
+                    throw e
+                }
             } catch (e: Exception) {
-                showSnackbar(binding.root, "Something went wrong: ${e.localizedMessage}")
+                showSnackbar(binding.root, "Error loading tickets")
             }
         }
-    }
+
+
 
 
     override fun onTicketClick(ticketItem: TicketDto) {
@@ -574,35 +618,32 @@ class Billin_Ticket_Activity : AppCompatActivity(), OnTicketClickListener,
         }
     }
 
-    @SuppressLint("DefaultLocale", "SetTextI18n")
-    private fun updateCartUI() {
-        lifecycleScope.launch {
-            val (totalAmount) = ticketRepository.getCartStatus()
-            formattedTotalAmount = String.format(Locale.ENGLISH, "%.2f", totalAmount)
-            val hasUserAmount = !binding.editName.text.isNullOrBlank()
+    @SuppressLint("SetTextI18n", "DefaultLocale")
+    private suspend fun updateCartUI() {
+        val (totalAmount, hasData) = ticketRepository.getCartStatus()
 
-            if (totalAmount > 0 && hasUserAmount) {
-                binding.btnProceed.text = getString(R.string.pay) + " Rs. " + formattedTotalAmount
-                binding.btnProceed.setBackgroundColor(
-                    ContextCompat.getColor(this@Billin_Ticket_Activity, R.color.primaryColor)
-                )
+        withContext(Dispatchers.Main) {
+            if (hasData) {
+                formattedTotalAmount = String.format(Locale.ENGLISH, "%.2f", totalAmount)
+                binding.btnProceed.text =
+                    getString(R.string.proceed) + "  Rs.$formattedTotalAmount"
+
                 binding.btnProceed.isEnabled = true
-            } else if (totalAmount > 0) {
-                if (!isLandscapeScreen(applicationContext)) {
-                    binding.btnProceed.text =
-                        getString(R.string.pay) + " Rs. " + formattedTotalAmount
-                    binding.btnProceed.setBackgroundColor(
-                        ContextCompat.getColor(this@Billin_Ticket_Activity, R.color.primaryColor)
-                    )
-                    binding.btnProceed.isEnabled = true
-                }
-
-            } else {
-                binding.btnProceed.text = getString(R.string.pay) + " Rs. " + formattedTotalAmount
                 binding.btnProceed.setBackgroundColor(
-                    ContextCompat.getColor(this@Billin_Ticket_Activity, R.color.light_grey)
+                    ContextCompat.getColor(
+                        this@Billin_Ticket_Activity,
+                        R.color.primaryColor
+                    )
                 )
+            } else {
+                binding.btnProceed.text = getString(R.string.proceed)
                 binding.btnProceed.isEnabled = false
+                binding.btnProceed.setBackgroundColor(
+                    ContextCompat.getColor(
+                        this@Billin_Ticket_Activity,
+                        R.color.light_grey
+                    )
+                )
             }
         }
     }

@@ -1,13 +1,11 @@
 package com.example.ticket.data.repository
 
-import androidx.lifecycle.liveData
+import retrofit2.HttpException
 import androidx.room.Transaction
 import com.example.ticket.data.network.model.TicketDto
-
 import com.example.ticket.data.network.service.ApiClient
 import com.example.ticket.data.room.dao.ActiveTicketDao
 import com.example.ticket.data.room.entity.ActiveTicket
-import com.example.ticket.data.room.entity.Ticket
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -24,12 +22,14 @@ class ActiveTicketRepository(
             val entities = apiResponse.map { it.toEntity() }
             refreshTickets(entities)
             true
+        } catch (e: HttpException) {
+
+            throw e
         } catch (e: Exception) {
             e.printStackTrace()
             false
         }
     }
-
     private suspend fun fetchTickets(
         bearerToken: String
     ): List<TicketDto> = withContext(Dispatchers.IO) {
@@ -37,7 +37,6 @@ class ActiveTicketRepository(
             .getTicket(bearerToken)
             .data
     }
-
 
     @Transaction
     private suspend fun refreshTickets(

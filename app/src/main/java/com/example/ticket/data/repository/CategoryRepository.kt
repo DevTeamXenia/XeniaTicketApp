@@ -1,6 +1,6 @@
 package com.example.ticket.data.repository
 
-import androidx.room.Query
+import retrofit2.HttpException
 import com.example.ticket.data.network.model.CategoryItem
 import com.example.ticket.data.network.service.ApiClient
 import com.example.ticket.data.room.dao.CategoryDao
@@ -20,6 +20,9 @@ class CategoryRepository(
             val dbEntities = apiResponse.map { it.toEntity() }
             refreshCategories(dbEntities)
             true
+        } catch (e: HttpException) {
+
+            throw e
         } catch (e: Exception) {
             e.printStackTrace()
             false

@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
@@ -32,6 +33,7 @@ import com.example.ticket.ui.adapter.TicketAdapter
 import com.example.ticket.ui.dialog.CustomInactivityDialog
 import com.example.ticket.ui.dialog.CustomInternetAvailabilityDialog
 import com.example.ticket.ui.dialog.CustomTicketPopupDialogue
+import com.example.ticket.utils.common.ApiResponseHandler
 import com.example.ticket.utils.common.CommonMethod.setLocale
 import com.example.ticket.utils.common.CommonMethod.showSnackbar
 import com.example.ticket.utils.common.CompanyKey
@@ -41,6 +43,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
+import retrofit2.HttpException
 import java.util.Locale
 import kotlin.getValue
 
@@ -147,13 +150,12 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
     }
     private fun fetchDetails() {
         lifecycleScope.launch {
-            val isCategoryEnabled =
-                companyRepository.getString(CompanyKey.CATEGORY_ENABLE)
-                    ?.equals("true", true) == true
+            val isCategoryEnabled = companyRepository.getString(CompanyKey.CATEGORY_ENABLE)?.toBoolean() ?: false
             if (isCategoryEnabled) {
                 getCategory()
             } else {
                 getTickets()
+                binding.linOfferCat.visibility= View.GONE
             }
         }
     }
@@ -171,152 +173,219 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
             onTicketClickListener = this,
             ticketRepository = ticketRepository
         )
-
-        binding.ticketRecycler.layoutManager =
-            GridLayoutManager(this, 3)
         binding.ticketRecycler.adapter = ticketAdapter
 
 
 
     }
     private fun getCategory() {
-        lifecycleScope.launch {
-            try {
-                val token = sessionManager.getToken()
+        try {
+            val token = sessionManager.getToken()
 
-                if (token.isNullOrEmpty()) {
-                    binding.ticketCat.visibility = View.GONE
-                    return@launch
-                }
-
-                val isLoaded = withContext(Dispatchers.IO) {
-                    categoryRepository.loadCategories(token)
-                }
-
-                if (!isLoaded) {
-                    binding.ticketCat.visibility = View.GONE
-                    return@launch
-                }
-
-                val categoryEntities = withContext(Dispatchers.IO) {
-                    categoryRepository.getAllCategory()
-                }
-
-                if (categoryEntities.isEmpty()) {
-                    binding.ticketCat.visibility = View.GONE
-                    return@launch
-                }
-
-                val activeCategories = categoryEntities.filter { it.categoryActive }
-
-                if (activeCategories.isEmpty()) {
-                    binding.ticketCat.visibility = View.GONE
-                    return@launch
-                }
-
-                binding.ticketCat.visibility =
-                    if (companyRepository.getBoolean(CompanyKey.CATEGORY_ENABLE))
-                        View.VISIBLE
-                    else View.GONE
-
-                val selectedCategory = activeCategories.first()
-                selectedCategoryId = selectedCategory.categoryId
-
-                val categories = activeCategories.map { entity ->
-                    Category(
-                        categoryId = entity.categoryId,
-                        categoryName = entity.categoryName,
-                        categoryNameMa = entity.categoryNameMa,
-                        categoryNameTa = entity.categoryNameTa,
-                        categoryNameTe = entity.categoryNameTe,
-                        categoryNameKa = entity.categoryNameKa,
-                        categoryNameHi = entity.categoryNameHi,
-                        categoryNameMr = entity.categoryNameMr,
-                        categoryNamePa = entity.categoryNamePa,
-                        categoryNameSi = entity.categoryNameSi,
-                        CategoryCompanyId = entity.CategoryCompanyId,
-                        categoryCreatedDate = entity.categoryCreatedDate,
-                        categoryCreatedBy = entity.categoryCreatedBy,
-                        categoryModifiedDate = entity.categoryModifiedDate,
-                        categoryModifiedBy = entity.categoryModifiedBy,
-                        categoryActive = entity.categoryActive
-                    )
-                }
-
-                categoryAdapter.updateCategories(categories)
-                getTickets(selectedCategoryId)
-            } catch (e: Exception) {
-                Log.e("DEBUG", "Category load error", e)
+            if (token.isNullOrEmpty()) {
                 binding.ticketCat.visibility = View.GONE
+                return
             }
+
+
+            ApiResponseHandler.handleApiCall(
+                activity = this@TicketActivity,
+                apiCall = {
+                    withContext(Dispatchers.IO) {
+                        categoryRepository.loadCategories(token)
+                    }
+                },
+                onSuccess = { isLoaded ->
+                    if (!isLoaded) {
+                        showSnackbar(binding.root, "Category sync failed, using local data")
+                        binding.ticketCat.visibility = View.GONE
+                        return@handleApiCall
+                    }
+
+                    lifecycleScope.launch {
+                        val categoryEntities = withContext(Dispatchers.IO) {
+                            categoryRepository.getAllCategory()
+                        }
+
+                        if (categoryEntities.isEmpty()) {
+                            binding.ticketCat.visibility = View.GONE
+                            return@launch
+                        }
+
+                        val activeCategories = categoryEntities.filter { it.categoryActive }
+
+                        if (activeCategories.isEmpty()) {
+                            binding.ticketCat.visibility = View.GONE
+                            return@launch
+                        }
+
+                        binding.ticketCat.visibility =
+                            if (companyRepository.getBoolean(CompanyKey.CATEGORY_ENABLE))
+                                View.VISIBLE
+                            else View.GONE
+
+                        val selectedCategory = activeCategories.first()
+                        selectedCategoryId = selectedCategory.categoryId
+
+                        val categories = activeCategories.map { entity ->
+                            Category(
+                                categoryId = entity.categoryId,
+                                categoryName = entity.categoryName,
+                                categoryNameMa = entity.categoryNameMa,
+                                categoryNameTa = entity.categoryNameTa,
+                                categoryNameTe = entity.categoryNameTe,
+                                categoryNameKa = entity.categoryNameKa,
+                                categoryNameHi = entity.categoryNameHi,
+                                categoryNameMr = entity.categoryNameMr,
+                                categoryNamePa = entity.categoryNamePa,
+                                categoryNameSi = entity.categoryNameSi,
+                                CategoryCompanyId = entity.CategoryCompanyId,
+                                categoryCreatedDate = entity.categoryCreatedDate,
+                                categoryCreatedBy = entity.categoryCreatedBy,
+                                categoryModifiedDate = entity.categoryModifiedDate,
+                                categoryModifiedBy = entity.categoryModifiedBy,
+                                categoryActive = entity.categoryActive
+                            )
+                        }
+                        categoryAdapter.updateCategories(categories)
+                        getTickets(selectedCategoryId)
+                    }
+                }
+            )
+        } catch (e: HttpException) {
+            if (e.code() == 401) {
+                AlertDialog.Builder(this@TicketActivity)
+                    .setTitle("Logout !!")
+                    .setMessage("You have been logged out because your account was used on another device.")
+                    .setCancelable(false)
+                    .setPositiveButton("Logout") { _, _ ->
+                        ApiResponseHandler.logoutUser(this@TicketActivity)
+                    }
+                    .show()
+
+            } else {
+                throw e
+            }
+        } catch (e: Exception) {
+            showSnackbar(binding.root, "Error loading tickets")
         }
     }
-    private fun getTickets(categoryId: Int) {
-        lifecycleScope.launch {
-            try {
-                val token = sessionManager.getToken()
-                if (token.isNullOrEmpty()) return@launch
+    private fun getTickets(categoryId: Int? = null) {
 
-
-                try {
-                    activeTicketRepository.loadTickets(token)
-                } catch (e: Exception) {
-                    Log.w("TICKET_SYNC", "Using cached tickets", e)
-                }
-
-
-                val tickets = activeTicketRepository.getTicketsByCategory(categoryId)
-
-                if (tickets.isEmpty()) {
-                    ticketAdapter.updateTickets(emptyList())
-                    showSnackbar(binding.root, "No tickets for this category")
-                    return@launch
-                }
-
-
-                val ticketDtos = tickets.map { it.toDto() }
-                ticketAdapter.updateTickets(ticketDtos)
-
-            } catch (e: Exception) {
-                showSnackbar(binding.root, "Error loading tickets")
-                Log.e("TICKET_LOAD", "Error", e)
+        try {
+            val token = sessionManager.getToken()
+            if (token.isNullOrEmpty()) {
+                return
             }
+
+            ApiResponseHandler.handleApiCall(
+                activity = this@TicketActivity,
+                apiCall = {
+                    withContext(Dispatchers.IO) {
+                        activeTicketRepository.loadTickets(token)
+                    }
+                },
+                onSuccess = { loadResult ->
+                    if (!loadResult) {
+                        showSnackbar(binding.root, "Ticket sync failed, using local data")
+                    }
+                    lifecycleScope.launch {
+                        val tickets = if (categoryId != null) {
+                            activeTicketRepository.getTicketsByCategory(categoryId)
+                        } else {
+                            activeTicketRepository.getAllTickets()
+                        }
+
+                        if (tickets.isEmpty()) {
+                            ticketAdapter.updateTickets(emptyList())
+                            showSnackbar(binding.root, "No tickets available")
+                            return@launch
+                        }
+
+                        val ticketDtos = tickets.map { it.toDto() }
+                        ticketAdapter.updateTickets(ticketDtos)
+                    }
+                    binding.ticketRecycler.layoutManager = GridLayoutManager(
+                        this@TicketActivity,
+                        4
+                    )
+                    binding.ticketRecycler.adapter = ticketAdapter
+                }
+            )
+        } catch (e: HttpException) {
+            if (e.code() == 401) {
+                AlertDialog.Builder(this@TicketActivity)
+                    .setTitle("Logout !!")
+                    .setMessage("Your session has expired. Please login again.")
+                    .setCancelable(false)
+                    .setPositiveButton("Logout") { _, _ ->
+                        ApiResponseHandler.logoutUser(this@TicketActivity)
+                    }
+                    .show()
+
+            } else {
+                throw e
+            }
+        } catch (e: Exception) {
+            showSnackbar(binding.root, "Error loading tickets")
         }
     }
-
 
     private fun getTickets() {
-        lifecycleScope.launch {
-            try {
-                val token = sessionManager.getToken()
-                if (token.isNullOrEmpty()) return@launch
-
-
-                try {
-                    activeTicketRepository.loadTickets(token)
-                } catch (e: Exception) {
-                    Log.w("TICKET_SYNC", "Using cached tickets", e)
-                }
-
-
-                val tickets = activeTicketRepository.getAllTickets()
-
-                if (tickets.isEmpty()) {
-                    ticketAdapter.updateTickets(emptyList())
-                    showSnackbar(binding.root, "No tickets for this category")
-                    return@launch
-                }
-
-
-                val ticketDtos = tickets.map { it.toDto() }
-                ticketAdapter.updateTickets(ticketDtos)
-
-            } catch (e: Exception) {
-                showSnackbar(binding.root, "Error loading tickets")
-                Log.e("TICKET_LOAD", "Error", e)
+        try {
+            val token = sessionManager.getToken()
+            if (token.isNullOrEmpty()) {
+                return
             }
+
+            ApiResponseHandler.handleApiCall(
+                activity = this@TicketActivity,
+                apiCall = {
+                    withContext(Dispatchers.IO) {
+                        activeTicketRepository.loadTickets(token)
+                    }
+                },
+                onSuccess = { loadResult ->
+                    if (!loadResult) {
+                        showSnackbar(binding.root, "Ticket sync failed, using local data")
+                    }
+                    lifecycleScope.launch {
+                        val tickets = activeTicketRepository.getAllTickets()
+                        if (tickets.isEmpty()) {
+                            ticketAdapter.updateTickets(emptyList())
+                            return@launch
+                        }
+                        val ticketDtos = tickets.map { it.toDto() }
+                        ticketAdapter.updateTickets(ticketDtos)
+                        binding.ticketRecycler.layoutManager = GridLayoutManager(
+                            this@TicketActivity,
+                            4
+                        )
+                        binding.ticketRecycler.adapter = ticketAdapter
+                    }
+                }
+            )
+        } catch (e: HttpException) {
+            if (e.code() == 401) {
+                AlertDialog.Builder(this@TicketActivity)
+                    .setTitle("Logout !!")
+                    .setMessage("Your session has expired. Please login again.")
+                    .setCancelable(false)
+                    .setPositiveButton("Logout") { _, _ ->
+                        ApiResponseHandler.logoutUser(this@TicketActivity)
+                    }
+                    .show()
+
+            } else {
+                throw e
+            }
+        } catch (e: Exception) {
+            showSnackbar(binding.root, "Error loading tickets")
         }
     }
+
+
+
     override fun onTicketClick(ticketItem: TicketDto) {
 
         val dialog = CustomTicketPopupDialogue()

@@ -157,6 +157,10 @@ class CustomTicketPopupDialogue : DialogFragment() {
         val appLang = sessionManager.getSelectedLanguage()
 
         val currentLang = if (!billingLang.isNullOrEmpty()) billingLang else appLang
+
+
+
+
         btnBack = view.findViewById(R.id.btnBack)
         btnClear = view.findViewById(R.id.btnClear)
         icClose = view.findViewById(R.id.imgClose)
@@ -198,7 +202,7 @@ class CustomTicketPopupDialogue : DialogFragment() {
         val formattedAmount = String.format(Locale.ENGLISH, "%.2f", ticketRate)
         txtTicketRate.text = "Rs. $formattedAmount /-"
 
-        editTextTickets.inputType =0
+        editTextTickets.inputType = 0
         editTextTickets.requestFocus()
         lifecycleScope.launch {
             val cartItem = ticketRepository.getCartItemByTicketId(ticketId)
@@ -209,7 +213,7 @@ class CustomTicketPopupDialogue : DialogFragment() {
                 }
             } ?: run {
                 withContext(Dispatchers.Main) {
-                    editTextTickets.setText("0")
+                    editTextTickets.setText("1")
                     updateTotalAmount(1)
                 }
             }
@@ -233,12 +237,15 @@ class CustomTicketPopupDialogue : DialogFragment() {
             }
         }
 
+
         editTextTickets.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 val quantity = s?.toString()?.toIntOrNull() ?: 0
                 updateTotalAmount(quantity)
             }
+
             override fun afterTextChanged(s: Editable?) {}
         })
 
@@ -255,6 +262,12 @@ class CustomTicketPopupDialogue : DialogFragment() {
 
         btnDone.setOnClickListener {
             val quantity = editTextTickets.text.toString().toIntOrNull() ?: 0
+
+            if (quantity <= 0) {
+                Toast.makeText(requireContext(), "Please enter a valid quantity", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
             val cartItem = Ticket(
                 ticketId = ticketId,
                 ticketName = ticketName,
@@ -269,13 +282,13 @@ class CustomTicketPopupDialogue : DialogFragment() {
                 ticketCategoryId = ticketCategoryId,
                 ticketCompanyId = ticketCompanyId,
                 ticketAmount = ticketRate,
-                ticketTotalAmount = totalAmount.toDouble(), // 0.00 aayirikkum
+                ticketTotalAmount = totalAmount.toDouble(),
                 ticketCreatedDate = System.currentTimeMillis().toString(),
-                ticketCreatedBy = 0,
+                ticketCreatedBy =0 ,
                 ticketActive = true,
                 daName = "",
                 daRate = ticketRate,
-                daQty = quantity,              // 0 allowed
+                daQty = quantity,
                 daTotalAmount = totalAmount.toDouble(),
                 daPhoneNumber = "",
                 daProofId = "",
@@ -292,7 +305,6 @@ class CustomTicketPopupDialogue : DialogFragment() {
                 dismiss()
             }
         }
-
 
 
 
@@ -324,16 +336,13 @@ class CustomTicketPopupDialogue : DialogFragment() {
     @SuppressLint("SetTextI18n")
     private fun appendToFocusedEditText(text: String) {
         val currentText = editTextTickets.text.toString()
-
-        if (currentText == "0") {
-            editTextTickets.setText(text) // replace 0
-        } else {
-            editTextTickets.setText(currentText + text)
+        if (currentText.isEmpty() && text == "0") {
+            return
         }
 
+        editTextTickets.setText(currentText + text)
         editTextTickets.setSelection(editTextTickets.text.length)
     }
-
 
 
     private fun removeLastCharacterFromFocusedEditText() {
@@ -361,22 +370,24 @@ class CustomTicketPopupDialogue : DialogFragment() {
         imm.hideSoftInputFromWindow(editTextTickets.windowToken, 0)
     }
 
-
     @SuppressLint("DefaultLocale", "SetTextI18n")
     private fun updateTotalAmount(quantity: Int) {
-        txtQty.visibility = View.VISIBLE
-        txtTotalAmount.visibility = View.VISIBLE
+        if (quantity == 0) {
+            txtQty.text = getString(R.string.txt_amount)+" :"
+            txtTotalAmount.visibility = View.GONE
+            return
+        } else {
+            txtQty.visibility = View.VISIBLE
+            txtTotalAmount.visibility = View.VISIBLE
+        }
 
         totalAmount = (ticketRate * quantity).toString()
-
         val formattedRate = String.format(Locale.ENGLISH, "%.2f", ticketRate)
-        txtQty.text = getString(R.string.txt_amount) + " : " +
-                formattedRate + " x " + quantity
+        txtQty.text = getString(R.string.txt_amount)+" : " + formattedRate + " x " + quantity
 
         val formattedTotal = String.format(Locale.ENGLISH, "%.2f", totalAmount.toDouble())
         txtTotalAmount.text = "Rs. $formattedTotal/-"
     }
-
 
 
 

@@ -17,9 +17,6 @@ object Constants {
 
     const val SECRET_KEY = "1234567890abcdef1234567890abcdef"
 
-    const val COMPANY_GATEWAY_CAN = "CannaraBank"
-    const val COMPANY_GATEWAY_FEDERAL = "Federal"
-    const val COMPANY_GATEWAY_DHANLAXMI = "DhanlaxmiBank"
 
     const val PRINTER_FALCON = "FALCON"
     const val PRINTER_B200MAX = "B200MAX"

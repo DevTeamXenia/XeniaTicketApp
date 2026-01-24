@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 import org.json.JSONObject
 import retrofit2.HttpException
 import org.koin.android.ext.android.inject
+import android.widget.Toast
 
 object ApiResponseHandler {
 
@@ -22,11 +23,14 @@ object ApiResponseHandler {
         apiCall: suspend () -> T,
         onSuccess: (T) -> Unit
     ) {
+        android.util.Log.d("ApiResponseHandler", "handleApiCall started")
         CoroutineScope(Dispatchers.Main).launch {
             try {
                 val result = apiCall()
+                android.util.Log.d("ApiResponseHandler", "apiCall succeeded, calling onSuccess")
                 onSuccess(result)
             } catch (e: HttpException) {
+                android.util.Log.e("ApiResponseHandler", "HttpException caught: ${e.code()}", e)
                 if (e.code() == 401) {
                     val errorBody = e.response()?.errorBody()?.string()
                     val message = try {
@@ -36,29 +40,38 @@ object ApiResponseHandler {
                     }
 
                     if (!message.isNullOrBlank()) {
-                        // Show popup with server message
-                        AlertDialog.Builder(activity)
-                            .setTitle("Session Expired")
-                            .setMessage(message)
-                            .setCancelable(false)
-                            .setPositiveButton("Logout") { _, _ ->
-                                logoutUser(activity)
-                            }
-                            .show()
-                    } else {
-                        // Plain 401 → clear local DB silently
+                            android.util.Log.d("ApiResponseHandler", "Showing dialog for other 401")
+                            AlertDialog.Builder(activity)
+                                .setTitle("Session Expired")
+                                .setMessage(message)
+                                .setCancelable(false)
+                                .setPositiveButton("Logout") { _, _ ->
+                                    logoutUser(activity)
+                                }
+                                .show()
+
+                        } else if (message == "You have been logged out because your account was used on another device.") {
+                        android.util.Log.d("ApiResponseHandler", "Showing Toast for multi-device logout")
+                        Toast.makeText(activity, message, Toast.LENGTH_LONG).show()
                         clearLocalData(activity)
+                        logoutUser(activity)
+                    } else {
+                        android.util.Log.d("ApiResponseHandler", "Silent logout for plain 401")
+                        clearLocalData(activity)
+                        logoutUser(activity)
                     }
                 } else {
+                    android.util.Log.e("ApiResponseHandler", "Non-401 HttpException: ${e.code()} - ${e.message()}", e)
                     throw e
                 }
             } catch (e: Exception) {
+                android.util.Log.e("ApiResponseHandler", "Other exception in handleApiCall", e)
                 throw e
             }
         }
     }
 
-    private fun logoutUser(activity: Activity) {
+    fun logoutUser(activity: Activity) {
         val sessionManager: SessionManager by activity.inject()
         sessionManager.clearSession()
 
@@ -78,7 +91,7 @@ object ApiResponseHandler {
 
         CoroutineScope(Dispatchers.IO).launch {
             ticketRepository.clearAllData()
-           categoryRepository.clearAllData()
+            categoryRepository.clearAllData()
         }
     }
 }
