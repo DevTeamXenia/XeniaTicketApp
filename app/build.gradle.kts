@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.ticket"
+    namespace = "com.xenia.ticket"
     compileSdk = 36
     ndkVersion = "27.0.12077973"
 
@@ -14,7 +14,7 @@ android {
         buildConfig = true
     }
     defaultConfig {
-        applicationId = "com.example.ticket"
+        applicationId = "com.xenia.ticket"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
