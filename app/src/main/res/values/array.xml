@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="date_range_options">
+        <item>Today</item>
+        <item>Yesterday</item>
+        <item>This week</item>
+        <item>This month</item>
+        <item>This quarter</item>
+        <item>Custom</item>
+    </string-array>
+
+</resources>

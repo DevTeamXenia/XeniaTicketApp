@@ -48,14 +48,12 @@ class ActiveTicketRepository(
 
     suspend fun getAllTickets(): List<ActiveTicket> =
         withContext(Dispatchers.IO) {
-            ticketDao.getAllTickets()
+            ticketDao.getAllActiveTickets()
         }
     suspend fun getTicketsByCategory(categoryId: Int): List<ActiveTicket> =
         withContext(Dispatchers.IO) {
             ticketDao.getTicketsByCategory(categoryId)
         }
-
-
     private fun TicketDto.toEntity(): ActiveTicket =
         ActiveTicket(
             ticketId = ticketId,

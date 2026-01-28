@@ -17,7 +17,7 @@ class SessionManager(context: Context) {
         private const val COMPANY_LANGUAGES = "SL"
         private const val STAR_ENABLE = "IS_STAR"
         private const val KEY_BILLING_SELECTED_LANGUAGE = "BSL"
-        private const val KEY_DEFAULT_LANGUAGE = "SDL"
+
         private const val KEY_SELECTED_PRINTER = "selected_printer"
     }
 
@@ -33,7 +33,6 @@ class SessionManager(context: Context) {
     fun isFirstLoad(): Boolean {
         return sharedPreferences.getBoolean(KEY_IS_FIRST_LOAD, true)
     }
-
     fun setFirstLoad(isFirstTime: Boolean) {
         editor.putBoolean(KEY_IS_FIRST_LOAD, isFirstTime)
         editor.apply()

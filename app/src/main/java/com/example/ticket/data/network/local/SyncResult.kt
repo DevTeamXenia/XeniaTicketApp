@@ -1,4 +1,4 @@
-package com.example.ticket.data.local
+package com.example.ticket.data.network.local
 
 
 

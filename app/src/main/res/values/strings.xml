@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name" translatable="false">Ticket Kiosk</string>
-    <string name="make_a_donation" translatable="false">MAKE A DONATION</string>
     <string name="english" translatable="false">English</string>
     <string name="malayalam" translatable="false">മലയാളം</string>
     <string name="tamil" translatable="false">தமிழ்</string>

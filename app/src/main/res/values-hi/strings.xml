@@ -42,13 +42,9 @@
     <string name="do_you_want_to_logout">क्या आप लॉगआउट करना चाहते हैं?</string>
     <string name="choose_item">आइटम चुनें</string>
     <string name="done">हो गया</string>
-    <string name="capture">कब्जा</string>
     <string name="image_upload">छवि अपलोड</string>
-    <string name="sub_temple">उप मंदिर</string>
     <string name="my_cart">मेरी गाड़ी</string>
-    <string name="birth_star_of_devotees">भक्तों का जन्म नक्षत्र</string>
     <string name="edit">संशोधन</string>
-    <string name="fill_devotee_details">भक्त विवरण भरें</string>
     <string name="upi" />
     <string name="item" >वस्तु</string>
     <string name="price">कीमत</string>
@@ -56,8 +52,6 @@
     <string name="total">कुल</string>
 
     <string name="language_settings">भाषा</string>
-    <string name="profile">प्रोफ़ाइल</string>
-    <string name="delete_account">खाता हटाएं</string>
     <string name="logout">लॉगआउट</string>
     <string name="dashboard">डैशबोर्ड</string>
     <string name="settings">सेटिंग्स</string>
@@ -69,7 +63,6 @@
     <string name="save" >बचाना</string>
     <string name="item_summary_report">विस्तृत रिपोर्ट</string>
     <string name="item_name">आइटम का नाम</string>
-    <string name="pancard_number">पैन कार्ड नंबर</string>
 
 
 </resources>

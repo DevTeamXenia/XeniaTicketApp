@@ -140,7 +140,6 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
             finish()
 
         }
-
         binding.btnProceed.setOnClickListener {
             val intent = Intent(applicationContext, TicketCartActivity::class.java)
             startActivity(intent)
@@ -173,9 +172,11 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
             onTicketClickListener = this,
             ticketRepository = ticketRepository
         )
-        binding.ticketRecycler.adapter = ticketAdapter
 
+        binding.ticketRecycler.layoutManager = GridLayoutManager(this, 4)
+        binding.ticketRecycler.adapter = ticketAdapter
     }
+
     private fun getCategory() {
         try {
             val token = sessionManager.getToken()
@@ -189,9 +190,7 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
             ApiResponseHandler.handleApiCall(
                 activity = this@TicketActivity,
                 apiCall = {
-                    withContext(Dispatchers.IO) {
-                        categoryRepository.loadCategories(token)
-                    }
+                    true
                 },
                 onSuccess = { isLoaded ->
                     if (!isLoaded) {
@@ -270,70 +269,52 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
     }
     private fun getTickets(categoryId: Int? = null) {
 
-        try {
-            val token = sessionManager.getToken()
-            if (token.isNullOrEmpty()) {
-                return
-            }
+        val token = sessionManager.getToken()
+        if (token.isNullOrEmpty()) return
 
-            ApiResponseHandler.handleApiCall(
-                activity = this@TicketActivity,
-                apiCall = {
-                    withContext(Dispatchers.IO) {
-                        activeTicketRepository.loadTickets(token)
-                    }
-                },
-                onSuccess = { loadResult ->
-                    if (!loadResult) {
-                        showSnackbar(binding.root, "Ticket sync failed, using local data")
-                    }
-                    lifecycleScope.launch {
-                        val tickets = if (categoryId != null && categoryId!=0) {
-                            activeTicketRepository.getTicketsByCategory(categoryId)
-                        } else {
-                            activeTicketRepository.getAllTickets()
-                        }
+        lifecycleScope.launch {
 
-                        if (tickets.isEmpty()) {
-                            ticketAdapter.updateTickets(emptyList())
-                            showSnackbar(binding.root, "No tickets available")
-                            return@launch
-                        }
-
-                        val ticketDtos = tickets.map { it.toDto() }
-                        ticketAdapter.updateTickets(ticketDtos)
+            try {
+                val tickets = withContext(Dispatchers.IO) {
+                    if (categoryId != null && categoryId != 0) {
+                        activeTicketRepository.getTicketsByCategory(categoryId)
+                    } else {
+                        activeTicketRepository.getAllTickets()
                     }
-                    binding.ticketRecycler.layoutManager = GridLayoutManager(
-                        this@TicketActivity,
-                        4
-                    )
-                    binding.ticketRecycler.adapter = ticketAdapter
                 }
-            )
-        } catch (e: HttpException) {
-            if (e.code() == 401) {
-                AlertDialog.Builder(this@TicketActivity)
-                    .setTitle("Logout !!")
-                    .setMessage("Your session has expired. Please login again.")
-                    .setCancelable(false)
-                    .setPositiveButton("Logout") { _, _ ->
-                        ApiResponseHandler.logoutUser(this@TicketActivity)
-                    }
-                    .show()
 
-            } else {
-                throw e
+                if (tickets.isEmpty()) {
+                    ticketAdapter.updateTickets(emptyList())
+                    showSnackbar(binding.root, "No tickets available")
+                    return@launch
+                }
+
+                val ticketDtos = tickets.map { it.toDto() }
+                ticketAdapter.updateTickets(ticketDtos)
+
+            } catch (e: HttpException) {
+
+                if (e.code() == 401) {
+                    AlertDialog.Builder(this@TicketActivity)
+                        .setTitle("Logout !!")
+                        .setMessage(
+                            "You have been logged out because your account was used on another device."
+                        )
+                        .setCancelable(false)
+                        .setPositiveButton("Logout") { _, _ ->
+                            ApiResponseHandler.logoutUser(this@TicketActivity)
+                        }
+                        .show()
+                } else {
+                    showSnackbar(binding.root, "Server error: ${e.code()}")
+                }
+            } catch (e: Exception) {
+                showSnackbar(binding.root, "Error loading tickets")
             }
-        } catch (e: Exception) {
-            showSnackbar(binding.root, "Error loading tickets")
         }
     }
-
-
     override fun onTicketClick(ticketItem: TicketDto) {
-
         val dialog = CustomTicketPopupDialogue()
-
         dialog.setData(
             ticketId = ticketItem.ticketId,
             ticketName = ticketItem.ticketName,
@@ -349,24 +330,30 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
             ticketCompanyId = ticketItem.ticketCompanyId,
             ticketRate = ticketItem.ticketAmount
         )
-
         dialog.setListener(this)
-
         dialog.show(supportFragmentManager, "CustomPopup")
     }
 
 
-    override fun onTicketClear(darshanItem: TicketDto) {
+    override fun onTicketClear(ticketItem: TicketDto) {
         lifecycleScope.launch {
-            ticketRepository.deleteTicketById(darshanItem.ticketId)
-            fetchDetails()
+            ticketRepository.deleteTicketById(ticketItem.ticketId)
+            getTickets(selectedCategoryId)
             updateCartUI()
         }
     }
-
+    override fun onResume() {
+        super.onResume()
+        setupRecyclerViews()
+        getTickets(selectedCategoryId)
+        inactivityHandler.resumeInactivityCheck()
+        lifecycleScope.launch {
+            updateCartUI()
+        }
+    }
     override fun onTicketAdded() {
         lifecycleScope.launch {
-            fetchDetails()
+            getTickets(selectedCategoryId)
             updateCartUI()
         }
     }
@@ -374,7 +361,7 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
     override fun onRestart() {
         super.onRestart()
         setupRecyclerViews()
-        fetchDetails()
+        getTickets(selectedCategoryId)
         lifecycleScope.launch {
             updateCartUI()
         }
@@ -408,8 +395,6 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
             }
         }
     }
-
-
 
     override fun onPause() {
         super.onPause()
@@ -457,22 +442,9 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
         ticketCreatedBy = ticketCreatedBy,
         ticketActive = ticketActive
     )
-
     override fun onCategoryClick(category: Category) {
         selectedCategoryId = category.categoryId
         getTickets(selectedCategoryId)
     }
-
-
-//    override fun onBackPressed() {
-//        val intent = Intent(this, LanguageActivity::class.java).apply {
-//            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or
-//                    Intent.FLAG_ACTIVITY_NEW_TASK or
-//                    Intent.FLAG_ACTIVITY_CLEAR_TASK
-//        }
-//        startActivity(intent)
-//        finish()
-//    }
-
 
 }

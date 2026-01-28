@@ -21,7 +21,6 @@
     <string name="amount">ಮೊತ್ತ :</string>
     <string name="txt_amount">ಮೊತ್ತ</string>
     <string name="transcation_id">ವ್ಯವಹಾರ ಸಂಖ್ಯೆ:</string>
-    <string name="star">ತಾರೆ</string>
     <string name="pay_name">ಹೆಸರು :</string>
     <string name="payment_failed">ಪಾವತಿ ವಿಫಲವಾಗಿದೆ</string>
     <string name="it_seems_we_have_not_received_money">ನಾವು ಹಣವನ್ನು ಸ್ವೀಕರಿಸಿಲ್ಲ ಎಂದು ತೋರುತ್ತದೆ</string>
@@ -65,9 +64,7 @@
     <string name="image_upload">ಚಿತ್ರ ಅಪ್ಲೋಡ್</string>
     <string name="sub_temple">ಉಪ ದೇವಾಲಯ</string>
     <string name="my_cart">ನನ್ನ ಕಾರ್ಟ್</string>
-    <string name="birth_star_of_devotees">ಭಕ್ತರ ಜನ್ಮ ನಕ್ಷತ್ರ</string>
     <string name="edit">ಸಂಪಾದಿಸು</string>
-    <string name="fill_devotee_details">ಭಕ್ತರ ವಿವರಗಳನ್ನು ಭರ್ತಿ ಮಾಡಿ</string>
     <string name="upi" />
     <string name="item" >ಐಟಂ</string>
     <string name="price">ಬೆಲೆ</string>
@@ -88,39 +85,6 @@
     <string name="save" >ಉಳಿಸಿ</string>
     <string name="item_summary_report">ವಿಸ್ತೃತ ವರದಿ</string>
     <string name="item_name">ಅಂಶದ ಹೆಸರು</string>
-    <string name="pancard_number">ಪಾನ್ ಕಾರ್ಡ್ ಸಂಖ್ಯೆ</string>
-
-
-
-    <string-array name="nakshatras">
-        <item>ಅಶ್ವಿನಿ</item>
-        <item>ಭರಣಿ</item>
-        <item>ಕೃತ್ತಿಕಾ</item>
-        <item>ರೋಹಿಣಿ</item>
-        <item>ಮೃಗಶಿರಾ</item>
-        <item>ಆರ್ದ್ರಾ</item>
-        <item>ಪುನರ್ವಸು</item>
-        <item>ಪುಷ್ಯ</item>
-        <item>ಆಶ್ಲೇಷಾ</item>
-        <item>ಮಘಾ/ಮಖ</item>
-        <item>ಪುಬ್ಬಾ\n(ಪೂರ್ವ ಫಲ್ಗುಣಿ</item>
-        <item>ಉತ್ತರಾ\n(ಉತ್ತರ ಫಲ್ಗುಣಿ)</item>
-        <item>ಹಸ್ತಾ</item>
-        <item>ಚಿತ್ತಾ</item>
-        <item>ಸ್ವಾತಿ</item>
-        <item>ವಿಶಾಖ</item>
-        <item>ಅನೂರಾಧ</item>
-        <item>ಜ್ಯೇಷ್ಠ</item>
-        <item>ಮೂಲ</item>
-        <item>ಪೂರ್ವಾಷಾಢಾ</item>
-        <item>ಉತ್ತರಾಷಾಢಾ</item>
-        <item>ಶ್ರವಣ</item>
-        <item>ಧನಿಷ್ಠ</item>
-        <item>ಶತಭಿಷ</item>
-        <item>ಪೂರ್ವಾಭಾದ್ರಾ</item>
-        <item>ಉತ್ತರಾಭಾದ್ರಾ</item>
-        <item>ರೇವತಿ</item>
-    </string-array>
 
 
 </resources>

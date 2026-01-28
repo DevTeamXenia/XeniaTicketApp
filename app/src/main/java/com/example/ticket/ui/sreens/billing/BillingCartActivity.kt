@@ -60,7 +60,6 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
 
     private var formattedTotalAmount: String = ""
     private var selectedLanguage: String? = ""
-    private var idProofType : String? = ""
     private val customTicketPopupDialogue: CustomTicketPopupDialogue by inject()
     private lateinit var ticketItemsItems: Ticket
 

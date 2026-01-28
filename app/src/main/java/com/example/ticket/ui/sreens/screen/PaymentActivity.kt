@@ -276,7 +276,6 @@ class PaymentActivity : AppCompatActivity() {
                     selectedLanguage!!
                 )
             }
-
             if (isB1008) {
                 try {
                     headerBitmap?.scale(550, 200)?.let { scaled ->
@@ -383,7 +382,7 @@ class PaymentActivity : AppCompatActivity() {
 
         val labelDReceiptNo = getLocalizedString("Receipt No", defaultlang)
         val labelDDate = getLocalizedString("Date", defaultlang)
-        val labelDItem = getLocalizedString("Item", defaultlang)
+        val labelDItem = getLocalizedString("Ticket", defaultlang)
         val labelDPrice = getLocalizedString("Price", defaultlang)
         val labelDAmount = getLocalizedString("Amount", defaultlang)
         val labelDQty = getLocalizedString("Qty", defaultlang)
@@ -409,7 +408,6 @@ class PaymentActivity : AppCompatActivity() {
             else -> "Entry Ticket"
 
         }
-
         val receiptDTitle = when (defaultlang) {
 
             "ml" -> "പ്രവേശന ടിക്കറ്റ്"
@@ -423,7 +421,6 @@ class PaymentActivity : AppCompatActivity() {
             else -> "Entry Ticket"
 
         }
-
         tempCanvas.drawText(receiptTitle, width / 2f, 40f, paint)
         tempCanvas.drawText(receiptDTitle, width / 2f, 80f, paint)
 
@@ -487,7 +484,6 @@ class PaymentActivity : AppCompatActivity() {
             tempCanvas.drawText(itemName ?: "", 20f, yOffset, paint)
 
             yOffset += 35f
-
             tempCanvas.drawText(itemDName ?: "", 20f, yOffset, paint)
             yOffset += 35f
             paint.textAlign = Paint.Align.CENTER
@@ -495,8 +491,6 @@ class PaymentActivity : AppCompatActivity() {
             tempCanvas.drawText(qtyStr, width * 0.65f, yOffset, paint)
             paint.textAlign = Paint.Align.RIGHT
             tempCanvas.drawText(amountStr, width - 40f, yOffset, paint)
-
-
 
             yOffset += 45f
         }
@@ -514,6 +508,20 @@ class PaymentActivity : AppCompatActivity() {
             yOffset,
             paint
         )
+        yOffset += 30f
+
+        if (!transID.isNullOrEmpty()) {
+            paint.textSize = 18f
+            paint.textAlign = Paint.Align.RIGHT
+            tempCanvas.drawText(
+                "$labelUPI: $transID",
+                width - 20f,
+                yOffset,
+                paint
+            )
+            yOffset += 25f
+        }
+
         yOffset += 35f
         paint.textSize = 22f
         paint.textAlign = Paint.Align.CENTER
@@ -543,7 +551,6 @@ class PaymentActivity : AppCompatActivity() {
             paint
         )
 
-        yOffset += textPadding
         paint.textAlign = Paint.Align.LEFT
         paint.textSize = 20f
         paint.typeface = Typeface.DEFAULT
@@ -556,15 +563,16 @@ class PaymentActivity : AppCompatActivity() {
         tempCanvas.drawText("$labelPhonenumber: $phoneNo", textX, textY, paint)
         textY += 25f
         tempCanvas.drawText(labelDPhonenumber, textX, textY, paint)
-        yOffset = textY + 20f
-//
-//        generateQRCode()?.let { qrBitmap ->
-//            val qrSize = 300
-//            val qrX = (width - qrSize) / 2f
-//            tempCanvas.drawBitmap(qrBitmap, qrX, yOffset, paint)
-//            yOffset += qrSize + 50f
-//        }
-        yOffset += 35f
+        yOffset = textY + 60f
+
+        if (from.isNullOrEmpty() || from != "billing") {
+            generateQRCode()?.let { qrBitmap ->
+                val qrSize = 300
+                val qrX = (width - qrSize) / 2f
+                tempCanvas.drawBitmap(qrBitmap, qrX, yOffset, paint)
+                yOffset += qrSize + 50f
+            }
+        }
         val finalBitmap = createBitmap(width, (yOffset + 20f).toInt())
         Canvas(finalBitmap).drawBitmap(tempBitmap, 0f, 0f, null)
         tempBitmap.recycle()
@@ -589,12 +597,9 @@ class PaymentActivity : AppCompatActivity() {
         val labelAmount = getLocalizedString("Amount", selectedLanguage)
         val labelUPI = getLocalizedString("UPI Reference No", selectedLanguage)
         val labelQty = getLocalizedString("Qty", selectedLanguage)
-        val labelDevooteDetails = getLocalizedString("Devotees Details", selectedLanguage)
         val labelPhonenumber = getLocalizedString("Phone No", selectedLanguage)
         val labelTotalAmount = getLocalizedString("Total Amount", selectedLanguage)
         val labelName = getLocalizedString("Name", selectedLanguage)
-        val labelmessage =
-            getLocalizedString("There is NO Prasadam for Sheeghra Darshan", selectedLanguage)
         val tempBitmap = createBitmap(width, 10000)
         val tempCanvas = Canvas(tempBitmap)
 
@@ -615,7 +620,6 @@ class PaymentActivity : AppCompatActivity() {
             else -> "Entry Ticket"
         }
         tempCanvas.drawText(receiptTitle, width / 2f, 40f, paint)
-
         var yOffset = 130f
         paint.textAlign = Paint.Align.LEFT
         paint.textSize = 22f
@@ -677,12 +681,9 @@ class PaymentActivity : AppCompatActivity() {
 
             yOffset += 45f
         }
-
         paint.strokeWidth = 2f
         tempCanvas.drawLine(20f, yOffset, width - 20f, yOffset, paint)
         yOffset += 60f
-
-
         paint.textSize = 24f
         paint.textAlign = Paint.Align.RIGHT
         tempCanvas.drawText(
@@ -691,6 +692,20 @@ class PaymentActivity : AppCompatActivity() {
             yOffset,
             paint
         )
+        yOffset += 25f
+
+        if (!transID.isNullOrEmpty()) {
+            paint.textSize = 18f
+            paint.textAlign = Paint.Align.RIGHT
+            tempCanvas.drawText(
+                "$labelUPI: $transID",
+                width - 20f,
+                yOffset,
+                paint
+            )
+            yOffset += 35f
+        }
+
         yOffset += 35f
         val padding = 15f
         val textPadding = 0f
@@ -702,10 +717,7 @@ class PaymentActivity : AppCompatActivity() {
         val textHeight = 35f * 3
         tempYOffset += maxOf(imageSize, textHeight) + 20f
 
-
         val rectBottom = tempYOffset + textPadding
-
-
         paint.style = Paint.Style.STROKE
         paint.color = Color.BLACK
         val innerPadding = 30f
@@ -716,8 +728,6 @@ class PaymentActivity : AppCompatActivity() {
             cornerRadius, cornerRadius,
             paint
         )
-
-        yOffset += textPadding
         paint.textAlign = Paint.Align.LEFT
         paint.textSize = 20f
         paint.typeface = Typeface.DEFAULT
@@ -727,20 +737,19 @@ class PaymentActivity : AppCompatActivity() {
         textY += 30f
         tempCanvas.drawText("$labelPhonenumber: $phoneNo", textX, textY, paint)
 
-        yOffset = textY + 20f
-//
-//        generateQRCode()?.let { qrBitmap ->
-//            val qrSize = 300
-//            val qrX = (width - qrSize) / 2f
-//            tempCanvas.drawBitmap(qrBitmap, qrX, yOffset, paint)
-//            yOffset += qrSize + 50f
-//        }
-        yOffset += 35f
-        val finalBitmap = createBitmap(width, (yOffset + 50f).toInt())
+        yOffset = textY + 60f
+
+        if (from.isNullOrEmpty() || from != "billing") {
+            generateQRCode()?.let { qrBitmap ->
+                val qrSize = 300
+                val qrX = (width - qrSize) / 2f
+                tempCanvas.drawBitmap(qrBitmap, qrX, yOffset, paint)
+                yOffset += qrSize + 50f
+            }
+        }
+        val finalBitmap = createBitmap(width, (yOffset + 10f).toInt())
         Canvas(finalBitmap).drawBitmap(tempBitmap, 0f, 0f, null)
-
         tempBitmap.recycle()
-
         return finalBitmap
     }
     private fun generateQRCode(): Bitmap? {
@@ -755,11 +764,11 @@ class PaymentActivity : AppCompatActivity() {
                 width,
                 height,
                 Bitmap.Config.ARGB_8888
-            )  // Fixed bitmap creation
+            )
             for (x in 0 until width) {
                 for (y in 0 until height) {
                     val color = if (bitMatrix[x, y]) Color.BLACK else Color.WHITE
-                    bmp.setPixel(x, y, color)  // Fixed pixel setting
+                    bmp.setPixel(x, y, color)
                 }
             }
             bmp
@@ -772,7 +781,6 @@ class PaymentActivity : AppCompatActivity() {
         return when (languageCode.lowercase()) {
 
             "en" -> key
-
 
             "ml" -> when (key) {
                 "Receipt No" -> "രസീത് നമ്പർ"
@@ -787,7 +795,6 @@ class PaymentActivity : AppCompatActivity() {
                 "Amount" -> "തുക"
                 "Total Amount" -> "ആകെ തുക"
                 "UPI Reference No" -> "UPI Reference No"
-                "There is NO Prasadam for Sheeghra Darshan" -> "ശീഘ്ര ദർശനത്തിന് പ്രസാദം ഇല്ല"
                 else -> key
             }
 
@@ -795,7 +802,7 @@ class PaymentActivity : AppCompatActivity() {
             "hi" -> when (key) {
                 "Receipt No" -> "रसीद संख्या"
                 "Date" -> "तारीख"
-                "Item" -> "टिकट"
+                "Ticket" -> "टिकट"
                 "Name" -> "नाम"
                 "Phone No" -> "फ़ोन नंबर"
                 "ID No" -> "पहचान संख्या"
@@ -812,7 +819,7 @@ class PaymentActivity : AppCompatActivity() {
             "si" -> when (key) {
                 "Receipt No" -> "රිසිට්පත අංකය"
                 "Date" -> "දිනය"
-                "Item" -> "ටිකට්"
+                "Ticket" -> "ටිකට්"
                 "Name" -> "නම"
                 "Phone No" -> "දුරකථන අංකය"
                 "ID No" -> "හැඳුනුම් අංකය"
@@ -829,7 +836,7 @@ class PaymentActivity : AppCompatActivity() {
             "kn" -> when (key) {
                 "Receipt No" -> "ರಸೀದಿ ಸಂಖ್ಯೆ"
                 "Date" -> "ದಿನಾಂಕ"
-                "Item" -> "ಟಿಕೆಟ್"
+                "Ticket" -> "ಟಿಕೆಟ್"
                 "Name" -> "ಹೆಸರು"
                 "Phone No" -> "ಫೋನ್ ನಂಬರ"
                 "ID No" -> "ಐಡಿ ಸಂಖ್ಯೆ"
@@ -846,7 +853,7 @@ class PaymentActivity : AppCompatActivity() {
             "ta" -> when (key) {
                 "Receipt No" -> "ரசீது எண்"
                 "Date" -> "தேதி"
-                "Item" -> "டிக்கெட்"
+                "Ticket" -> "டிக்கெட்"
                 "Name" -> "பெயர்"
                 "Phone No" -> "தொலைபேசி எண்"
                 "ID No" -> "அடையாள எண்"
@@ -863,7 +870,7 @@ class PaymentActivity : AppCompatActivity() {
             "te" -> when (key) {
                 "Receipt No" -> "రశీదు సంఖ్య"
                 "Date" -> "తేదీ"
-                "Item" -> "టికెట్"
+                "Ticket" -> "టికెట్"
                 "Name" -> "పేరు"
                 "Phone No" -> "ఫోన్ నంబర్"
                 "ID No" -> "ఐడి నంబర్"
@@ -880,7 +887,7 @@ class PaymentActivity : AppCompatActivity() {
             "pa" -> when (key) {
                 "Receipt No" -> "ਰਸੀਦ ਨੰਬਰ"
                 "Date" -> "ਤਾਰੀਖ਼"
-                "Item" -> "ਟਿਕਟ"
+                "Ticket" -> "ਟਿਕਟ"
                 "Name" -> "ਨਾਮ"
                 "Phone No" -> "ਫ਼ੋਨ ਨੰਬਰ"
                 "ID No" -> "ਆਈਡੀ ਨੰਬਰ"
@@ -897,7 +904,7 @@ class PaymentActivity : AppCompatActivity() {
             "mr" -> when (key) {
                 "Receipt No" -> "पावती क्रमांक"
                 "Date" -> "तारीख"
-                "Item" -> "तिकीट"
+                "Ticket" -> "तिकीट"
                 "Name" -> "नाव"
                 "Phone No" -> "फोन नंबर"
                 "ID No" -> "ओळख क्रमांक"

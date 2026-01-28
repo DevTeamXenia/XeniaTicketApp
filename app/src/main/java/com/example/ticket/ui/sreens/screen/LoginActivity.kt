@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import com.example.ticket.R
+import com.example.ticket.data.repository.CompanyRepository
 import com.example.ticket.data.repository.LoginRepository
 import com.example.ticket.databinding.ActivityLoginBinding
 import com.example.ticket.ui.sreens.billing.BillingTicketActivity
@@ -34,6 +35,7 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLoginBinding
     private val sessionManager: SessionManager by inject()
     private val loginRepository: LoginRepository by inject()
+    private val companyRepository: CompanyRepository by inject()
 
     private var isPasswordVisible = false
 
@@ -182,7 +184,6 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
 
         return screenSizeMask == Configuration.SCREENLAYOUT_SIZE_XLARGE && isPortrait
     }
-
     private fun performLogin(
         userId: String,
         password: String,
@@ -214,85 +215,15 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
                         clear()
                     }
                 }
-
-                val config = resources.configuration
-                val screenSizeMask = config.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK
-                val isLandscape = config.orientation == Configuration.ORIENTATION_LANDSCAPE
-                val isPortrait = config.orientation == Configuration.ORIENTATION_PORTRAIT
-
-
                 val userType = UserType.fromValue(
                     JwtUtils.getUserType(token)
                 )
 
-                when (userType) {
-
-                    UserType.COUNTER_USER -> {
-
-                        val allowedForLarge =
-                            screenSizeMask == Configuration.SCREENLAYOUT_SIZE_LARGE
-                        val allowedForXLarge =
-                            screenSizeMask == Configuration.SCREENLAYOUT_SIZE_XLARGE && isLandscape
-
-                        if (!allowedForLarge && !allowedForXLarge) {
-                            dismissLoader()
-                            showSnackbar(
-                                binding.root,
-                                "COUNTER_USER has no permission for this device/orientation!"
-                            )
-                            return@launch
-                        }
-
-                        // Check for first login
-                        val isFirstLoginKey = "isFirstLogin_$userId"
-                        val isFirstLogin = sharedPref.getBoolean(isFirstLoginKey, true)
-
-                        if (isFirstLogin) {
-                            // Open printer setup
-                        openPrinterSetup()
-
-                            // Mark as not first login anymore
-                            sharedPref.edit {
-                                putBoolean(isFirstLoginKey, false)
-                            }
-                        } else {
-
-
-                            startActivity(Intent(this@LoginActivity, LanguageActivity::class.java))
-
-                            finish()
-                        }
-                    }
-
-                    UserType.PROCESS_USER -> {
-
-                        dismissLoader()
-                        showSnackbar(
-                            binding.root,
-                            "PROCESS_USER is not allowed to login on this device!"
-                        )
-                        return@launch
-                    }
-
-                    UserType.CUSTOMER -> {
-
-                        if (screenSizeMask != Configuration.SCREENLAYOUT_SIZE_XLARGE || !isPortrait) {
-                            dismissLoader()
-                            startActivity(Intent(this@LoginActivity, LanguageActivity::class.java))
-                        }
-
-                        sessionManager.saveSelectedPrinter(PRINTER_KIOSK)
-                        startActivity(Intent(this@LoginActivity, LanguageActivity::class.java))
-
-                        finish()
-                    }
-
-                    UserType.UNKNOWN -> {
-                        dismissLoader()
-                        showSnackbar(binding.root, "Unknown user type!")
-                    }
+                companyRepository.getCompany() ?: run {
+                    startActivity(Intent(this@LoginActivity, SyncActivity::class.java))
+                    finish()
+                    return@launch
                 }
-
             } catch (e: HttpException) {
 
                 val errorBody = e.response()?.errorBody()?.string()
@@ -315,13 +246,6 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
         }
     }
 
-    private fun openPrinterSetup() {
-        val intent = Intent(applicationContext, PrinterSettingActivity::class.java).apply {
-            putExtra("fromLogin", "Login")
-        }
-        startActivity(intent)
-        finish()
-    }
     private fun hideKeyboard() {
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         val view = currentFocus ?: View(this)
@@ -336,7 +260,6 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
             overlayPermissionLauncher.launch(intent)
         }
     }
-
     private val overlayPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {  }
 }

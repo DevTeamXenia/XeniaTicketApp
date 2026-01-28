@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name" translatable="false">Ticket Kiosk</string>
-    <string name="make_a_donation">देणगी द्या</string>
     <string name="todo">करायची कामं</string>
     <string name="p_o_w_e_r_e_d_b_y">पावर्ड बाय</string>
     <string name="b_a_n_k_i_n_g_p_a_r_t_n_e_r">बँकिंग भागीदार</string>
@@ -16,14 +15,11 @@
 
     <!-- donation_screen -->
     <string name="fill_out_your_details">तपशील भरा</string>
-    <string name="donation_amount">ई-हंडी रक्कम</string>
-    <string name="annadana_amount">अन्नदान रक्कम</string>
     <string name="_10_000">Rs.</string>
     <string name="pay">पे करा</string>
     <string name="phone_number">फोन नंबर</string>
     <string name="_91">+91</string>
     <string name="name">नाव</string>
-    <string name="select_your_janma_nakshatra">आपले जन्म नक्षत्र निवडा</string>
 
     <!-- Popup_Screen -->
     <string name="amount_10_000">रक्कम Rs. 10,000 /-</string>
@@ -37,7 +33,6 @@
     <string name="amount">रक्कम :</string>
     <string name="txt_amount">रक्कम</string>
     <string name="transcation_id">व्यवहार आयडी :</string>
-    <string name="star">नक्षत्र</string>
     <string name="pay_name">नाव :</string>
     <string name="payment_failed">पेमेंट अयशस्वी</string>
     <string name="it_seems_we_have_not_received_money">असे वाटते की पैसे मिळाले नाहीत</string>
@@ -50,10 +45,7 @@
     <string name="you_have_been_inactive_for_a_while_please_touch_the_screen_to_continue">तुम्हाला चालू ठेवायचे आहे का?</string>
     <string name="qr_expire">QR कालबाह्य होतो :</string>
     <string name="aadhaar_no">आधार क्रमांक</string>
-
-
     <string name="ticket">तिकीट</string>
-
     <string name="welcome">स्वागत आहे!</string>
     <string name="more_people">अधिक लोक</string>
 
@@ -79,20 +71,14 @@
     <string name="do_you_want_to_logout">तुम्हाला लॉगआउट करायचे आहे का?</string>
     <string name="choose_item">घटक निवडा</string>
     <string name="done">पूर्ण</string>
-    <string name="sub_temple">उप मंदिर</string>
-    <string name="capture">कॅप्चर</string>
     <string name="my_cart">माझी कार्ट</string>
-    <string name="image_upload">प्रतिमा अपलोड</string>
-    <string name="birth_star_of_devotees">भक्तांचे जन्म नक्षत्र</string>
     <string name="edit">संपादित करा</string>
-    <string name="fill_devotee_details">भक्ताची माहिती भरा</string>
     <string name="upi">UPI</string>
     <string name="item">घटक</string>
     <string name="price">किंमत</string>
     <string name="qty">प्रमाण</string>
     <string name="total">एकूण</string>
     <string name="marathi">मराठी</string>
-
     <string name="language_settings">भाषा</string>
     <string name="profile">प्रोफाईल</string>
     <string name="delete_account">खाते हटवा</string>
@@ -102,7 +88,6 @@
     <string name="reports">अहवाल</string>
     <string name="detailed_report">सविस्तर अहवाल</string>
     <string name="summary_report">सारांश अहवाल</string>
-
     <string name="select_device_printer">प्रिंटर डिव्हाइस निवडा</string>
     <string name="save" >जतन करा</string>
     <string name="remember_me">मला लक्षात ठेवा</string>

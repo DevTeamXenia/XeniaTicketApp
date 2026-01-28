@@ -71,7 +71,6 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
     private var selectedLanguage: String? = ""
     private var selectedCategoryId: Int = 0
     private var spanCount: Int = 2
-
     private var reportsExpanded = false
     private lateinit var ticketItemsItems: TicketDto
     private var formattedTotalAmount: String = ""
@@ -260,21 +259,12 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
                 return
             }
 
-
             ApiResponseHandler.handleApiCall(
                 activity = this@BillingTicketActivity,
                 apiCall = {
-                    withContext(Dispatchers.IO) {
-                        categoryRepository.loadCategories(token)
-                    }
+                    true
                 },
-                onSuccess = { isLoaded ->
-                    if (!isLoaded) {
-                        showSnackbar(binding.root, "Category sync failed, using local data")
-                        binding.ticketCat.visibility = View.GONE
-                        return@handleApiCall
-                    }
-
+                onSuccess = {
                     lifecycleScope.launch {
                         val categoryEntities = withContext(Dispatchers.IO) {
                             categoryRepository.getAllCategory()
@@ -320,11 +310,13 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
                                 categoryActive = entity.categoryActive
                             )
                         }
+
                         categoryAdapter.updateCategories(categories)
                         getTickets(selectedCategoryId)
                     }
                 }
             )
+
         } catch (e: HttpException) {
             if (e.code() == 401) {
                 AlertDialog.Builder(this@BillingTicketActivity)
@@ -335,14 +327,14 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
                         ApiResponseHandler.logoutUser(this@BillingTicketActivity)
                     }
                     .show()
-
             } else {
                 throw e
             }
         } catch (e: Exception) {
-            showSnackbar(binding.root, "Error loading tickets")
+            showSnackbar(binding.root, "Error loading categories")
         }
     }
+
     private fun getTickets(categoryId: Int? = null) {
         showLoader(this@BillingTicketActivity, "Loading Tickets...")
         try {
@@ -352,9 +344,7 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
             ApiResponseHandler.handleApiCall(
                 activity = this@BillingTicketActivity,
                 apiCall = {
-                    withContext(Dispatchers.IO) {
-                        activeTicketRepository.loadTickets(token)
-                    }
+                   true
                 },
                 onSuccess = { loadResult ->
                     lifecycleScope.launch {
@@ -367,15 +357,12 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
                             } else {
                                 activeTicketRepository.getAllTickets()
                             }
-
                             if (tickets.isEmpty()) {
                                 ticketAdapter.updateTickets(emptyList())
                                 ticketAdapter.updateDbItemsMap(emptyMap())
                                 showSnackbar(binding.root, "No tickets available")
                                 return@launch
                             }
-
-                            // Map DB items for quantity update
                             val dbItems = withContext(Dispatchers.IO) {
                                 ticketRepository.getAllTicketsInCart().associateBy { it.ticketId }
                             }
@@ -391,7 +378,6 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
                             binding.ticketRecycler.adapter = ticketAdapter
 
                         } finally {
-                            // Always dismiss loader here, after all inner work is done
                             dismissLoader()
                         }
                     }
@@ -415,17 +401,13 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
         }
     }
 
-
-
     override fun onCategoryClick(category: Category) {
         selectedCategoryId = category.categoryId
         getTickets(selectedCategoryId)
     }
 
-
     override fun onTicketClick(ticketItem: TicketDto) {
         runOnUiThread {
-
             ticketItemsItems = ticketItem
 
             customTicketPopupDialogue.setData(
@@ -454,19 +436,17 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
         }
     }
 
-
     override fun onTicketClear(ticketItem: TicketDto) {
         lifecycleScope.launch {
             ticketItemsItems = ticketItem
             ticketRepository.deleteTicketById(ticketItem.ticketId)
-            fetchDetails()
+            getTickets(selectedCategoryId)
             updateCartUI()
         }
     }
-
     override fun onTicketAdded() {
         lifecycleScope.launch {
-           fetchDetails()
+            getTickets(selectedCategoryId)
             updateCartUI()
         }
     }
@@ -474,7 +454,7 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
     override fun onRestart() {
         super.onRestart()
         setupRecyclerViews()
-        fetchDetails()
+     getTickets(selectedCategoryId)
         lifecycleScope.launch {
             updateCartUI()
         }

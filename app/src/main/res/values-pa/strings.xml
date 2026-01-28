@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name" translatable="false">Ticket Kiosk</string>
-    <string name="make_a_donation">ਦਾਨ ਕਰੋ</string>
     <string name="todo">ਕੰਮ ਕਰਨੇ ਹਨ</string>
     <string name="p_o_w_e_r_e_d_b_y">ਪਾਵਰਡ ਬਾਈ</string>
     <string name="b_a_n_k_i_n_g_p_a_r_t_n_e_r">ਬੈਂਕਿੰਗ ਸਾਥੀ</string>

@@ -1,10 +1,231 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/white"
+    android:orientation="vertical"
     tools:context=".ui.sreens.billing.SummaryReportActivity">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/light_bg"
+        android:orientation="vertical">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_margin="16dp"
+            android:background="@drawable/rounded_light_stroke_rect">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:text="@string/summary_report"
+                android:textColor="@color/secondaryColor"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+        </RelativeLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="8dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/txtFromDateTime"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@drawable/rounded_light_stroke_rect"
+                android:focusable="false"
+                android:hint="dd/mm/yyyy"
+                android:padding="10dp" />
+
+            <EditText
+                android:id="@+id/txtToDateTime"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:background="@drawable/rounded_light_stroke_rect"
+                android:focusable="false"
+                android:hint="dd/mm/yyyy"
+                android:padding="10dp" />
+        </LinearLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/txtGeneratedTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/report_generated_time"
+                android:textColor="@color/black"
+                android:textSize="14sp" />
+
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:padding="5dp"
+                android:background="@drawable/rounded_light_stroke_rect">
+
+                <ImageView
+                    android:id="@+id/btnPrint"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:padding="4dp"
+                    android:src="@drawable/printerimage"
+                    android:contentDescription="Print"
+                    app:tint="@color/primaryColor" />
+
+
+            </RelativeLayout>
+
+
+        </RelativeLayout>
+
+    </LinearLayout>
+
+
+    <!-- Transaction Report Table -->
+    <TableLayout
+        android:id="@+id/tableReport"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:stretchColumns="1,2">
+
+        <TableRow>
+
+            <TextView
+                android:id="@+id/txtTransaction"
+                android:padding="8dp"
+                android:text="Transaction"
+                android:textColor="@color/primaryColor"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/txtSummary"
+                android:gravity="center"
+                android:padding="8dp"
+                android:text="Summary"
+                android:textColor="@color/primaryColor"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/txtReport"
+                android:gravity="end"
+                android:padding="8dp"
+                android:text="Report"
+                android:textColor="@color/primaryColor"
+                android:textStyle="bold" />
+        </TableRow>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="10dp"
+            android:background="@color/primaryColor"/>
+
+        <TableRow>
+
+            <TextView
+                android:padding="8dp"
+                android:text="@string/ticket"
+                android:textColor="@color/black" />
+
+            <TextView
+                android:id="@+id/txtTotalDarshanCount"
+                android:gravity="center"
+                android:padding="8dp"
+                android:text=""
+                android:textColor="@color/black" />
+
+            <TextView
+                android:id="@+id/txtTotalDarshan"
+                android:gravity="end"
+                android:padding="8dp"
+                android:text=""
+                android:textColor="@color/black" />
+        </TableRow>
+    </TableLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="10dp"
+        android:background="@color/primaryColor"/>
+
+    <TextView
+        android:id="@+id/txtTotalAmount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="8dp"
+        android:gravity="end"
+        android:text="@string/total_amount"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="10dp"
+        android:background="@color/primaryColor"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/txtCash"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/rounded_light_stroke_rect"
+            android:gravity="center"
+            android:padding="12dp"
+            android:textColor="@color/black" />
+
+        <TextView
+            android:id="@+id/txtCard"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:background="@drawable/rounded_light_stroke_rect"
+            android:gravity="center"
+            android:padding="12dp"
+            android:textColor="@color/black" />
+
+        <TextView
+            android:id="@+id/txtUpi"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:background="@drawable/rounded_light_stroke_rect"
+            android:gravity="center"
+            android:padding="12dp"
+            android:textColor="@color/black" />
+    </LinearLayout>
+
+</LinearLayout>

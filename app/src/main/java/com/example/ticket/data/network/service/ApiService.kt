@@ -2,11 +2,16 @@ package com.example.ticket.data.network.service
 
 import com.example.ticket.data.network.model.CategoryResponse
 import com.example.ticket.data.network.model.CompanyResponse
+import com.example.ticket.data.network.model.GenerateQrRequest
+import com.example.ticket.data.network.model.GenerateQrResponse
+import com.example.ticket.data.network.model.ItemSummaryReportResponse
 import com.example.ticket.data.network.model.LabelSettingsResponse
 import com.example.ticket.data.network.model.LoginRequest
 import com.example.ticket.data.network.model.LoginResponse
 import com.example.ticket.data.network.model.LogoutResponse
 import com.example.ticket.data.network.model.OrderResponse
+import com.example.ticket.data.network.model.PaymentStatusResponse
+import com.example.ticket.data.network.model.SummaryReportResponse
 import com.example.ticket.data.network.model.TicketPaymentRequest
 import com.example.ticket.data.network.model.TicketRequest
 import com.example.ticket.data.network.model.TicketResponse
@@ -15,6 +20,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ApiService {
@@ -39,7 +45,7 @@ interface ApiService {
     @GET("Company/label")
     suspend fun getCompanyLabel(
         @Header("Authorization") bearerToken: String
-    ):List<LabelSettingsResponse>
+    ): List<LabelSettingsResponse>
 
 
     @GET("Category/sync")
@@ -58,5 +64,32 @@ interface ApiService {
         @Body request: TicketPaymentRequest
     ): OrderResponse
 
+    @GET("Report/SummaryReport")
+    suspend fun getSummaryReport(
+        @Header("Authorization") bearerToken: String,
+        @Query("startDateTime") startDate: String,
+        @Query("endDateTime") endDate: String,
+    ): SummaryReportResponse
+
+    @GET("Report/OfferingsSummary")
+    suspend fun getItemSummaryReport(
+        @Header("Authorization") bearerToken: String,
+        @Query("startDateTime") startDateTime: String,
+        @Query("endDateTime") endDateTime: String
+    ): ItemSummaryReportResponse
+
+    @POST("payments/fed/generateQr")
+    suspend fun generateQr(
+        @Header("Authorization") token: String,
+        @Body request: GenerateQrRequest
+    ): GenerateQrResponse
+
+
+
+    @GET("payments/fed/status/{orderId}")
+    suspend fun getFedPaymentStatus(
+        @Path("orderId") orderId: String,
+        @Header("Authorization") token: String
+    ): PaymentStatusResponse
 
 }

@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.ticket.R
 import com.example.ticket.data.listeners.InactivityHandlerActivity
 import com.example.ticket.data.listeners.OnTicketClickListener
+import com.example.ticket.data.network.model.GenerateQrRequest
 import com.example.ticket.data.network.model.TicketDto
 import com.example.ticket.data.network.model.TicketPaymentRequest
 import com.example.ticket.data.repository.CompanyRepository
@@ -29,22 +30,25 @@ import com.example.ticket.databinding.ActivityTicketCartBinding
 import com.example.ticket.ui.adapter.TicketCartAdapter
 import com.example.ticket.ui.dialog.CustomInactivityDialog
 import com.example.ticket.ui.dialog.CustomInternetAvailabilityDialog
+import com.example.ticket.ui.dialog.CustomQRDarshanPopupDialogue
 import com.example.ticket.ui.dialog.CustomTicketPopupDialogue
 import com.example.ticket.utils.common.ApiResponseHandler
+import com.example.ticket.utils.common.CommonMethod.dismissLoader
 import com.example.ticket.utils.common.CommonMethod.enableInactivityReset
 import com.example.ticket.utils.common.CommonMethod.generateNumericTransactionReferenceID
+import com.example.ticket.utils.common.CommonMethod.isInternetAvailable
 import com.example.ticket.utils.common.CommonMethod.setLocale
+import com.example.ticket.utils.common.CommonMethod.showLoader
 import com.example.ticket.utils.common.CommonMethod.showSnackbar
 import com.example.ticket.utils.common.CompanyKey
 import com.example.ticket.utils.common.InactivityHandler
 import com.example.ticket.utils.common.JwtUtils
 import com.example.ticket.utils.common.SessionManager
-import com.google.gson.Gson
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
-import org.koin.core.qualifier.named
 import retrofit2.HttpException
 import java.util.Locale
 import kotlin.getValue
@@ -61,6 +65,8 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
     private val sessionManager: SessionManager by inject()
     private val paymentRepository: PaymentRepository by inject()
     private val companyRepository: CompanyRepository by inject()
+    private val customInternetAvailabilityDialog: CustomInternetAvailabilityDialog by inject()
+    private val customQRDarshanPopupDialogue: CustomQRDarshanPopupDialogue by inject()
     private var formattedTotalAmount: String = ""
     private var idProofType: String? = ""
     private var devoteeName: String? = null
@@ -119,11 +125,23 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                 )
             }
             lifecycleScope.launch {
-                postTicketPaymentHistory(
-                    status = "S",
-                    statusDesc = "Payment Success"
-                )
+                val amountValue = formattedTotalAmount.toDoubleOrNull() ?: 0.0
+                if (amountValue < 2) {
+
+                    postTicketPaymentHistory("S", "Successful")
+
+                }
+                else if (companyRepository.getBoolean(CompanyKey.ISPAYMENTGATEWAY)) {
+
+                    generatePayment()
+
+                }
+                else {
+
+                    postTicketPaymentHistory("S", "Successful")
+                }
             }
+
         }
 
         loadTicketItems()
@@ -132,12 +150,12 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
     private fun initUI() {
         binding.txtName.text = getString(R.string.name)
         binding.txtPhoneNumber.text = getString(R.string.phone_number)
-
-        binding.btnPay.text=getString(R.id.btnPay)
+        binding.btnPay.text = getString(R.string.pay)
         binding.editTextName.enableInactivityReset(inactivityHandler)
         binding.editTextPhoneNumber.enableInactivityReset(inactivityHandler)
 
     }
+
     @SuppressLint("SetTextI18n", "DefaultLocale")
     private fun loadTicketItems() {
         lifecycleScope.launch {
@@ -173,9 +191,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
             }
         }
     }
-
     override fun onDeleteClick(ticket: Ticket) {
-
         lifecycleScope.launch(Dispatchers.IO) {
             ticketRepository.deleteTicketById(ticket.ticketId)
             withContext(Dispatchers.Main) {
@@ -208,13 +224,88 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
         dialog.show(supportFragmentManager, "CustomPopup")
     }
 
+    private fun generatePayment() {
+        lifecycleScope.launch {
+
+            val (totalAmount) = ticketRepository.getCartStatus()
+
+            if (!isInternetAvailable(this@TicketCartActivity)) {
+                customInternetAvailabilityDialog.show(
+                    supportFragmentManager,
+                    "warning_dialog"
+                )
+                return@launch
+            }
+
+            showLoader(this@TicketCartActivity, "Loading... Please wait.")
+
+
+            val gateway = companyRepository.getString(CompanyKey.PAYMENT_GATEWAY)
+
+            when (gateway) {
+
+                "CanaraBank" -> {
+                    dismissLoader()
+//                    generateCanaraPaymentQrCode(formattedTotalAmount)
+                }
+
+                "FederalBank" -> {
+                    dismissLoader()
+                    generateFederalPaymentQrCode(totalAmount)
+                }
+
+                else -> {
+                    dismissLoader()
+//                    generatePaymentQrCode(formattedTotalAmount)
+                }
+            }
+
+        }
+    }
+    private fun generateFederalPaymentQrCode(donationAmount: Double) {
+        val request = GenerateQrRequest(
+            Amount = donationAmount.toInt(),
+            name ="",
+            phone = "",
+        )
+
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+
+                val response = withContext(Dispatchers.IO) {
+                    paymentRepository.generateQr(
+                        token = sessionManager.getToken().toString(),
+                        request = request
+                    )
+                }
+
+                val orderId = response.OrderId
+                val upiUrl = response.UpiIntentUrl
+                if (!orderId.isNullOrEmpty() && !upiUrl.isNullOrEmpty()) {
+                    customQRDarshanPopupDialogue.setData(
+                        donationAmount.toInt().toString(),
+                        upiUrl,
+                        orderId
+                    )
+                    customQRDarshanPopupDialogue.show(
+                        supportFragmentManager,
+                        "CustomPopup"
+                    )
+                }
+            } catch (e: HttpException) {
+                showSnackbar(
+                    binding.root,
+                    "unable to generate QR code! Please try again..."
+                )
+            }
+        }
+    }
     private suspend fun postTicketPaymentHistory(
         status: String,
         statusDesc: String,
         retryCount: Int = 0
     ) {
         try {
-
 
             val cartTickets = ticketRepository.getAllTicketsInCart()
             if (cartTickets.isEmpty()) {
@@ -223,7 +314,6 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                 }
                 return
             }
-
             val itemsList = cartTickets.flatMap { item ->
                 (1..item.daQty).map {
                     TicketPaymentRequest.Item(
@@ -307,7 +397,6 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
             )
 
         } catch (e: HttpException) {
-
             withContext(Dispatchers.Main) {
                 if (e.code() == 401) {
                     AlertDialog.Builder(this@TicketCartActivity)
@@ -322,7 +411,6 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                     handleRetry(e, status, statusDesc, retryCount)
                 }
             }
-
         } catch (e: Exception) {
             withContext(Dispatchers.Main) {
                 binding.btnPay.isEnabled = true
@@ -337,7 +425,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
         statusDesc: String,
         retryCount: Int,
 
-    ) {
+        ) {
         if (e is HttpException && e.code() == 401) {
             binding.btnPay.isEnabled = true
             showSnackbar(binding.root, "Unauthorized: Please login again")
@@ -378,12 +466,14 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
         startActivity(intent)
         finish()
     }
+
     fun showMessage(msg: String) {
         AlertDialog.Builder(this)
             .setMessage(msg)
             .setPositiveButton("OK", null)
             .show()
     }
+
     override fun onTicketClick(darshanItem: TicketDto) {
         TODO("Not yet implemented")
     }
@@ -396,12 +486,10 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
         loadTicketItems()
     }
 
-
     override fun onResume() {
         super.onResume()
         inactivityHandler.resumeInactivityCheck()
     }
-
 
     override fun onPause() {
         super.onPause()
@@ -430,16 +518,6 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
 
     override fun resetInactivityTimer() {
         inactivityHandler.resetTimer()
-    }
-
-    override fun onBackPressed() {
-        val intent = Intent(this, TicketActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                    Intent.FLAG_ACTIVITY_NEW_TASK or
-                    Intent.FLAG_ACTIVITY_CLEAR_TASK
-        }
-        startActivity(intent)
-        finish()
     }
 
 }

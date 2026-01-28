@@ -3,14 +3,11 @@
 
 
     <string name="home">ഹോം</string>
-
-
     <string name="_10_000">Rs.</string>
     <string name="pay">അടയ്ക്കുക</string>
     <string name="phone_number">ഫോൺ നമ്പർ</string>
     <string name="_91">+91</string>
     <string name="name">പേര്</string>
-    <string name="select_your_janma_nakshatra">നിങ്ങളുടെ ജന്മ നക്ഷത്രം തിരഞ്ഞെടുക്കുക</string>
 
     //Popup_Screen
     <string name="amount_10_000"> തുക Rs. 10,000 /-</string>
@@ -61,13 +58,9 @@
     <string name="do_you_want_to_logout">നിങ്ങൾക്ക് ലോഗ്ഔട്ട് ചെയ്യണോ?</string>
     <string name="choose_item">ഇനം തിരഞ്ഞെടുക്കുക</string>
     <string name="done">ചെയ്തു</string>
-    <string name="capture">ക്യാപ്ചർ</string>
-    <string name="image_upload">ചിത്രം അപ്‌ലോഡ്</string>
     <string name="sub_temple">ഉപക്ഷേത്രം</string>
     <string name="my_cart">കാർട്ട്</string>
-    <string name="birth_star_of_devotees">ഭക്തരുടെ ജന്മനക്ഷത്രം</string>
     <string name="edit">എഡിറ്റ്</string>
-    <string name="fill_devotee_details">ഭക്തരുടെ വിവരങ്ങൾ പൂരിപ്പിക്കുക</string>
     <string name="upi" />
     <string name="item" >ഇനം</string>
     <string name="price">വില</string>

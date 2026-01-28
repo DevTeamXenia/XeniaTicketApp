@@ -1,14 +1,17 @@
 package com.example.ticket.ui.sreens.screen
 
-import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
-import android.graphics.Bitmap
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
+import android.view.Gravity
 import android.view.View
+import android.view.WindowManager
+import android.widget.Button
+import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -16,10 +19,11 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
-import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.example.ticket.R
 import retrofit2.HttpException
 import com.example.ticket.data.listeners.InactivityHandlerActivity
+import com.example.ticket.data.network.local.InitialSyncManager
+import com.example.ticket.data.network.local.SyncResult
 import com.example.ticket.data.repository.CompanyRepository
 import com.example.ticket.data.repository.TicketRepository
 import com.example.ticket.databinding.ActivitySelectionBinding
@@ -28,7 +32,6 @@ import com.example.ticket.ui.dialog.CustomInternetAvailabilityDialog
 import com.example.ticket.ui.sreens.billing.BillingTicketActivity
 import com.example.ticket.utils.common.ApiResponseHandler
 import com.example.ticket.utils.common.CommonMethod.dismissLoader
-import com.example.ticket.utils.common.CommonMethod.showLoader
 import com.example.ticket.utils.common.CommonMethod.showSnackbar
 import com.example.ticket.utils.common.CompanyKey
 import com.example.ticket.utils.common.Constants.LANGUAGE_ENGLISH
@@ -40,16 +43,17 @@ import com.example.ticket.utils.common.Constants.LANGUAGE_PUNJABI
 import com.example.ticket.utils.common.Constants.LANGUAGE_SINHALA
 import com.example.ticket.utils.common.Constants.LANGUAGE_TAMIL
 import com.example.ticket.utils.common.Constants.LANGUAGE_TELUGU
+import com.example.ticket.utils.common.JwtUtils
 import com.example.ticket.utils.common.SessionManager
+import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
-import java.io.File
-import java.io.FileOutputStream
 import kotlin.collections.forEach
 import kotlin.collections.get
 import kotlin.getValue
+
 
 class LanguageActivity : AppCompatActivity(),
     CustomInternetAvailabilityDialog.InternetAvailabilityListener,
@@ -60,18 +64,17 @@ class LanguageActivity : AppCompatActivity(),
     private val companyRepository: CompanyRepository by inject()
     private var screen: String? = null
     private val ticketRepository: TicketRepository by inject()
-
-
+    private val initialSyncManager: InitialSyncManager by inject()
     private var enabledLanguages: List<String> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivitySelectionBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         screen = intent.getStringExtra("screen")
-
-
+        binding.swipeRefreshLayout?.setOnRefreshListener {
+                refreshAllApis()
+        }
         requestOverlayPermission()
         loadCompanyDetails()
     }
@@ -80,7 +83,7 @@ class LanguageActivity : AppCompatActivity(),
             val isLandscape =
                 resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-            val fileName = if (isLandscape) {
+            val imageUrl = if (isLandscape) {
                 companyRepository.getString(CompanyKey.COMPANYLOGO_L)
                     ?: companyRepository.getString(CompanyKey.COMPANYLOGO_P)
             } else {
@@ -88,16 +91,13 @@ class LanguageActivity : AppCompatActivity(),
                     ?: companyRepository.getString(CompanyKey.COMPANYLOGO_L)
             }
 
-            if (fileName.isNullOrBlank()) return@launch
-
-            val fullUrl = "https://apiimage.xeniapos.com/Temple/assest/uploads?fileName=$fileName"
+            if (imageUrl.isNullOrBlank()) return@launch
 
             Glide.with(binding.imgBackground)
-                .load(fullUrl)
+                .load(imageUrl)
                 .into(binding.imgBackground)
         }
     }
-
     private fun getLanguageCardMap(): Map<String, View> {
         return mapOf(
             LANGUAGE_ENGLISH to binding.cardEnglish,
@@ -112,7 +112,6 @@ class LanguageActivity : AppCompatActivity(),
         ).filterValues { true }
             .mapValues { it.value }
     }
-
     private fun setupLanguageButtons(enabledLanguages: List<String>) {
 
         val languageCardMap = getLanguageCardMap()
@@ -131,13 +130,9 @@ class LanguageActivity : AppCompatActivity(),
             }
         }
     }
-
-
     private suspend fun setupCardPosition(enabledLanguages: List<String>) {
-
         val container = binding.languageCardContainer
         if (container.childCount < 5) return
-
         val languageCardMap = getLanguageCardMap()
         val defaultLanguage = companyRepository.getDefaultLanguage()
 
@@ -148,26 +143,20 @@ class LanguageActivity : AppCompatActivity(),
         if (defaultLanguage != LANGUAGE_ENGLISH) {
             languageCardMap[defaultLanguage]?.let { orderedCards.add(it) }
         }
-
         enabledLanguages.forEach { lang ->
             languageCardMap[lang]?.let { card ->
                 if (card !in orderedCards) orderedCards.add(card)
             }
         }
-
         val rows = (0 until 5).mapNotNull {
             container.getChildAt(it) as? LinearLayout
         }
-
         if (rows.size < 5) return
-
         rows.forEach { it.removeAllViews() }
-
         orderedCards.forEachIndexed { index, card ->
             (card.parent as? LinearLayout)?.removeView(card)
             rows[index / 2].addView(card)
         }
-
         rows.forEach { row ->
             if (row.childCount == 1) {
                 row.addView(
@@ -182,12 +171,7 @@ class LanguageActivity : AppCompatActivity(),
             }
         }
     }
-
-
-
     private fun loadCompanyDetails() {
-//        showLoader(this@LanguageActivity, "Loading Company Settings...")
-
         lifecycleScope.launch {
             try {
                 val token = sessionManager.getToken()
@@ -196,13 +180,12 @@ class LanguageActivity : AppCompatActivity(),
                     dismissLoader()
                     return@launch
                 }
-                val loadResult = withContext(Dispatchers.IO) {
-                    companyRepository.loadCompanySettings(token)
-                }
-                if (!loadResult) {
-                    showSnackbar(binding.root, "Company settings sync failed, using local data")
-                }
 
+                Log.d("SUB_DIALOG", "Token = $token")
+
+                sessionManager.getToken()?.let { token ->
+                    showSubscriptionDialog(token)
+                }
                 val company = companyRepository.getCompany()
                 if (company == null) {
                     showSnackbar(binding.root, "Company data missing in database!")
@@ -210,7 +193,6 @@ class LanguageActivity : AppCompatActivity(),
                     return@launch
                 }
 
-                // setup UI sequentially
                 enabledLanguages = companyRepository
                     .getString(CompanyKey.COMPANY_LANGUAGES)
                     ?.split(",")
@@ -225,7 +207,9 @@ class LanguageActivity : AppCompatActivity(),
                 if (e.code() == 401) {
                     AlertDialog.Builder(this@LanguageActivity)
                         .setTitle("Logout !!")
-                        .setMessage("You have been logged out because your account was used on another device.")
+                        .setMessage(
+                            "You have been logged out because your account was used on another device."
+                        )
                         .setCancelable(false)
                         .setPositiveButton("Logout") { _, _ ->
                             ApiResponseHandler.logoutUser(this@LanguageActivity)
@@ -243,29 +227,6 @@ class LanguageActivity : AppCompatActivity(),
         }
     }
 
-
-    private fun saveBitmapToFile(context: Context, bitmap: Bitmap, filename: String): File {
-        val file = File(context.cacheDir, filename)
-        FileOutputStream(file).use { out ->
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
-        }
-        return file
-    }
-
-    private suspend fun loadBitmapSafely(context: Context, url: String): Bitmap? =
-        withContext(Dispatchers.IO) {
-            try {
-                Glide.with(context)
-                    .asBitmap()
-                    .load(url)
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .submit()
-                    .get()
-            } catch (e: Exception) {
-                e.printStackTrace()
-                null
-            }
-        }
     private fun selectLanguage(language: String) {
         lifecycleScope.launch {
             if (UserType.fromValue(sessionManager.getUserType()) == UserType.COUNTER_USER) {
@@ -280,10 +241,121 @@ class LanguageActivity : AppCompatActivity(),
             }
         }
     }
+    private fun showSubscriptionDialog(token: String) {
+
+        val companyName = JwtUtils.getCompanyName(token)
+        val daysRemaining = JwtUtils.getRemainingDays(token)
+
+        if (companyName.isNullOrEmpty() || daysRemaining == null) return
+        if (daysRemaining > 15) return
+
+        val dialogView = layoutInflater.inflate(R.layout.dialog_subscription, null)
+
+        val txtMessage = dialogView.findViewById<TextView>(R.id.txtMessage)
+        val txtCompany = dialogView.findViewById<TextView>(R.id.txtCompany)
+        val btnLogout = dialogView.findViewById<Button>(R.id.btnRenew)
+        val btnPaid = dialogView.findViewById<Button>(R.id.btnPaid)
+
+        txtCompany.text = "Company : $companyName"
+
+        val userType = JwtUtils.getUserType(token)
+
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setCancelable(false)
+            .create()
+
+        dialog.setCanceledOnTouchOutside(false)
+
+        dialog.setOnShowListener {
+            dialog.window?.clearFlags(
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+            )
+        }
+
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
+        val userTypeEnum =
+            UserType.values().find { it.value.equals(userType, true) }
+                ?: UserType.UNKNOWN
+
+
+        // ✅ ONE CLICK DISMISS FIX FUNCTION
+        fun dismissDialogImmediately() {
+
+            // Prevent multiple clicks
+            btnPaid.isEnabled = false
+            btnLogout.isEnabled = false
+
+            // Dismiss instantly
+            dialog.dismiss()
+        }
+
+
+        // ----------------------------
+        // COUNTER USER
+        // ----------------------------
+        if (userTypeEnum == UserType.COUNTER_USER) {
+
+            btnLogout.visibility = View.VISIBLE
+            btnLogout.text = "LOGOUT"
+            btnLogout.setOnClickListener {
+                dialog.dismiss()
+                ApiResponseHandler.logoutUser(this)
+            }
+
+            btnPaid.visibility = View.VISIBLE
+            btnPaid.text = if (daysRemaining <= 0) "PAY NOW" else "SKIP NOW"
+
+            btnPaid.setOnClickListener {
+                dismissDialogImmediately()
+            }
+
+        } else {
+
+            // ----------------------------
+            // OTHER USERS
+            // ----------------------------
+            if (daysRemaining <= 0) {
+
+                btnLogout.visibility = View.VISIBLE
+                btnLogout.text = "LOGOUT"
+                btnLogout.setOnClickListener {
+                    dialog.dismiss()
+                    ApiResponseHandler.logoutUser(this)
+                }
+
+                btnPaid.visibility = View.GONE
+
+            } else {
+
+                btnLogout.visibility = View.GONE
+
+                btnPaid.visibility = View.VISIBLE
+                btnPaid.text = "SKIP NOW"
+
+                btnPaid.setOnClickListener {
+                    dismissDialogImmediately()
+                }
+            }
+        }
+
+
+        // Message Text
+        txtMessage.text =
+            if (daysRemaining <= 0) {
+                "Your subscription has expired. Please renew licence to continue."
+            } else {
+                "Your subscription will expire in $daysRemaining days. Please renew to avoid interruption."
+            }
+
+        dialog.show()
+    }
+
+
 
     override fun onResume() {
         super.onResume()
-
         lifecycleScope.launch(Dispatchers.IO) {
             try {
                 ticketRepository.clearAllData()
@@ -317,8 +389,6 @@ class LanguageActivity : AppCompatActivity(),
         }
     }
 
-
-
     override fun onPause() {
         super.onPause()
     }
@@ -335,7 +405,6 @@ class LanguageActivity : AppCompatActivity(),
             overlayPermissionLauncher.launch(intent)
         }
     }
-
     private val overlayPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { /* No action needed after permission request */ }
@@ -352,5 +421,59 @@ class LanguageActivity : AppCompatActivity(),
         lifecycleScope.launch {
 
         }
+    }
+
+    private fun refreshAllApis() {
+        lifecycleScope.launch {
+            binding.swipeRefreshLayout?.isRefreshing = true
+
+            val result = initialSyncManager.startInitialLoad()
+
+            binding.swipeRefreshLayout?.isRefreshing = false
+
+            when (result) {
+                is SyncResult.Success -> {
+                    showSnackbar(binding.root, "Data Refreshed")
+                    loadCompanyDetails()
+                }
+                is SyncResult.Error -> {
+                    showSnackbar(binding.root, "Sync failed")
+                }
+            }
+        }
+    }
+
+    private fun showPasswordDialog(onSuccess: () -> Unit) {
+
+        val dialogView = layoutInflater.inflate(R.layout.dialog_password, null)
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setCancelable(false)
+            .create()
+        dialog.setCanceledOnTouchOutside(false)
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        val edtPassword = dialogView.findViewById<EditText>(R.id.edt_password)
+        val btnOk = dialogView.findViewById<MaterialButton>(R.id.btn_OK)
+
+        btnOk.setOnClickListener {
+            val enteredPassword = edtPassword.text.toString()
+            val sessionPassword = sessionManager.getPassword()
+
+            if (enteredPassword.isEmpty()) {
+                edtPassword.error = "Password required"
+                return@setOnClickListener
+            }
+
+            if (enteredPassword == sessionPassword) {
+                dialog.dismiss()
+                onSuccess()
+            } else {
+                edtPassword.error = "Incorrect password"
+                edtPassword.requestFocus()
+                edtPassword.text.clear()
+            }
+        }
+
+        dialog.show()
     }
 }

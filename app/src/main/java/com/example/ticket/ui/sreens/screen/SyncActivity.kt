@@ -11,11 +11,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import androidx.lifecycle.lifecycleScope
 import com.example.ticket.R
-import com.example.ticket.data.local.InitialSyncManager
-import com.example.ticket.data.local.SyncResult
-import com.example.ticket.data.repository.LoginRepository
+import com.example.ticket.data.network.local.InitialSyncManager
+import com.example.ticket.data.network.local.SyncResult
 import com.example.ticket.databinding.ActivitySyncBinding
-import com.example.ticket.ui.sreens.billing.BillingTicketActivity
 import com.example.ticket.utils.common.CommonMethod
 import com.example.ticket.utils.common.CommonMethod.showSnackbar
 import com.example.ticket.utils.common.Constants.PRINTER_KIOSK
@@ -29,7 +27,7 @@ import kotlin.jvm.java
 class SyncActivity : AppCompatActivity() {
     private val sessionManager: SessionManager by inject()
     private val syncManager: InitialSyncManager by inject()
-    private val loginRepository: LoginRepository by inject()
+
 
     private lateinit var binding: ActivitySyncBinding
 
@@ -109,25 +107,26 @@ class SyncActivity : AppCompatActivity() {
                         return@launch
                     }
 
-
+                    // Check for first login
                     val isFirstLoginKey = "isFirstLogin_$userId"
                     val isFirstLogin = sharedPref.getBoolean(isFirstLoginKey, true)
 
                     if (isFirstLogin) {
+                        // Open printer setup
                         openPrinterSetup()
 
+                        // Mark as not first login anymore
                         sharedPref.edit {
                             putBoolean(isFirstLoginKey, false)
                         }
                     } else {
 
 
-                        startActivity(Intent(this@SyncActivity, BillingTicketActivity::class.java))
+                        startActivity(Intent(this@SyncActivity, LanguageActivity::class.java))
 
                         finish()
                     }
                 }
-
 
                 UserType.PROCESS_USER -> {
 
@@ -143,15 +142,11 @@ class SyncActivity : AppCompatActivity() {
 
                     if (screenSizeMask != Configuration.SCREENLAYOUT_SIZE_XLARGE || !isPortrait) {
                         CommonMethod.dismissLoader()
-                        showSnackbar(
-                            binding.root,
-                            "User has no permission for this device/orientation!"
-                        )
-                        return@launch
+                        startActivity(Intent(this@SyncActivity, LanguageActivity::class.java))
                     }
 
                     sessionManager.saveSelectedPrinter(PRINTER_KIOSK)
-                    startActivity(Intent(this@SyncActivity, TicketActivity::class.java))
+                    startActivity(Intent(this@SyncActivity, LanguageActivity::class.java))
 
                     finish()
                 }

@@ -1,4 +1,4 @@
-package com.example.ticket.data.local
+package com.example.ticket.data.network.local
 
 import com.example.ticket.data.repository.ActiveTicketRepository
 import com.example.ticket.data.repository.CategoryRepository
@@ -66,8 +66,5 @@ class InitialSyncManager(
             SyncResult.Error("Initial load failed: ${e.message}")
         }
     }
-
-
-
 
 }

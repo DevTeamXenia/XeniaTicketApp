@@ -10,8 +10,9 @@ import com.example.ticket.data.room.entity.Ticket
 @Dao
 interface ActiveTicketDao {
 
-    @Query("SELECT * FROM ActiveTickets")
-    suspend fun getAllTickets(): List<ActiveTicket>
+    @Query("SELECT * FROM ActiveTickets WHERE ticketActive = 1")
+    suspend fun getAllActiveTickets(): List<ActiveTicket>
+
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(tickets: List<ActiveTicket>)

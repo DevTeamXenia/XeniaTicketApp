@@ -2,14 +2,7 @@
 <resources>
 
     <string name="home">මුල් පිටුව</string>
-
-    <!-- home_screen -->
-
-
-    <!-- donation_screen -->
     <string name="fill_out_your_details">ඔබගේ විස්තර පුරවන්න</string>
-    <string name="donation_amount">දාන මුදල*</string>
-    <string name="annadana_amount">අන්නදාන මුදල</string>
     <string name="_10_000">Rs..</string>
     <string name="pay">ගෙවන්න</string>
     <string name="phone_number">දුරකථන අංකය</string>
@@ -17,12 +10,10 @@
     <string name="name">නම</string>
     <string name="select_your_janma_nakshatra">ඔබගේ ජනම නක්ෂත්‍රය තෝරන්න</string>
 
-    <!-- Popup_Screen -->
     <string name="amount_10_000">මුදලරු.. 10,000 /-</string>
     <string name="scan_this_code_to_pay">ගෙවීමට මෙම කේතය ස්කෑන් කරන්න</string>
     <string name="expire">QR අවසන් වන්නේ :</string>
 
-    <!-- payment_Screen -->
     <string name="thank_you">ස්තුතියි!</string>
     <string name="your_payment_was_successful">ඔබගේ ගෙවීම සාර්ථකයි!</string>
     <string name="amount">මුදල :</string>

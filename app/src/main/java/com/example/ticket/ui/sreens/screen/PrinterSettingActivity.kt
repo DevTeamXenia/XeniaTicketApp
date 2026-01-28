@@ -145,7 +145,6 @@ class PrinterSettingActivity : AppCompatActivity() {
         }
     }
 
-
     private fun loadSavedPrinterSelection() {
         val savedPrinter = sessionManager.getSelectedPrinter()
 

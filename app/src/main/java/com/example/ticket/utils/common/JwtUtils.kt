@@ -49,4 +49,12 @@ object JwtUtils {
     } catch (e: Exception) {
         null
     }
+    fun getCompanyName(token: String): String? = try {
+        decodeJwt(token)?.optString("companyName")
+    } catch (e: Exception) { null }
+
+    fun getRemainingDays(token: String): Int? = try {
+        decodeJwt(token)?.optString("remainingDays")?.toIntOrNull()
+    } catch (e: Exception) { null }
+
 }

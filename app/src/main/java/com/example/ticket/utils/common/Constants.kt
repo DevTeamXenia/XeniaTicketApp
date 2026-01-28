@@ -15,9 +15,6 @@ object Constants {
     const val CASH = "CASH"
 
 
-    const val SECRET_KEY = "1234567890abcdef1234567890abcdef"
-
-
     const val PRINTER_FALCON = "FALCON"
     const val PRINTER_B200MAX = "B200MAX"
     const val PRINTER_KIOSK = "KIOSK"

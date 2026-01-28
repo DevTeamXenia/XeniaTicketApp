@@ -73,8 +73,7 @@
         <ImageView
             android:id="@+id/imgLogo"
             android:layout_width="150dp"
-            android:layout_height="100dp"
-            android:src="@drawable/ic_sib"
+            android:layout_height="150dp"
             android:layout_marginTop="10dp"
             android:layout_gravity="center_horizontal"
             android:contentDescription="@string/todo"
