@@ -97,7 +97,6 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
         }
 
         getLabel()
-
     }
     private fun setupUI() {
         binding.txtselectTicket.text = getString(R.string.choose_your_tickets)
@@ -243,13 +242,12 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
                 spanCount=2
                 getCategory()
             } else {
-                spanCount=3
+                spanCount=2
                 getTickets(selectedCategoryId)
                 binding.ticketCategory.visibility= View.GONE
             }
         }
     }
-
     private fun getCategory() {
         try {
             val token = sessionManager.getToken()

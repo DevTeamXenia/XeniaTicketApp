@@ -95,10 +95,10 @@ class SyncActivity : AppCompatActivity() {
 
                     val allowedForLarge =
                         screenSizeMask == Configuration.SCREENLAYOUT_SIZE_LARGE
-                    val allowedForXLarge =
-                        screenSizeMask == Configuration.SCREENLAYOUT_SIZE_XLARGE && isLandscape
+                    val allowedForNormal =
+                        screenSizeMask == Configuration.SCREENLAYOUT_SIZE_NORMAL
 
-                    if (!allowedForLarge && !allowedForXLarge) {
+                    if (!allowedForLarge && !allowedForNormal) {
                         CommonMethod.dismissLoader()
                         showSnackbar(
                             binding.root,
@@ -107,15 +107,12 @@ class SyncActivity : AppCompatActivity() {
                         return@launch
                     }
 
-                    // Check for first login
                     val isFirstLoginKey = "isFirstLogin_$userId"
                     val isFirstLogin = sharedPref.getBoolean(isFirstLoginKey, true)
 
                     if (isFirstLogin) {
-                        // Open printer setup
                         openPrinterSetup()
 
-                        // Mark as not first login anymore
                         sharedPref.edit {
                             putBoolean(isFirstLoginKey, false)
                         }

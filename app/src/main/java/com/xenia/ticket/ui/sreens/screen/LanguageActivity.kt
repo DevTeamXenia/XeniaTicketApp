@@ -8,7 +8,6 @@ import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import android.widget.Button
-import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
@@ -44,10 +43,7 @@ import com.xenia.ticket.utils.common.Constants.LANGUAGE_TAMIL
 import com.xenia.ticket.utils.common.Constants.LANGUAGE_TELUGU
 import com.xenia.ticket.utils.common.JwtUtils
 import com.xenia.ticket.utils.common.SessionManager
-import com.google.android.material.button.MaterialButton
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
 import kotlin.collections.forEach
 import kotlin.collections.get
@@ -332,8 +328,6 @@ class LanguageActivity : AppCompatActivity(),
         dialog.show()
     }
 
-
-
     override fun onResume() {
         super.onResume()
 
@@ -347,7 +341,6 @@ class LanguageActivity : AppCompatActivity(),
             }
         }
     }
-
     private suspend fun setBankLogo() {
         val gateway = companyRepository.getString(CompanyKey.PAYMENT_GATEWAY)
         val logo = when (gateway) {
@@ -414,37 +407,37 @@ class LanguageActivity : AppCompatActivity(),
         }
     }
 
-    private fun showPasswordDialog(onSuccess: () -> Unit) {
-
-        val dialogView = layoutInflater.inflate(R.layout.dialog_password, null)
-        val dialog = AlertDialog.Builder(this)
-            .setView(dialogView)
-            .setCancelable(false)
-            .create()
-        dialog.setCanceledOnTouchOutside(false)
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
-        val edtPassword = dialogView.findViewById<EditText>(R.id.edt_password)
-        val btnOk = dialogView.findViewById<MaterialButton>(R.id.btn_OK)
-
-        btnOk.setOnClickListener {
-            val enteredPassword = edtPassword.text.toString()
-            val sessionPassword = sessionManager.getPassword()
-
-            if (enteredPassword.isEmpty()) {
-                edtPassword.error = "Password required"
-                return@setOnClickListener
-            }
-
-            if (enteredPassword == sessionPassword) {
-                dialog.dismiss()
-                onSuccess()
-            } else {
-                edtPassword.error = "Incorrect password"
-                edtPassword.requestFocus()
-                edtPassword.text.clear()
-            }
-        }
-
-        dialog.show()
-    }
+//    private fun showPasswordDialog(onSuccess: () -> Unit) {
+//
+//        val dialogView = layoutInflater.inflate(R.layout.dialog_password, null)
+//        val dialog = AlertDialog.Builder(this)
+//            .setView(dialogView)
+//            .setCancelable(false)
+//            .create()
+//        dialog.setCanceledOnTouchOutside(false)
+//        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+//        val edtPassword = dialogView.findViewById<EditText>(R.id.edt_password)
+//        val btnOk = dialogView.findViewById<MaterialButton>(R.id.btn_OK)
+//
+//        btnOk.setOnClickListener {
+//            val enteredPassword = edtPassword.text.toString()
+//            val sessionPassword = sessionManager.getPassword()
+//
+//            if (enteredPassword.isEmpty()) {
+//                edtPassword.error = "Password required"
+//                return@setOnClickListener
+//            }
+//
+//            if (enteredPassword == sessionPassword) {
+//                dialog.dismiss()
+//                onSuccess()
+//            } else {
+//                edtPassword.error = "Incorrect password"
+//                edtPassword.requestFocus()
+//                edtPassword.text.clear()
+//            }
+//        }
+//
+//        dialog.show()
+//    }
 }

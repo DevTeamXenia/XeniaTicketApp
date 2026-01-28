@@ -125,7 +125,7 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
         when (userType) {
 
             UserType.COUNTER_USER -> {
-                if (!isLargeOrXLargeLandscape()) {
+                if (!isSmallPortrait()) {
                     dismissLoader()
                     showSnackbar(
                         binding.root,
@@ -167,13 +167,11 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
             }
         }
     }
-    private fun isLargeOrXLargeLandscape(): Boolean {
+    private fun isSmallPortrait(): Boolean {
         val config = resources.configuration
-        val screenSizeMask = config.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK
-        val isLandscape = config.orientation == Configuration.ORIENTATION_LANDSCAPE
-
-        return screenSizeMask == Configuration.SCREENLAYOUT_SIZE_LARGE ||
-                (screenSizeMask == Configuration.SCREENLAYOUT_SIZE_XLARGE && isLandscape)
+        val screenSizeMask = config.screenLayout and Configuration.SCREENLAYOUT_SIZE_NORMAL
+        val isPortrait = config.orientation == Configuration.ORIENTATION_PORTRAIT
+        return screenSizeMask == Configuration.SCREENLAYOUT_SIZE_NORMAL && isPortrait
     }
     private fun isXLargePortrait(): Boolean {
         val config = resources.configuration
