@@ -38,10 +38,10 @@
             android:name=".ui.sreens.billing.DetailedReportActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.sreens.screen.LanguageActivity"
+            android:name=".ui.sreens.kiosk.LanguageActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.sreens.screen.PrinterSettingActivity"
+            android:name=".ui.sreens.kiosk.PrinterSettingActivity"
             android:exported="false" />
         <activity
             android:name=".ui.sreens.billing.BillingCartActivity"
@@ -50,20 +50,20 @@
             android:name=".ui.sreens.billing.BillingTicketActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.sreens.screen.PaymentActivity"
+            android:name=".ui.sreens.kiosk.PaymentActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.sreens.screen.TicketCartActivity"
+            android:name=".ui.sreens.kiosk.TicketCartActivity"
             android:exported="false"
             android:launchMode="singleTop" />
         <activity
-            android:name=".ui.sreens.screen.SyncActivity"
+            android:name=".ui.sreens.kiosk.SyncActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.sreens.screen.TicketActivity"
+            android:name=".ui.sreens.kiosk.TicketActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.sreens.screen.LoginActivity"
+            android:name=".ui.sreens.kiosk.LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

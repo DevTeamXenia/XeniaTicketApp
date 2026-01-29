@@ -35,8 +35,8 @@ import com.xenia.ticket.ui.adapter.TicketBookingAdapter
 import com.xenia.ticket.ui.adapter.TicketCartAdapter
 import com.xenia.ticket.ui.dialog.CustomLogoutPopupDialog
 import com.xenia.ticket.ui.dialog.CustomTicketPopupDialogue
-import com.xenia.ticket.ui.sreens.screen.LanguageActivity
-import com.xenia.ticket.ui.sreens.screen.PrinterSettingActivity
+import com.xenia.ticket.ui.sreens.kiosk.LanguageActivity
+import com.xenia.ticket.ui.sreens.kiosk.PrinterSettingActivity
 import com.xenia.ticket.utils.common.ApiResponseHandler
 import com.xenia.ticket.utils.common.CommonMethod.dismissLoader
 import com.xenia.ticket.utils.common.CommonMethod.setLocale

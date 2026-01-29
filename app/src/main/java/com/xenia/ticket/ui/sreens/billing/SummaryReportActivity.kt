@@ -14,7 +14,7 @@ import com.xenia.ticket.data.network.model.SummaryReportResponse
 import com.xenia.ticket.data.repository.ReportRepository
 import com.xenia.ticket.databinding.ActivitySummaryReportBinding
 import com.xenia.ticket.ui.dialog.CustomInternetAvailabilityDialog
-import com.xenia.ticket.ui.sreens.screen.PrinterSettingActivity
+import com.xenia.ticket.ui.sreens.kiosk.PrinterSettingActivity
 import com.xenia.ticket.utils.common.CommonMethod.dismissLoader
 import com.xenia.ticket.utils.common.CommonMethod.isInternetAvailable
 import com.xenia.ticket.utils.common.CommonMethod.setLocale

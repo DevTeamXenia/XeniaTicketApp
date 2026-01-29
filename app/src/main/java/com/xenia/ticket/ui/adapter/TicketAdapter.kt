@@ -15,7 +15,6 @@ import com.xenia.ticket.R
 import com.xenia.ticket.data.listeners.OnTicketClickListener
 import com.xenia.ticket.data.network.model.TicketDto
 import com.xenia.ticket.data.repository.TicketRepository
-import com.xenia.ticket.data.room.entity.Ticket
 import com.xenia.ticket.utils.common.Constants.LANGUAGE_ENGLISH
 import com.xenia.ticket.utils.common.Constants.LANGUAGE_HINDI
 import com.xenia.ticket.utils.common.Constants.LANGUAGE_KANNADA
@@ -40,7 +39,6 @@ class TicketAdapter(
 ) : RecyclerView.Adapter<TicketAdapter.ViewHolder>() {
 
     private var ticketItems: List<TicketDto> = listOf()
-    private var dbItemsMap: Map<Int, Ticket> = emptyMap()
     private var selectedItemPosition = 0
     private val tickets = mutableListOf<TicketDto>()
 
@@ -64,7 +62,7 @@ class TicketAdapter(
         private val txtTicketPrice1: TextView = itemView.findViewById(R.id.txt_ticket_price_1)
         private val txtTicketName2: TextView = itemView.findViewById(R.id.txt_ticket_name_2)
         private val txtTicketPrice2: TextView = itemView.findViewById(R.id.txt_ticket_price_2)
-        private val Quantity: TextView = itemView.findViewById(R.id.txtQty)
+        private val quantity: TextView = itemView.findViewById(R.id.txtQty)
         private val imgClearCart: ImageView = itemView.findViewById(R.id.imgClearCart)
         private val txtTotalAmount: TextView = itemView.findViewById(R.id.txt_ticket_total_price_2)
 
@@ -94,10 +92,16 @@ class TicketAdapter(
                                 }
                                 val qty = cartItem.daQty
                                 val ticketRate = ticketItem.ticketAmount
+                                txtTicketPrice2.text = "Rs. ${String.format("%.2f", ticketItem.ticketAmount)}"
 
                                 String.format(Locale.ENGLISH, "Amount %.2f*%d", ticketRate, qty)
-                                Quantity.text = "Amount ${String.format("%.2f", ticketRate)}*${qty}"
-                                txtTicketPrice2.text = "Rs. ${String.format("%.2f", ticketItem.ticketAmount)}"
+
+                                quantity.text =
+                                    context.getString(R.string.txt_amount) +
+                                            String.format("%.2f", ticketRate) +
+                                            " * $qty"
+
+
                                 val total = ticketRate * qty
                                 txtTotalAmount.text = String.format(Locale.ENGLISH, "%.2f/-", total)
 
@@ -160,13 +164,4 @@ class TicketAdapter(
         notifyDataSetChanged()
     }
 
-    @SuppressLint("NotifyDataSetChanged")
-    fun refreshCartState() {
-        notifyDataSetChanged()
-    }
-    @SuppressLint("NotifyDataSetChanged")
-    fun updateDbItemsMap(newMap: Map<Int, Ticket>) {
-        this.dbItemsMap = newMap
-        notifyDataSetChanged()
-    }
 }

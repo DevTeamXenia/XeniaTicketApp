@@ -18,7 +18,7 @@ import com.xenia.ticket.data.repository.ReportRepository
 import com.xenia.ticket.databinding.ActivityDetailedReportBinding
 import com.xenia.ticket.ui.adapter.DisplayItem
 import com.xenia.ticket.ui.adapter.ItemSummaryAdapter
-import com.xenia.ticket.ui.sreens.screen.PrinterSettingActivity
+import com.xenia.ticket.ui.sreens.kiosk.PrinterSettingActivity
 import com.xenia.ticket.utils.common.CommonMethod.dismissLoader
 import com.xenia.ticket.utils.common.CommonMethod.setLocale
 import com.xenia.ticket.utils.common.JwtUtils

@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@color/creamy_white"
-    tools:context=".ui.sreens.screen.PaymentActivity">
+    tools:context=".ui.sreens.kiosk.PaymentActivity">
 
 
     <androidx.cardview.widget.CardView

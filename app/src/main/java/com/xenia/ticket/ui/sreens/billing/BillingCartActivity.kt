@@ -25,8 +25,8 @@ import com.xenia.ticket.databinding.ActivityBillingCartBinding
 import com.xenia.ticket.ui.adapter.TicketCartAdapter
 import com.xenia.ticket.ui.dialog.CustomInternetAvailabilityDialog
 import com.xenia.ticket.ui.dialog.CustomTicketPopupDialogue
-import com.xenia.ticket.ui.sreens.screen.PaymentActivity
-import com.xenia.ticket.ui.sreens.screen.TicketActivity
+import com.xenia.ticket.ui.sreens.kiosk.PaymentActivity
+import com.xenia.ticket.ui.sreens.kiosk.TicketActivity
 import com.xenia.ticket.utils.common.ApiResponseHandler
 import com.xenia.ticket.utils.common.CommonMethod.dismissLoader
 import com.xenia.ticket.utils.common.CommonMethod.generateNumericTransactionReferenceID

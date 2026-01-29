@@ -3,7 +3,7 @@ package com.xenia.ticket.utils.common
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.xenia.ticket.ui.sreens.screen.LoginActivity
+import com.xenia.ticket.ui.sreens.kiosk.LoginActivity
 import kotlin.jvm.java
 
 class BootReceiver : BroadcastReceiver() {
