@@ -164,6 +164,8 @@ class SummaryReportActivity : AppCompatActivity(),
         binding.txtReport.text = getString(R.string.report)
         binding.txtSummary.text = getString(R.string.summary)
         binding.txtTransaction.text = getString(R.string.transaction)
+        binding.ticket.text = getString(R.string.ticket)
+
 
     }
     @SuppressLint("SetTextI18n", "DefaultLocale")

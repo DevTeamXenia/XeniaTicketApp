@@ -57,10 +57,6 @@ class DetailedReportActivity : AppCompatActivity() {
 
         selectedLanguage = sessionManager.getBillingSelectedLanguage()
         setLocale(this, selectedLanguage)
-
-        binding.tvTotalLabel.text = getString(R.string.total_amount)
-
-
         binding.spinnerRange.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
                 val selection = parent.getItemAtPosition(position).toString()
@@ -70,7 +66,6 @@ class DetailedReportActivity : AppCompatActivity() {
             override fun onNothingSelected(parent: AdapterView<*>) {}
         }
         binding.spinnerRange.setSelection(0)
-
         binding.edtFromDate.setOnClickListener {
             if (binding.spinnerRange.selectedItem.toString() == "Custom") {
                 showMaterialDateTimePicker(binding.edtFromDate) { newDate ->

@@ -61,6 +61,8 @@ class LanguageActivity : AppCompatActivity(),
     private val ticketRepository: TicketRepository by inject()
     private val initialSyncManager: InitialSyncManager by inject()
     private var enabledLanguages: List<String> = emptyList()
+    private var isSubscriptionDialogShown = false
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,8 +82,13 @@ class LanguageActivity : AppCompatActivity(),
     override fun onResume() {
         lifecycleScope.launch {
             ticketRepository.clearAllData()
-            sessionManager.getToken()?.let { token ->
-                showSubscriptionDialog(token)
+            if (!isSubscriptionDialogShown) {
+                lifecycleScope.launch {
+                    sessionManager.getToken()?.let { token ->
+                        showSubscriptionDialog(token)
+                        isSubscriptionDialogShown = true
+                    }
+                }
             }
             val gateway = companyRepository.getGateway()
             if (!gateway.isNullOrEmpty()) {
@@ -420,37 +427,5 @@ class LanguageActivity : AppCompatActivity(),
         }
     }
 
-//    private fun showPasswordDialog(onSuccess: () -> Unit) {
-//
-//        val dialogView = layoutInflater.inflate(R.layout.dialog_password, null)
-//        val dialog = AlertDialog.Builder(this)
-//            .setView(dialogView)
-//            .setCancelable(false)
-//            .create()
-//        dialog.setCanceledOnTouchOutside(false)
-//        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
-//        val edtPassword = dialogView.findViewById<EditText>(R.id.edt_password)
-//        val btnOk = dialogView.findViewById<MaterialButton>(R.id.btn_OK)
-//
-//        btnOk.setOnClickListener {
-//            val enteredPassword = edtPassword.text.toString()
-//            val sessionPassword = sessionManager.getPassword()
-//
-//            if (enteredPassword.isEmpty()) {
-//                edtPassword.error = "Password required"
-//                return@setOnClickListener
-//            }
-//
-//            if (enteredPassword == sessionPassword) {
-//                dialog.dismiss()
-//                onSuccess()
-//            } else {
-//                edtPassword.error = "Incorrect password"
-//                edtPassword.requestFocus()
-//                edtPassword.text.clear()
-//            }
-//        }
-//
-//        dialog.show()
-//    }
+
 }

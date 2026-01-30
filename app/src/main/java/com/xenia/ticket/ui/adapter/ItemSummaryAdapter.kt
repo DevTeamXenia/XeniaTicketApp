@@ -82,7 +82,7 @@ class ItemSummaryAdapter(private val items: List<DisplayItem>) :
         private val total = view.findViewById<TextView>(R.id.tvColTotal)
         @SuppressLint("SetTextI18n")
         fun bind() {
-            itemName.text = "Item Name"
+            itemName.text = "Ticket"
             rate.text = "Rate"
             qty.text = "Qty"
             total.text = "Total"

@@ -115,7 +115,7 @@ class ReportPrint(
             } else null
 
             val summaryBitmap = generateDailySummaryBitmap(
-                reportTitle = "Daily Summary Report",
+                reportTitle = "Summary Report",
                 reportStart = reportStart,
                 reportEnd = reportEnd,
                 donation = donation,
@@ -446,25 +446,22 @@ class ReportPrint(
         }
 
         val labelReportPeriod = getLocalizedString("Report Period", selectedLanguage, true)
-        val labelDonation = getLocalizedString("Donation", selectedLanguage, true)
-        val labelSevaParticulars = getLocalizedString("Seva Particulars", selectedLanguage, true)
-        val labelPoojaItem = getLocalizedString("Pooja Item", selectedLanguage, true)
-        val labelDarshan = getLocalizedString("Darshan", selectedLanguage, true)
+        val labelDarshan = getLocalizedString("Ticket", selectedLanguage, true)
         val labelNetAmount = getLocalizedString("Net Amount", selectedLanguage, true)
         val labelCreated = getLocalizedString("Created", selectedLanguage, true)
         val labelGenerated = getLocalizedString("Generated", selectedLanguage, true)
-        val englishTitle = "Daily Summary Report"
+        val englishTitle = "Summary Report"
 
         val localizedTitle = when (selectedLanguage.lowercase()) {
             "ml" -> "സംഗ്രഹ റിപ്പോർട്ട്"
-            "kn" -> "ಸಂಗ್ರಹ ವರದಿ"
+            "kn" -> "ಸಾರಾಂಶ ವರದಿ"
             "ta" -> "சுருக்க அறிக்கை"
-            "te" -> "సారాంశ నివేదిక"
+            "te" -> "సంక్షిప్త నివేదిక"
             "hi" -> "सारांश रिपोर्ट"
             "pa" -> "ਸੰਖੇਪ ਰਿਪੋਰਟ"
             "mr" -> "सारांश अहवाल"
             "si" -> "සාරාංශ වාර්තාව"
-            else -> "Daily Summary Report"
+            else -> "Summary Report"
         }
 
         val bitmap = createBitmap(width, 1800)
@@ -540,13 +537,7 @@ class ReportPrint(
                 }
             }
         }
-
-
-
-        drawLineLocalized(labelSevaParticulars, "Seva Particulars", Seva_Particulars)
-        drawLineLocalized(labelPoojaItem, "Pooja Item", pooja_items)
-        drawLineLocalized(labelDonation, "Donation", donation)
-        drawLineLocalized(labelDarshan, "Darshan", darshan)
+        drawLineLocalized(labelDarshan, "Ticket", darshan)
 
         y += 25f
         paint.textAlign = Paint.Align.LEFT
@@ -641,14 +632,11 @@ class ReportPrint(
         }
 
         val labelReportPeriod = getLocalizedString("Report Period", selectedLanguage, true)
-        val labelDonation = getLocalizedString("Donation", selectedLanguage, true)
-        val labelSevaParticulars = getLocalizedString("Seva Particulars", selectedLanguage, true)
-        val labelPoojaItem = getLocalizedString("Pooja Item", selectedLanguage, true)
-        val labelDarshan = getLocalizedString("Darshan", selectedLanguage, true)
+       val labelDarshan = getLocalizedString("Darshan", selectedLanguage, true)
         val labelNetAmount = getLocalizedString("Net Amount", selectedLanguage, true)
         val labelCreated = getLocalizedString("Created", selectedLanguage, true)
         val labelGenerated = getLocalizedString("Generated", selectedLanguage, true)
-        val englishTitle = "Daily Summary Report"
+        val englishTitle = "Summary Report"
         val localizedTitle = when (selectedLanguage.lowercase()) {
             "ml" -> "സംഗ്രഹ റിപ്പോർട്ട്"
             "kn" -> "ಸಂಗ್ರಹ ವರದಿ"
@@ -658,7 +646,7 @@ class ReportPrint(
             "pa" -> "ਸੰਖੇਪ ਰਿਪੋਰਟ"
             "mr" -> "सारांश अहवाल"
             "si" -> "සාරාංශ වාර්තාව"
-            else -> "Daily Summary Report"
+            else -> " Summary Report"
         }
 
         val bitmap = createBitmap(width, 1800)
@@ -737,11 +725,7 @@ class ReportPrint(
                 }
             }
         }
-
-        drawLineLocalized(labelSevaParticulars, "Seva Particulars", Seva_Particulars)
-        drawLineLocalized(labelPoojaItem, "Pooja Item", pooja_items)
-        drawLineLocalized(labelDonation, "Donation", donation)
-        drawLineLocalized(labelDarshan, "Darshan", darshan)
+        drawLineLocalized(labelDarshan, "Ticket", darshan)
 
         y += 20f
         paint.textAlign = Paint.Align.LEFT
@@ -876,7 +860,7 @@ class ReportPrint(
         fun printSection(title: String, list: List<OfferItem>, total: Double) {
             draw(title.uppercase(), 22f, true)
             draw("------------------------------------")
-            draw("Item Name           Qty   Total", 18f, true)
+            draw("Ticket              Qty   Total", 18f, true)
 
             list.forEach {
                 val name = (it.offerName ?: it.ticketName ?: "").take(15)
@@ -898,7 +882,7 @@ class ReportPrint(
         }
 
         if (response.darshanTickets.isNotEmpty()) {
-            printSection("DARSHAN TICKETS", response.darshanTickets, response.summary.darshanTickets.GrandTotalAmount)
+            printSection("TICKETS", response.darshanTickets, response.summary.darshanTickets.GrandTotalAmount)
         }
 
 
@@ -1002,7 +986,7 @@ class ReportPrint(
             y += 35f
             canvas.drawText("----------------------------------------------------", 0f, y, paint)
             y += 30f
-            canvas.drawText("Item Name                 Qty      Amount", 20f, y, paint)
+            canvas.drawText("Ticket                  Qty      Amount", 20f, y, paint)
             y += 20f
             paint.isFakeBoldText = false
 
@@ -1036,17 +1020,17 @@ class ReportPrint(
 
 
         printSection(
-            "Darshan Tickets",
+            " Tickets",
             when (selectedLanguage.lowercase()) {
-                "ml" -> "Darshan Tickets"
-                "ta" -> "Darshan Tickets"
-                "te" -> "Darshan Tickets"
-                "hi" -> "Darshan Tickets"
-                "kn" -> "Darshan Tickets"
-                "si" -> "Darshan Tickets"
-                "mr" -> "Darshan Tickets"
-                "pa" -> "Darshan Tickets"
-                else -> "Darshan Tickets"
+                "ml" -> " Tickets"
+                "ta" -> " Tickets"
+                "te" -> " Tickets"
+                "hi" -> " Tickets"
+                "kn" -> " Tickets"
+                "si" -> " Tickets"
+                "mr" -> " Tickets"
+                "pa" -> " Tickets"
+                else -> " Tickets"
             },
             response.darshanTickets,
             response.summary.darshanTickets.GrandTotalAmount
@@ -1087,93 +1071,92 @@ class ReportPrint(
 
             "ml" -> when (key) {
                 "Report Period" -> "റിപ്പോർട്ട് കാലയളവ്"
-                "Donation" -> "ഇ-കാണിക്ക"
-                "Seva Particulars" -> "വഴിപാടുകൾ"
-                "Pooja Item" -> "പൂജാ ഐറ്റം"
-                "Darshan" -> "ദർശനം"
+                "Ticket" -> "ടിക്കറ്റ്"
                 "Net Amount" -> "ആകെ തുക"
                 "Created" -> "Created"
                 "Generated" -> "Generated"
                 else -> key
             }
+
             "si" -> when (key) {
-                "Report Period" -> if (includeBracketText) "වාර්තාවේ කාලය " else "වාර්තාවේ කාලය"
-                "Donation" -> if (includeBracketText) "දානය " else "දානය"
-                "Seva Particulars" -> if (includeBracketText) "සේවා විස්තර " else "සේවා විස්තර"
-                "Pooja Item" -> if (includeBracketText) "පූජා භාණ්ඩ " else "පූජා භාණ්ඩ"
-                "Darshan" -> if (includeBracketText) "දර්ශන " else "දර්ශන"
-                "Net Amount" -> if (includeBracketText) "මුළු මුදල  (Net Amount) " else "මුළු මුදල"
+                "Report Period" -> "වාර්තාවේ කාලය"
+                "Ticket" -> "ටිකට්පත"
+                "Net Amount" -> if (includeBracketText)
+                    "මුළු මුදල (Net Amount)"
+                else
+                    "මුළු මුදල"
                 "Created" -> "නිර්මාණය කරන ලදි"
                 "Generated" -> "සාදන ලදි"
                 else -> key
             }
+
             "hi" -> when (key) {
-                "Report Period" -> if (includeBracketText) "रिपोर्ट अवधि " else "रिपोर्ट अवधि"
-                "Donation" -> if (includeBracketText) "ई-दान " else "ई-दान"
-                "Seva Particulars" -> if (includeBracketText) "सेवा विवरण " else "सेवा विवरण"
-                "Pooja Item" -> if (includeBracketText) "पूजा आइटम " else "पूजा आइटम"
-                "Darshan" -> if (includeBracketText) "दर्शन " else "दर्शन"
-                "Net Amount" -> if (includeBracketText) "कुल राशि  (Net Amount) " else "कुल राशि"
+                "Report Period" -> "रिपोर्ट अवधि"
+                "Ticket" -> "टिकट"
+                "Net Amount" -> if (includeBracketText)
+                    "कुल राशि (Net Amount)"
+                else
+                    "कुल राशि"
                 "Created" -> "Created"
                 "Generated" -> "Generated"
                 else -> key
             }
 
             "ta" -> when (key) {
-                "Report Period" -> if (includeBracketText) "அறிக்கை காலம் " else "அறிக்கை காலம்"
-                "Donation" -> if (includeBracketText) "ஈ-பரிசு " else "ஈ-பரிசு"
-                "Seva Particulars" -> if (includeBracketText) "சேவை விவரங்கள் " else "சேவை விவரங்கள்"
-                "Pooja Item" -> if (includeBracketText) "பூஜை பொருள் " else "பூஜை பொருள்"
-                "Darshan" -> if (includeBracketText) "தர்சனம் " else "தர்சனம்"
-                "Net Amount" -> if (includeBracketText) "மொத்த தொகை (Net Amount)" else "மொத்த தொகை"
+                "Report Period" -> "அறிக்கை காலம்"
+                "Ticket" -> "டிக்கெட்"
+                "Net Amount" -> if (includeBracketText)
+                    "மொத்த தொகை (Net Amount)"
+                else
+                    "மொத்த தொகை"
                 "Created" -> "Created"
                 "Generated" -> "Generated"
                 else -> key
             }
 
             "kn" -> when (key) {
-                "Report Period" -> if (includeBracketText) "ವರದಿ ಅವಧಿ" else "ವರದಿ ಅವಧಿ"
-                "Donation" -> if (includeBracketText) "ಇ-ದಾನ " else "ಇ-ದಾನ"
-                "Seva Particulars" -> if (includeBracketText) "ಸೇವಾ ವಿವರಗಳು " else "ಸೇವಾ ವಿವರಗಳು"
-                "Pooja Item" -> if (includeBracketText) "ಪೂಜೆ ಐಟಂ " else "ಪೂಜೆ ಐಟಂ"
-                "Darshan" -> if (includeBracketText) "ದರ್ಶನ " else "ದರ್ಶನ"
-                "Net Amount" -> if (includeBracketText) "ಒಟ್ಟು ಮೊತ್ತ (Net Amount) " else "ಒಟ್ಟು ಮೊತ್ತ"
+                "Report Period" -> "ವರದಿ ಅವಧಿ"
+                "Ticket" -> "ಟಿಕೆಟ್"
+                "Net Amount" -> if (includeBracketText)
+                    "ಒಟ್ಟು ಮೊತ್ತ (Net Amount)"
+                else
+                    "ಒಟ್ಟು ಮೊತ್ತ"
                 "Created" -> "Created"
                 "Generated" -> "Generated"
                 else -> key
             }
 
             "te" -> when (key) {
-                "Report Period" -> if (includeBracketText) "రిపోర్ట్ కాలం " else "రిపోర్ట్ కాలం"
-                "Donation" -> if (includeBracketText) "ఈ-దానం " else "ఈ-దానం"
-                "Seva Particulars" -> if (includeBracketText) "సేవ వివరాలు " else "సేవ వివరాలు"
-                "Pooja Item" -> if (includeBracketText) "పూజా అంశం " else "పూజా అంశం"
-                "Darshan" -> if (includeBracketText) "దర్శనం " else "దర్శనం"
-                "Net Amount" -> if (includeBracketText) "మొత్తం మొత్తం (Net Amount)" else "మొత్తం మొత్తం"
+                "Report Period" -> "రిపోర్ట్ కాలం"
+                "Ticket" -> "టికెట్"
+                "Net Amount" -> if (includeBracketText)
+                    "మొత్తం మొత్తం (Net Amount)"
+                else
+                    "మొత్తం మొత్తం"
                 "Created" -> "Created"
                 "Generated" -> "Generated"
                 else -> key
             }
 
             "pa" -> when (key) {
-                "Report Period" -> if (includeBracketText) "ਰਿਪੋਰਟ ਅਵਧੀ " else "ਰਿਪੋਰਟ ਅਵਧੀ"
-                "Donation" -> if (includeBracketText) "ਈ-ਦਾਨ " else "ਈ-ਦਾਨ"
-                "Seva Particulars" -> if (includeBracketText) "ਸੇਵਾ ਵਿਸਥਾਰ " else "ਸੇਵਾ ਵਿਸਥਾਰ"
-                "Pooja Item" -> if (includeBracketText) "ਪੂਜਾ ਆਈਟਮ " else "ਪੂਜਾ ਆਈਟਮ"
-                "Darshan" -> if (includeBracketText) "ਦਰਸ਼ਨ " else "ਦਰਸ਼ਨ"
-                "Net Amount" -> if (includeBracketText) "ਕੁੱਲ ਰਕਮ (Net Amount)" else "ਕੁੱਲ ਰਕਮ"
+                "Report Period" -> "ਰਿਪੋਰਟ ਅਵਧੀ"
+                "Ticket" -> "ਟਿਕਟ"
+                "Net Amount" -> if (includeBracketText)
+                    "ਕੁੱਲ ਰਕਮ (Net Amount)"
+                else
+                    "ਕੁੱਲ ਰਕਮ"
                 "Created" -> "Created"
                 "Generated" -> "Generated"
                 else -> key
             }
 
             "mr" -> when (key) {
-                "Report Period" -> if (includeBracketText) "अहवाल कालावधी " else "अहवाल कालावधी"
-                "Donation" -> if (includeBracketText) "ई-दान " else "ई-दान"
-                "Seva Particulars" -> if (includeBracketText) "सेवा तपशील " else "सेवा तपशील"
-                "Pooja Item" -> if (includeBracketText) "पूजा आयटम " else "पूजा आयटम"
-                "Darshan" -> if (includeBracketText) "दर्शन " else "दर्शन"
-                "Net Amount" -> if (includeBracketText) "एकूण रक्कम (Net Amount)" else "एकूण रक्कम"
+                "Report Period" -> "अहवाल कालावधी"
+                "Ticket" -> "तिकीट"
+                "Net Amount" -> if (includeBracketText)
+                    "एकूण रक्कम (Net Amount)"
+                else
+                    "एकूण रक्कम"
                 "Created" -> "Created"
                 "Generated" -> "Generated"
                 else -> key

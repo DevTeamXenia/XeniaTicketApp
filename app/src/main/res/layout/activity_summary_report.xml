@@ -144,6 +144,7 @@
         <TableRow>
 
             <TextView
+                android:id="@+id/ticket"
                 android:padding="8dp"
                 android:text="@string/ticket"
                 android:textColor="@color/black" />
