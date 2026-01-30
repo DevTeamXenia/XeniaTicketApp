@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.xenia.ticket.R
+import java.util.Locale
 import kotlin.text.format
 
 
@@ -69,7 +70,7 @@ class ItemSummaryAdapter(private val items: List<DisplayItem>) :
 
         @SuppressLint("SetTextI18n")
         fun bind(item: DisplayItem.TotalRow) {
-            amount.text = " %.2f".format(item.totalAmount)
+            amount.text = " %.2f".format(Locale.ENGLISH,item.totalAmount)
         }
     }
     override fun getItemCount() = items.size
@@ -102,9 +103,9 @@ class ItemSummaryAdapter(private val items: List<DisplayItem>) :
         @SuppressLint("DefaultLocale")
         fun bind(item: DisplayItem.Item) {
             name.text = item.name
-            rate.text = String.format("%.2f", item.rate)
+            rate.text = String.format(Locale.ENGLISH, "%.2f", item.rate)
             qty.text = item.qty.toString()
-            total.text = String.format("%.2f", item.total)
+            total.text =  String.format(Locale.ENGLISH,"%.2f", item.total)
         }
     }
 }

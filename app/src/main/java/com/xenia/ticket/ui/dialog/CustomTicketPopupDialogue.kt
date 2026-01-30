@@ -106,8 +106,8 @@ class CustomTicketPopupDialogue : DialogFragment() {
         this.ticketNameTe = ticketNameTe
         this.ticketNameHi = ticketNameHi
         this.ticketNameSi = ticketNameSi
-        this.ticketNameMr=ticketNameMr
-        this.ticketNamePa=ticketNamePa
+        this.ticketNameMr = ticketNameMr
+        this.ticketNamePa = ticketNamePa
         this.ticketRate = ticketRate
         this.ticketCompanyId=ticketCompanyId
         this.ticketCategoryId=ticketCtegoryId
@@ -158,9 +158,6 @@ class CustomTicketPopupDialogue : DialogFragment() {
 
         val currentLang = if (!billingLang.isNullOrEmpty()) billingLang else appLang
 
-
-
-
         btnBack = view.findViewById(R.id.btnBack)
         btnClear = view.findViewById(R.id.btnClear)
         icClose = view.findViewById(R.id.imgClose)
@@ -182,21 +179,6 @@ class CustomTicketPopupDialogue : DialogFragment() {
             LANGUAGE_MARATHI -> ticketNameMr
             else -> ticketName
         }
-        txtTicketName.text = when (sessionManager.getSelectedLanguage()) {
-            LANGUAGE_ENGLISH -> ticketName
-            LANGUAGE_MALAYALAM -> ticketNameMa
-            LANGUAGE_TAMIL -> ticketNameTa
-            LANGUAGE_KANNADA -> ticketNameKa
-            LANGUAGE_TELUGU -> ticketNameTe
-            LANGUAGE_HINDI -> ticketNameHi
-            LANGUAGE_SINHALA-> ticketNameSi
-            LANGUAGE_PUNJABI -> ticketNamePa
-            LANGUAGE_MARATHI -> ticketNameMr
-            else -> ticketName
-        }
-
-
-
 
 
         val formattedAmount = String.format(Locale.ENGLISH, "%.2f", ticketRate)
@@ -305,8 +287,6 @@ class CustomTicketPopupDialogue : DialogFragment() {
             }
         }
 
-
-
         btnClear.setOnClickListener {
             clearFocusedEditText()
         }
@@ -353,9 +333,6 @@ class CustomTicketPopupDialogue : DialogFragment() {
             editTextTickets.setSelection(updatedText.length)
         }
     }
-
-
-
 
     private fun clearFocusedEditText() {
         editTextTickets.text!!.clear()

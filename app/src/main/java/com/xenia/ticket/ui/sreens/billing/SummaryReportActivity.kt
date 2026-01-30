@@ -6,6 +6,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.EditText
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
@@ -26,8 +27,10 @@ import com.xenia.ticket.utils.common.SessionManager
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointBackward
 import com.google.android.material.datepicker.MaterialDatePicker
+import com.xenia.ticket.utils.common.ApiResponseHandler
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
+import retrofit2.HttpException
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -198,20 +201,20 @@ class SummaryReportActivity : AppCompatActivity(),
                 )
 
                 binding.txtTotalDarshan.text =
-                    "Rs.${String.format("%.2f", response.TotalDarshanAmount.toDouble())}/-"
+                    "Rs.${String.format(Locale.ENGLISH,"%.2f", response.TotalDarshanAmount.toDouble())}/-"
 
                 binding.txtCash.text =
-                    "Cash\nRs.${String.format("%.2f", response.TotalCash.toDouble())}/-"
+                    "Cash\nRs.${String.format(Locale.ENGLISH,"%.2f", response.TotalCash.toDouble())}/-"
 
                 binding.txtCard.text =
-                    "Card\nRs.${String.format("%.2f", response.TotalCard.toDouble())}/-"
+                    "Card\nRs.${String.format(Locale.ENGLISH,"%.2f", response.TotalCard.toDouble())}/-"
 
                 binding.txtUpi.text =
-                    "UPI\nRs.${String.format("%.2f", response.TotalUpi.toDouble())}/-"
+                    "UPI\nRs.${String.format(Locale.ENGLISH,"%.2f", response.TotalUpi.toDouble())}/-"
 
                 binding.txtTotalAmount.text =
                     "${getString(R.string.total_amount)} : Rs.${
-                        String.format("%.2f", response.TotalAmount.toDouble())
+                        String.format(Locale.ENGLISH,"%.2f", response.TotalAmount.toDouble())
                     }/-"
 
 
@@ -221,18 +224,21 @@ class SummaryReportActivity : AppCompatActivity(),
                 binding.btnPrint.isEnabled = isPrintable
                 binding.btnPrint.alpha = if (isPrintable) 1.0f else 0.5f
 
-            }  catch (e: Exception) {
-                when (e) {
-                    is retrofit2.HttpException -> {
-                        val errorBody = e.response()?.errorBody()?.string()
-                        Log.e("SUMMARY_API", "HTTP ${e.code()} : $errorBody")
-                        showSnackbar(binding.root, "Server error ${e.code()}")
-                    }
-                    else -> {
-                        Log.e("SUMMARY_API", "Exception", e)
-                        showSnackbar(binding.root, e.message ?: "Unknown error")
-                    }
+            } catch (e: HttpException) {
+                if (e.code() == 401) {
+                    AlertDialog.Builder(this@SummaryReportActivity)
+                        .setTitle("Logout !!")
+                        .setMessage("You have been logged out because your account was used on another device.")
+                        .setCancelable(false)
+                        .setPositiveButton("Logout") { _, _ ->
+                            ApiResponseHandler.logoutUser(this@SummaryReportActivity)
+                        }
+                        .show()
+                } else {
+                    throw e
                 }
+            } catch (e: Exception) {
+                showSnackbar(binding.root, "Error loading categories")
             }
             finally {
                 dismissLoader()
@@ -256,11 +262,21 @@ class SummaryReportActivity : AppCompatActivity(),
     } catch (e: Exception) {
         null
     }
+    private fun setEnglishLocale() {
+        val locale = Locale("en")
+        Locale.setDefault(locale)
+
+        val config = resources.configuration
+        config.setLocale(locale)
+
+        resources.updateConfiguration(config, resources.displayMetrics)
+    }
 
     private fun showMaterialDateTimePicker(
         targetEditText: EditText,
         onDateSelected: (String) -> Unit
     ) {
+        setEnglishLocale()
         val constraintsBuilder = CalendarConstraints.Builder()
             .setValidator(DateValidatorPointBackward.now())
 

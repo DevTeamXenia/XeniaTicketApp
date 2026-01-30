@@ -34,6 +34,7 @@ import com.xenia.ticket.utils.common.CommonMethod.isInternetAvailable
 import com.xenia.ticket.utils.common.CommonMethod.setLocale
 import com.xenia.ticket.utils.common.CommonMethod.showSnackbar
 import com.xenia.ticket.utils.common.CompanyKey
+import com.xenia.ticket.utils.common.Constants.CASH
 import com.xenia.ticket.utils.common.JwtUtils
 import com.xenia.ticket.utils.common.SessionManager
 
@@ -57,7 +58,7 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
     private val paymentRepository: PaymentRepository by inject()
     private val customInternetAvailabilityDialog: CustomInternetAvailabilityDialog by inject()
     private val companyRepository: CompanyRepository by inject()
-
+    private var selectedPaymentMode: String = ""
     private var formattedTotalAmount: String = ""
     private var selectedLanguage: String? = ""
     private val customTicketPopupDialogue: CustomTicketPopupDialogue by inject()
@@ -94,6 +95,7 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
         binding.txtName.text = getString(R.string.name)
         binding.txtPhoneNumber.text = getString(R.string.phone_number)
         binding.btnPay.text = getString(R.string.pay)
+        selectedPaymentMode = CASH
         jwtToken = sessionManager.getToken() ?: throw IllegalStateException("Token missing")
         userId =
             JwtUtils.getUserId(jwtToken) ?: throw IllegalStateException("UserId missing in JWT")
@@ -233,7 +235,6 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                 Base64.NO_WRAP
             )
 
-            // ✅ suspend call – now valid
             val companyId = companyRepository.getCompany()?.companyId ?: 0
             val token = sessionManager.getToken()
 

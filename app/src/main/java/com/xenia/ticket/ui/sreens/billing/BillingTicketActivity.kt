@@ -16,6 +16,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.sqlite.db.SupportSQLiteOpenHelper
 import com.xenia.ticket.R
 import com.xenia.ticket.data.listeners.OnBookingTicketClick
 import com.xenia.ticket.data.listeners.OnTicketClickListener
@@ -39,6 +40,7 @@ import com.xenia.ticket.ui.sreens.kiosk.LanguageActivity
 import com.xenia.ticket.ui.sreens.kiosk.PrinterSettingActivity
 import com.xenia.ticket.utils.common.ApiResponseHandler
 import com.xenia.ticket.utils.common.CommonMethod.dismissLoader
+import com.xenia.ticket.utils.common.CommonMethod.getScreenSize
 import com.xenia.ticket.utils.common.CommonMethod.setLocale
 import com.xenia.ticket.utils.common.CommonMethod.showLoader
 import com.xenia.ticket.utils.common.CommonMethod.showSnackbar
@@ -65,7 +67,7 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
     private val labelSettingsRepository: LabelSettingsRepository by inject()
 
     private lateinit var categoryAdapter: CategoryAdapter
-    private val customTicketPopupDialogue: CustomTicketPopupDialogue by inject()
+
     private lateinit var ticketAdapter: TicketBookingAdapter
     private var selectedProofMode: String = ""
     private var selectedLanguage: String? = ""
@@ -76,28 +78,26 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
     private var formattedTotalAmount: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        binding = ActivityBillinTicketBinding.inflate(layoutInflater)
-
-        if (intent.getBooleanExtra("forceLandscape", false)) {
-            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-        }
-        setContentView(binding.root)
-
-
         selectedLanguage = sessionManager.getBillingSelectedLanguage()
         setLocale(this, selectedLanguage)
+
+        super.onCreate(savedInstanceState)
+
+        binding = ActivityBillinTicketBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
         setupUI()
         fetchDetails()
-        setContentView(binding.root)
         setupRecyclerViews()
         setupListener()
+
         lifecycleScope.launch {
             updateCartUI()
         }
 
         getLabel()
     }
+
     private fun setupUI() {
         binding.txtselectTicket.text = getString(R.string.choose_your_tickets)
         binding.btnProceed.text = getString(R.string.proceed)
@@ -186,9 +186,7 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
                     menu.findItem(R.id.nav_summary).isVisible = reportsExpanded
                     true
                 }
-
                 R.id.nav_detailed -> {
-
                     startActivity(Intent(applicationContext, DetailedReportActivity::class.java))
                     binding.drawerLayout.closeDrawer(GravityCompat.START)
                     true
@@ -242,7 +240,10 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
                 spanCount=2
                 getCategory()
             } else {
-                spanCount=2
+                if (getScreenSize(this@BillingTicketActivity).equals("Normal")){
+                    spanCount=2
+                }
+                spanCount=3
                 getTickets(selectedCategoryId)
                 binding.ticketCategory.visibility= View.GONE
             }
@@ -385,53 +386,43 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
             if (e.code() == 401) {
                 AlertDialog.Builder(this@BillingTicketActivity)
                     .setTitle("Logout !!")
-                    .setMessage("Your session has expired. Please login again.")
+                    .setMessage("You have been logged out because your account was used on another device.")
                     .setCancelable(false)
                     .setPositiveButton("Logout") { _, _ ->
                         ApiResponseHandler.logoutUser(this@BillingTicketActivity)
                     }
                     .show()
-            } else throw e
-           dismissLoader()
+            } else {
+                throw e
+            }
         } catch (e: Exception) {
-            showSnackbar(binding.root, "Error loading tickets")
-            dismissLoader()
+            showSnackbar(binding.root, "Error loading categories")
         }
     }
-
     override fun onCategoryClick(category: Category) {
         selectedCategoryId = category.categoryId
         getTickets(selectedCategoryId)
     }
 
     override fun onTicketClick(ticketItem: TicketDto) {
-        runOnUiThread {
-            ticketItemsItems = ticketItem
-
-            customTicketPopupDialogue.setData(
-                ticketId = ticketItem.ticketId,
-                ticketName = ticketItem.ticketName,
-                ticketNameMa = ticketItem.ticketNameMa ?: "",
-                ticketNameTa = ticketItem.ticketNameTa ?: "",
-                ticketNameKa = ticketItem.ticketNameKa ?: "",
-                ticketNameTe = ticketItem.ticketNameTe ?: "",
-                ticketNameHi = ticketItem.ticketNameHi ?: "",
-                ticketNameSi = ticketItem.ticketNameSi ?: "",
-                ticketNamePa = ticketItem.ticketNamePa ?: "",
-                ticketNameMr = ticketItem.ticketNameMr ?: "",
-                ticketCtegoryId = ticketItem.ticketCategoryId,
-                ticketCompanyId = ticketItem.ticketCompanyId,
-                ticketRate = ticketItem.ticketAmount
-            )
-            customTicketPopupDialogue.setListener(this)
-            if (!customTicketPopupDialogue.isAdded) {
-                customTicketPopupDialogue.show(
-                    supportFragmentManager,
-                    "CustomPopup"
-                )
-            }
-
-        }
+        val dialog = CustomTicketPopupDialogue()
+        dialog.setData(
+            ticketId = ticketItem.ticketId,
+            ticketName = ticketItem.ticketName,
+            ticketNameMa = ticketItem.ticketNameMa ?: "",
+            ticketNameTa = ticketItem.ticketNameTa ?: "",
+            ticketNameKa = ticketItem.ticketNameKa ?: "",
+            ticketNameTe = ticketItem.ticketNameTe ?: "",
+            ticketNameHi = ticketItem.ticketNameHi ?: "",
+            ticketNameSi = ticketItem.ticketNameSi ?: "",
+            ticketNamePa = ticketItem.ticketNamePa ?: "",
+            ticketNameMr = ticketItem.ticketNameMr ?: "",
+            ticketCtegoryId = ticketItem.ticketCategoryId,
+            ticketCompanyId = ticketItem.ticketCompanyId,
+            ticketRate = ticketItem.ticketAmount
+        )
+        dialog.setListener(this)
+        dialog.show(supportFragmentManager, "CustomPopup")
     }
 
     override fun onTicketClear(ticketItem: TicketDto) {
@@ -476,7 +467,6 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
         ticketActive = ticketActive
     )
 
-
     override fun onTicketMinusClick(ticketItem: TicketDto) {
         lifecycleScope.launch {
 
@@ -490,8 +480,6 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
                 val newQty = currentQty - 1
 
                 if (newQty == 0) {
-
-
                     ticketRepository.deleteTicketById(ticketItem.ticketId)
 
                 } else {
@@ -611,7 +599,6 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
                 daProof = selectedProofMode,
                 daImg = byteArrayOf()
             )
-
             ticketRepository.insertCartBookingItem(cartItem, "Add")
 
             val updatedMap = ticketRepository.getTicketsMapByIds()
@@ -620,7 +607,6 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
             getCartTicket()
         }
     }
-
 
     override fun onDeleteClick(ticket: Ticket) {
         TODO("Not yet implemented")

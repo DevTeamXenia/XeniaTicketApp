@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import androidx.activity.result.contract.ActivityResultContracts
@@ -18,6 +19,7 @@ import com.xenia.ticket.databinding.ActivityLoginBinding
 import com.xenia.ticket.ui.sreens.billing.BillingTicketActivity
 import com.xenia.ticket.utils.common.CommonMethod.dismissLoader
 import com.xenia.ticket.utils.common.CommonMethod.isInternetAvailable
+import com.xenia.ticket.utils.common.CommonMethod.setLocale
 import com.xenia.ticket.utils.common.CommonMethod.showSnackbar
 import com.xenia.ticket.utils.common.Constants.PRINTER_KIOSK
 import com.xenia.ticket.utils.common.JwtUtils
@@ -27,6 +29,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import retrofit2.HttpException
+import java.util.Locale
 import kotlin.getValue
 
 
@@ -36,7 +39,7 @@ class LoginActivity : AppCompatActivity() {
     private val sessionManager: SessionManager by inject()
     private val loginRepository: LoginRepository by inject()
     private val companyRepository: CompanyRepository by inject()
-
+    private var selectedLanguage: String? = ""
     private var isPasswordVisible = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,7 +48,7 @@ class LoginActivity : AppCompatActivity() {
         setContentView(binding.root)
         setupPasswordToggle()
         requestOverlayPermission()
-
+        setAppLanguageAlwaysEnglish()
 
         if (sessionManager.isLoggedIn()) {
 
@@ -70,12 +73,24 @@ class LoginActivity : AppCompatActivity() {
         }
 
         binding.btnLogin.setOnClickListener {
+            Log.d("LOGIN", "Login button clicked")
+
             val userId = binding.edtUserId.text.toString()
             val password = binding.edtPassword.text.toString()
             if (validateAndLogin(userId, password)) {
+                Log.d("LOGIN", "Response: $userId,$password,$sharedPref")
                 performLogin(userId, password, sharedPref)
             }
         }
+    }
+    private fun setAppLanguageAlwaysEnglish() {
+        val locale = Locale.ENGLISH
+        Locale.setDefault(locale)
+
+        val config = resources.configuration
+        config.setLocale(locale)
+
+        resources.updateConfiguration(config, resources.displayMetrics)
     }
 
     private fun setupPasswordToggle() {
@@ -214,11 +229,15 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
                 val userType = UserType.fromValue(
                     JwtUtils.getUserType(token)
                 )
+                val company = companyRepository.getCompany()
 
-                companyRepository.getCompany() ?: run {
+                Log.d("LOGIN", "Company value = $company")
+                if (company == null) {
                     startActivity(Intent(this@LoginActivity, SyncActivity::class.java))
                     finish()
-                    return@launch
+                } else {
+                    startActivity(Intent(this@LoginActivity, SyncActivity::class.java))
+                    finish()
                 }
             } catch (e: HttpException) {
 

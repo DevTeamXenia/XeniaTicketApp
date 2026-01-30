@@ -74,7 +74,6 @@ class CustomLogoutPopupDialog : DialogFragment() {
         }
 
     }
-
     private fun callLogoutApi() {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
@@ -96,7 +95,6 @@ class CustomLogoutPopupDialog : DialogFragment() {
             }
         }
     }
-
     private fun showForcedLogoutState(message: String) {
         isForcedLogout = true
         tvMessage.text = message

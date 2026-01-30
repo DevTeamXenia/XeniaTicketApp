@@ -9,7 +9,7 @@
     <string name="_91">+94</string>
     <string name="name">නම</string>
     <string name="select_your_janma_nakshatra">ඔබගේ ජනම නක්ෂත්‍රය තෝරන්න</string>
-
+    <string name="profile">පැතිකඩ</string>
     <string name="amount_10_000">මුදලරු.. 10,000 /-</string>
     <string name="scan_this_code_to_pay">ගෙවීමට මෙම කේතය ස්කෑන් කරන්න</string>
     <string name="expire">QR අවසන් වන්නේ :</string>
@@ -73,7 +73,6 @@
     <string name="choose_your_tickets">ඔබගේ ටිකට් තෝරන්න</string>
 
     <string name="language_settings">භාෂාව</string>
-    <string name="profile">පැතිකඩ</string>
     <string name="delete_account">ගිණුම මකන්න</string>
     <string name="logout">ලොග්අවුට්</string>
     <string name="dashboard">ඩැෂ්බෝඩ්</string>

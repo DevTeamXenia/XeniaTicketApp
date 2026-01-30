@@ -49,6 +49,15 @@ data class OfferItem(
 
     @SerializedName("OfferNameKn")
     val offerNameKn: String? = null,
+    @SerializedName("OfferNamePa")
+    val offerNamePa: String? = null,
+
+    @SerializedName("OfferNameSi")
+    val offerNameSi: String? = null,
+
+    @SerializedName("OfferNameMr")
+    val offerNameMr: String? = null,
+
 
     @SerializedName("TotalQty")
     val totalQty: Double = 0.0,

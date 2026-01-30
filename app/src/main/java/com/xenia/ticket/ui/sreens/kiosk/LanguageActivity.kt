@@ -311,7 +311,7 @@ class LanguageActivity : AppCompatActivity(),
             }
 
             btnPaid.visibility = View.VISIBLE
-            btnPaid.text = if (daysRemaining <= 0) "PAY NOW" else "SKIP NOW"
+            btnPaid.text = if (daysRemaining <= 0) "RENEW NOW" else "SKIP NOW"
 
             btnPaid.setOnClickListener {
                 dismissDialogImmediately()

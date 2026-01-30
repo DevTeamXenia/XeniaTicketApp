@@ -8,6 +8,7 @@ import android.view.View
 import android.widget.AdapterView
 import android.widget.EditText
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -27,8 +28,11 @@ import com.xenia.ticket.utils.common.SessionManager
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointBackward
 import com.google.android.material.datepicker.MaterialDatePicker
+import com.xenia.ticket.utils.common.ApiResponseHandler
+import com.xenia.ticket.utils.common.CommonMethod.showSnackbar
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
+import retrofit2.HttpException
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -186,7 +190,7 @@ class DetailedReportActivity : AppCompatActivity() {
                         binding.rvItems.adapter = ItemSummaryAdapter(displayList)
 
                         val totalAmtValue = response.summary.GrandTotalAmountAll
-                        binding.tvTotalAmount.text = String.format("%.2f", totalAmtValue)
+                        binding.tvTotalAmount.text = String.format(Locale.ENGLISH,"%.2f", totalAmtValue)
 
                         val isPrintable = totalAmtValue > 0.0
                         binding.btnPrint.isEnabled = isPrintable
@@ -206,10 +210,21 @@ class DetailedReportActivity : AppCompatActivity() {
                     Toast.makeText(this@DetailedReportActivity, "No data found", Toast.LENGTH_SHORT).show()
                 }
 
+            } catch (e: HttpException) {
+                if (e.code() == 401) {
+                    AlertDialog.Builder(this@DetailedReportActivity)
+                        .setTitle("Logout !!")
+                        .setMessage("You have been logged out because your account was used on another device.")
+                        .setCancelable(false)
+                        .setPositiveButton("Logout") { _, _ ->
+                            ApiResponseHandler.logoutUser(this@DetailedReportActivity)
+                        }
+                        .show()
+                } else {
+                    throw e
+                }
             } catch (e: Exception) {
-                dismissLoader()
-                e.printStackTrace()
-                Toast.makeText(this@DetailedReportActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                showSnackbar(binding.root, "Error loading categories")
             }
         }
     }
@@ -225,6 +240,9 @@ class DetailedReportActivity : AppCompatActivity() {
                 "te" -> item.offerNameTe
                 "hi" -> item.offerNameHi
                 "kn" -> item.offerNameKn
+                "si" -> item.offerNameSi
+                "pa" -> item.offerNamePa
+                "mr" -> item.offerNameMr
                 else -> item.offerName
             }
 
@@ -256,8 +274,24 @@ class DetailedReportActivity : AppCompatActivity() {
         val apiFormat = SimpleDateFormat("dd/MM/yyyy hh:mm a", Locale.ENGLISH)
         return apiFormat.format(date)
     }
+    private fun setEnglishLocale() {
+        val locale = Locale("en")
+        Locale.setDefault(locale)
 
-    private fun showMaterialDateTimePicker(targetEditText: EditText, onDateSelected: (String) -> Unit) {
+        val config = resources.configuration
+        config.setLocale(locale)
+
+        resources.updateConfiguration(config, resources.displayMetrics)
+    }
+
+    private fun showMaterialDateTimePicker(
+        targetEditText: EditText,
+        onDateSelected: (String) -> Unit
+    ) {
+
+        // Force calendar to English
+        setEnglishLocale()
+
         val constraintsBuilder = CalendarConstraints.Builder()
             .setValidator(DateValidatorPointBackward.now())
 
@@ -268,6 +302,9 @@ class DetailedReportActivity : AppCompatActivity() {
             .build()
 
         datePicker.addOnPositiveButtonClickListener { selection ->
+
+            if (isFinishing || isDestroyed) return@addOnPositiveButtonClickListener
+
             val calendar = Calendar.getInstance()
             calendar.timeInMillis = selection
 
@@ -277,21 +314,29 @@ class DetailedReportActivity : AppCompatActivity() {
             val timePicker = TimePickerDialog(
                 this,
                 { _, selectedHour, selectedMinute ->
+
                     calendar.set(Calendar.HOUR_OF_DAY, selectedHour)
                     calendar.set(Calendar.MINUTE, selectedMinute)
 
-                    val dateTimeFormat = SimpleDateFormat("dd/MM/yyyy hh:mm a", Locale.ENGLISH)
+                    val dateTimeFormat =
+                        SimpleDateFormat("dd/MM/yyyy hh:mm a", Locale.ENGLISH)
+
                     val dateTimeStr = dateTimeFormat.format(calendar.time)
+
                     targetEditText.setText(dateTimeStr)
                     onDateSelected(dateTimeStr)
+
                 },
                 hour,
                 minute,
                 false
             )
+
             timePicker.show()
         }
 
         datePicker.show(supportFragmentManager, "MATERIAL_DATE_PICKER")
     }
+
+
 }

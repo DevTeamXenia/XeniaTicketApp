@@ -117,8 +117,6 @@ class SyncActivity : AppCompatActivity() {
                             putBoolean(isFirstLoginKey, false)
                         }
                     } else {
-
-
                         startActivity(Intent(this@SyncActivity, LanguageActivity::class.java))
 
                         finish()
