@@ -42,6 +42,7 @@ import com.journeyapps.barcodescanner.BarcodeEncoder
 import kotlinx.coroutines.*
 import org.koin.android.ext.android.inject
 import retrofit2.HttpException
+import java.util.Locale
 
 class CustomQRDarshanPopupDialogue : DialogFragment() {
 
@@ -52,18 +53,13 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
     private var amount: String = ""
     private var url: String = ""
     private var transactionReferenceID: String = ""
-    private var token: String = ""
     private var name: String = ""
     private var phoneNumber: String = ""
-    private var proofId: String = ""
-    private var proofIdType: String = ""
     private lateinit var imgLogo: ImageView
-
     private var pollingTimer: CountDownTimer? = null
     private var paymentStatusJob: Job? = null
     private val paymentRepository: PaymentRepository by inject()
     private val sessionManager: SessionManager by inject()
-    private val darshanRepository: TicketRepository by inject()
     private val ticketRepository: TicketRepository by inject()
     private val companyRepository: CompanyRepository by inject()
     private var isCheckingPaymentStatus = false
@@ -73,16 +69,15 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
         amount: String,
         url: String,
         transactionReferenceID: String,
+        name: String,
+        phoneNumber : String,
 
     ) {
         this.amount = amount
         this.url = url
         this.transactionReferenceID = transactionReferenceID
-        this.token = token
         this.name = name
         this.phoneNumber = phoneNumber
-        this.proofId = proofId
-        this.proofIdType = proofIdType
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -156,7 +151,7 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
                 )
             }
             val amountValue: Float = amount.toFloat()
-            val formattedAmount = String.format("%.2f", amountValue)
+            val formattedAmount = String.format(Locale.ENGLISH, "%.2f", amountValue)
             amountTextView.text = getString(R.string.amount) + " Rs. $formattedAmount /-"
             val qrCodeBitmap = generateUPIQRCode(url)
             qrCodeImageView.setImageBitmap(qrCodeBitmap)
@@ -232,10 +227,7 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
 
                     when (response.status) {
                         "SUCCESS" -> {
-                            postTicketPaymentHistory(
-                                status = "S",
-                                statusDesc = "Payment Success"
-                            )
+                            postTicketPaymentHistory( "S","Payment Success")
                             break
                         }
 
@@ -299,7 +291,7 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
                 CompanyId = companyId,
                 UserId = sessionManager.getUserId(),
                 Name = name,
-                tTranscationId = generateNumericTransactionReferenceID(),
+                tTranscationId = transactionReferenceID,
                 tCustRefNo = "",
                 tNpciTransId = "",
                 tIdProofNo = "",

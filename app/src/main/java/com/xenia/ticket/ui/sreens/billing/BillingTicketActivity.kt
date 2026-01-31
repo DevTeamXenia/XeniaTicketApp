@@ -5,8 +5,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -45,10 +47,14 @@ import com.xenia.ticket.utils.common.CommonMethod.setLocale
 import com.xenia.ticket.utils.common.CommonMethod.showLoader
 import com.xenia.ticket.utils.common.CommonMethod.showSnackbar
 import com.xenia.ticket.utils.common.CompanyKey
+import com.xenia.ticket.utils.common.PlutusConstants
+import com.xenia.ticket.utils.common.PlutusServiceManager
 import com.xenia.ticket.utils.common.SessionManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
+import org.json.JSONObject
 import org.koin.android.ext.android.inject
 import java.util.Locale
 import retrofit2.HttpException
@@ -77,6 +83,7 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
     private lateinit var ticketItemsItems: TicketDto
     private var formattedTotalAmount: String = ""
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         selectedLanguage = sessionManager.getBillingSelectedLanguage()
         setLocale(this, selectedLanguage)
@@ -96,10 +103,12 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
         }
 
         getLabel()
+
     }
 
+
     private fun setupUI() {
-        binding.txtselectTicket.text = getString(R.string.choose_your_tickets)
+        binding.txtSelectTicket.text = getString(R.string.choose_your_tickets)
         binding.btnProceed.text = getString(R.string.proceed)
         val menu = binding.navView.menu
         menu.findItem(R.id.nav_language).title = getString(R.string.language_settings)

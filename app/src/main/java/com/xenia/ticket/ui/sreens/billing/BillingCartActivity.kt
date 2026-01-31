@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.util.Base64
 import android.util.Log
 import android.view.MotionEvent
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -32,15 +33,20 @@ import com.xenia.ticket.utils.common.CommonMethod.dismissLoader
 import com.xenia.ticket.utils.common.CommonMethod.generateNumericTransactionReferenceID
 import com.xenia.ticket.utils.common.CommonMethod.isInternetAvailable
 import com.xenia.ticket.utils.common.CommonMethod.setLocale
+import com.xenia.ticket.utils.common.CommonMethod.showLoader
 import com.xenia.ticket.utils.common.CommonMethod.showSnackbar
 import com.xenia.ticket.utils.common.CompanyKey
 import com.xenia.ticket.utils.common.Constants.CASH
 import com.xenia.ticket.utils.common.JwtUtils
+import com.xenia.ticket.utils.common.PlutusConstants
+import com.xenia.ticket.utils.common.PlutusServiceManager
 import com.xenia.ticket.utils.common.SessionManager
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
+import org.json.JSONObject
 import org.koin.android.ext.android.inject
 import retrofit2.HttpException
 import java.util.Locale
@@ -67,6 +73,7 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
     private lateinit var jwtToken: String
     private var userId: Int = 0
     private var imageData: ByteArray? = null
+    private lateinit var plutusManager: PlutusServiceManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -78,6 +85,12 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
         if (intent.getBooleanExtra("forceLandscape", false)) {
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         }
+
+        plutusManager = PlutusServiceManager(this) { response ->
+            Log.e("PLUTUS_RESP", response)
+            Toast.makeText(this, response, Toast.LENGTH_LONG).show()
+        }
+        plutusManager.bindService()
 
         initView()
 
@@ -132,6 +145,22 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                 return@setOnClickListener
             }
             binding.btnPay.isEnabled = false
+
+            lifecycleScope.launch {
+                val amountValue = formattedTotalAmount.toDoubleOrNull() ?: 0.0
+                val ctx = this@BillingCartActivity
+
+               if (companyRepository.getBoolean(CompanyKey.ISPAYMENTGATEWAY)) {
+                    binding.btnPay.isEnabled = false
+                    showLoader(ctx, "Generating Qr code...")
+                    generatePayment()
+                } else {
+                    binding.btnPay.isEnabled = false
+                    showLoader(ctx, "Posting ticket...")
+                    postTicketPaymentHistory("S", "Successful")
+                }
+            }
+
             lifecycleScope.launch {
                 postTicketPaymentHistory(
                     status = "S",
@@ -140,6 +169,97 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
             }
         }
     }
+
+
+    private fun generatePayment() {
+        lifecycleScope.launch {
+
+            val (totalAmount) = ticketRepository.getCartStatus()
+
+            if (!isInternetAvailable(this@BillingCartActivity)) {
+                customInternetAvailabilityDialog.show(
+                    supportFragmentManager,
+                    "warning_dialog"
+                )
+                return@launch
+            }
+            val gateway = companyRepository.getString(CompanyKey.PAYMENT_GATEWAY)
+
+            when (gateway) {
+                "CanaraBank" -> {
+                    dismissLoader()
+//                    generateCanaraPaymentQrCode(formattedTotalAmount)
+                }
+                "FederalBank" -> {
+                    //generateFederalPaymentQrCode(totalAmount)
+                }
+                "PineLabs" -> {
+                    generatePineLabPaymentQrCode(totalAmount)
+                }
+                else -> {
+                    dismissLoader()
+//                    generatePaymentQrCode(formattedTotalAmount)
+                }
+            }
+
+        }
+    }
+
+
+    private fun generatePineLabPaymentQrCode(totalAmount: Double) {
+        val request = JSONObject().apply {
+            put("Header", JSONObject().apply {
+                put("ApplicationId", "d585cf57dc5f4dab9e99fc1d37fa1333")
+                put("UserId", "cashier1")
+                put("MethodId", PlutusConstants.METHOD_DO_TRANSACTION)
+                put("VersionNo", "1.0")
+            })
+
+            put("Detail", JSONObject().apply {
+                put("TransactionType", 4001) // Card Sale
+                put("BillingRefNo", "TXN123456")
+                put("PaymentAmount", totalAmount.toString()) // ₹100.00
+            })
+        }
+        Log.e("PLUTUS_RESP", request.toString())
+        plutusManager.sendRequest(request.toString())
+    }
+
+    private fun printReceipt() {
+        val printArray = JSONArray().apply {
+            put(JSONObject().apply {
+                put("PrintDataType", 0)
+                put("PrinterWidth", 24)
+                put("IsCenterAligned", true)
+                put("DataToPrint", "PAYMENT SUCCESS")
+            })
+
+            put(JSONObject().apply {
+                put("PrintDataType", 0)
+                put("PrinterWidth", 24)
+                put("IsCenterAligned", false)
+                put("DataToPrint", "Amount: ₹100.00")
+            })
+        }
+
+        val request = JSONObject().apply {
+            put("Header", JSONObject().apply {
+                put("ApplicationId", "d585cf57dc5f4dab9e99fc1d37fa1333")
+                put("UserId", "cashier1")
+                put("MethodId", PlutusConstants.METHOD_PRINT)
+                put("VersionNo", "1.0")
+            })
+
+            put("Detail", JSONObject().apply {
+                put("PrintRefNo", "PR12345")
+                put("SavePrintData", true)
+                put("Data", printArray)
+            })
+        }
+        Log.e("PLUTUS_RESP", request.toString())
+        plutusManager.sendRequest(request.toString())
+    }
+
     @SuppressLint("SetTextI18n", "DefaultLocale")
     private fun loadDarshanItems() {
         lifecycleScope.launch {
@@ -175,6 +295,7 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
             }
         }
     }
+
     override fun onEditClick(ticketItem: Ticket) {
 
         ticketItemsItems = ticketItem

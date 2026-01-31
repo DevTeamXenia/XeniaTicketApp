@@ -379,6 +379,11 @@ class PaymentActivity : AppCompatActivity() {
         val labelDPhonenumber = getLocalizedString("Phone No", defaultLang)
         val labelDTotalAmount = getLocalizedString("Total Amount", defaultLang)
         val labelDName = getLocalizedString("Name", defaultLang)
+        val labelDItem = getLocalizedString("Ticket", defaultLang)
+        val labelDPrice = getLocalizedString("Price", defaultLang)
+        val labelDAmount = getLocalizedString("Amount", defaultLang)
+        val labelDQty = getLocalizedString("Qty", defaultLang)
+
         val tempBitmap = createBitmap(width, 10000)
         val tempCanvas = Canvas(tempBitmap)
 
@@ -426,12 +431,19 @@ class PaymentActivity : AppCompatActivity() {
         yOffset += 30f
         paint.textAlign = Paint.Align.LEFT
         tempCanvas.drawText(labelItem, 20f, yOffset, paint)
-
         paint.textAlign = Paint.Align.CENTER
         tempCanvas.drawText(labelPrice, width * 0.5f, yOffset, paint)
         tempCanvas.drawText(labelQty, width * 0.65f, yOffset, paint)
         paint.textAlign = Paint.Align.RIGHT
         tempCanvas.drawText(labelAmount, width - 30f, yOffset, paint)
+        yOffset += 30f
+        paint.textAlign = Paint.Align.LEFT
+        tempCanvas.drawText(labelDItem, 20f, yOffset, paint)
+        paint.textAlign = Paint.Align.CENTER
+        tempCanvas.drawText(labelDPrice, width * 0.5f, yOffset, paint)
+        tempCanvas.drawText(labelDQty, width * 0.65f, yOffset, paint)
+        paint.textAlign = Paint.Align.RIGHT
+        tempCanvas.drawText(labelDAmount, width - 30f, yOffset, paint)
         yOffset += 30f
         paint.strokeWidth = 2f
         tempCanvas.drawLine(20f, yOffset, width - 20f, yOffset, paint)
@@ -481,7 +493,7 @@ class PaymentActivity : AppCompatActivity() {
                 paint = paint
             ) + 10f
 
-            yOffset += 35f
+            yOffset += 15f
 
             yOffset = drawMultilineText(
                 canvas = tempCanvas,

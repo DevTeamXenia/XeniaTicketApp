@@ -5,7 +5,9 @@ import android.content.Intent
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.Base64
+import android.util.Log
 import android.view.MotionEvent
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -38,6 +40,7 @@ import com.xenia.ticket.utils.common.CommonMethod.showSnackbar
 import com.xenia.ticket.utils.common.CompanyKey
 import com.xenia.ticket.utils.common.InactivityHandler
 import com.xenia.ticket.utils.common.JwtUtils
+import com.xenia.ticket.utils.common.PlutusServiceManager
 import com.xenia.ticket.utils.common.SessionManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -232,24 +235,16 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                 )
                 return@launch
             }
-
-            showLoader(this@TicketCartActivity, "Loading... Please wait.")
-
-
             val gateway = companyRepository.getString(CompanyKey.PAYMENT_GATEWAY)
 
             when (gateway) {
-
                 "CanaraBank" -> {
                     dismissLoader()
 //                    generateCanaraPaymentQrCode(formattedTotalAmount)
                 }
-
                 "FederalBank" -> {
-                    dismissLoader()
                     generateFederalPaymentQrCode(totalAmount)
                 }
-
                 else -> {
                     dismissLoader()
 //                    generatePaymentQrCode(formattedTotalAmount)
@@ -277,12 +272,18 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
 
                 val orderId = response.OrderId
                 val upiUrl = response.UpiIntentUrl
+                val name = binding.editTextName.text.toString().trim()
+                val phone = binding.editTextPhoneNumber.text.toString().trim()
                 if (!orderId.isNullOrEmpty() && !upiUrl.isNullOrEmpty()) {
                     customQRDarshanPopupDialogue.setData(
                         donationAmount.toInt().toString(),
                         upiUrl,
-                        orderId
+                        orderId,
+                        name,
+                        phone
+
                     )
+                    dismissLoader()
                     customQRDarshanPopupDialogue.show(
                         supportFragmentManager,
                         "CustomPopup"

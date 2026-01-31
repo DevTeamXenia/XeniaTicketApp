@@ -1,7 +1,6 @@
 package com.xenia.ticket.ui.sreens.kiosk
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.MotionEvent
@@ -9,9 +8,7 @@ import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.xenia.ticket.R
@@ -21,11 +18,9 @@ import com.xenia.ticket.data.network.model.TicketDto
 import com.xenia.ticket.data.repository.ActiveTicketRepository
 import com.xenia.ticket.data.repository.CategoryRepository
 import com.xenia.ticket.data.repository.CompanyRepository
-import com.xenia.ticket.data.repository.LabelSettingsRepository
 import com.xenia.ticket.data.repository.TicketRepository
 import com.xenia.ticket.data.room.entity.ActiveTicket
 import com.xenia.ticket.data.room.entity.Category
-import com.xenia.ticket.data.room.entity.LabelSettings
 import com.xenia.ticket.databinding.ActivityTicketBinding
 import com.xenia.ticket.ui.adapter.CategoryAdapter
 import com.xenia.ticket.ui.adapter.TicketAdapter
@@ -54,8 +49,6 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
     private val ticketRepository: TicketRepository by inject()
     private val activeTicketRepository: ActiveTicketRepository by inject()
     private val categoryRepository: CategoryRepository by inject()
-    private val labelSettingsRepository: LabelSettingsRepository by inject()
-
     private val sessionManager: SessionManager by inject()
     private val companyRepository: CompanyRepository by inject()
     private lateinit var categoryAdapter: CategoryAdapter
