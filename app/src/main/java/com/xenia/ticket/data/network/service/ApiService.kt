@@ -82,8 +82,6 @@ interface ApiService {
         @Body request: GenerateQrRequest
     ): GenerateQrResponse
 
-
-
     @GET("payments/fed/status/{orderId}")
     suspend fun getFedPaymentStatus(
         @Path("orderId") orderId: String,

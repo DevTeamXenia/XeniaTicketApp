@@ -256,7 +256,6 @@ class DetailedReportActivity : AppCompatActivity() {
             }
         }
 
-
         addCategoryItems("Tickets", response.darshanTickets, response.summary.darshanTickets.GrandTotalAmount)
 
         return displayList
@@ -332,6 +331,5 @@ class DetailedReportActivity : AppCompatActivity() {
 
         datePicker.show(supportFragmentManager, "MATERIAL_DATE_PICKER")
     }
-
 
 }

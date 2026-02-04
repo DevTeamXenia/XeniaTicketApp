@@ -90,6 +90,7 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
             Log.e("PLUTUS_RESP", response)
             Toast.makeText(this, response, Toast.LENGTH_LONG).show()
         }
+
         plutusManager.bindService()
 
         initView()
@@ -204,8 +205,6 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
 
         }
     }
-
-
     private fun generatePineLabPaymentQrCode(totalAmount: Double) {
         val request = JSONObject().apply {
             put("Header", JSONObject().apply {
