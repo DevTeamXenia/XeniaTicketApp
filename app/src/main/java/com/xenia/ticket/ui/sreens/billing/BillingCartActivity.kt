@@ -36,7 +36,9 @@ import com.xenia.ticket.utils.common.CommonMethod.setLocale
 import com.xenia.ticket.utils.common.CommonMethod.showLoader
 import com.xenia.ticket.utils.common.CommonMethod.showSnackbar
 import com.xenia.ticket.utils.common.CompanyKey
+import com.xenia.ticket.utils.common.Constants.CARD
 import com.xenia.ticket.utils.common.Constants.CASH
+import com.xenia.ticket.utils.common.Constants.UPI
 import com.xenia.ticket.utils.common.JwtUtils
 import com.xenia.ticket.utils.common.PlutusConstants
 import com.xenia.ticket.utils.common.PlutusServiceManager
@@ -106,6 +108,36 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
 
     }
     private fun initView() {
+        binding.radioGroup.check(R.id.radiaCash)
+        binding.radiaCash.setBackgroundResource(R.drawable.selected_border)
+        binding.radiaUPI.setBackgroundResource(R.drawable.editext_boarder)
+        binding.radiaCard.setBackgroundResource(R.drawable.editext_boarder)
+        binding.btnPay.isEnabled = true
+        selectedPaymentMode = CASH
+        binding.radioGroup.setOnCheckedChangeListener { _, checkedId ->
+            when (checkedId) {
+                R.id.radiaUPI -> {
+                    binding.radiaUPI.setBackgroundResource(R.drawable.selected_border)
+                    binding.radiaCash.setBackgroundResource(R.drawable.editext_boarder)
+                    binding.radiaCard.setBackgroundResource(R.drawable.editext_boarder)
+                    selectedPaymentMode = UPI
+                }
+
+                R.id.radiaCash -> {
+                    binding.radiaCash.setBackgroundResource(R.drawable.selected_border)
+                    binding.radiaUPI.setBackgroundResource(R.drawable.editext_boarder)
+                    binding.radiaCard.setBackgroundResource(R.drawable.editext_boarder)
+                    selectedPaymentMode = CASH
+                }
+
+                R.id.radiaCard -> {
+                    binding.radiaCard.setBackgroundResource(R.drawable.selected_border)
+                    binding.radiaUPI.setBackgroundResource(R.drawable.editext_boarder)
+                    binding.radiaCash.setBackgroundResource(R.drawable.editext_boarder)
+                    selectedPaymentMode = CARD
+                }
+            }
+        }
         binding.txtName.text = getString(R.string.name)
         binding.txtPhoneNumber.text = getString(R.string.phone_number)
         binding.btnPay.text = getString(R.string.pay)
@@ -151,7 +183,12 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                 val amountValue = formattedTotalAmount.toDoubleOrNull() ?: 0.0
                 val ctx = this@BillingCartActivity
 
-               if (companyRepository.getBoolean(CompanyKey.ISPAYMENTGATEWAY)) {
+                if (selectedPaymentMode == CASH) {
+                    showLoader(ctx, "Posting ticket...")
+                    postTicketPaymentHistory("S", "Successful")
+                    return@launch
+                }
+              else if (companyRepository.getBoolean(CompanyKey.ISPAYMENTGATEWAY)) {
                     binding.btnPay.isEnabled = false
                     showLoader(ctx, "Generating Qr code...")
                     generatePayment()
@@ -206,23 +243,33 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
         }
     }
     private fun generatePineLabPaymentQrCode(totalAmount: Double) {
+
+        val transactionType = 4001  // CARD ONLY
+
         val request = JSONObject().apply {
+
             put("Header", JSONObject().apply {
-                put("ApplicationId", "d585cf57dc5f4dab9e99fc1d37fa1333")
+                put("ApplicationId", sessionManager.getPineLabsAppId())
                 put("UserId", "cashier1")
                 put("MethodId", PlutusConstants.METHOD_DO_TRANSACTION)
                 put("VersionNo", "1.0")
             })
 
             put("Detail", JSONObject().apply {
-                put("TransactionType", 4001) // Card Sale
-                put("BillingRefNo", "TXN123456")
-                put("PaymentAmount", totalAmount.toString()) // ₹100.00
+                put("TransactionType", transactionType)
+                put("BillingRefNo", "TXN${System.currentTimeMillis()}")
+                put("PaymentAmount", totalAmount.toString())
             })
         }
-        Log.e("PLUTUS_RESP", request.toString())
+
+        Log.e("PLUTUS_REQ", request.toString())
+
         plutusManager.sendRequest(request.toString())
+
     }
+
+
+
 
     private fun printReceipt() {
         val printArray = JSONArray().apply {
@@ -286,7 +333,6 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
     }
 
     override fun onDeleteClick(ticket: Ticket) {
-
         lifecycleScope.launch(Dispatchers.IO) {
             ticketRepository.deleteTicketById(ticket.ticketId)
             withContext(Dispatchers.Main) {
@@ -355,8 +401,8 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                 Base64.NO_WRAP
             )
 
-            val companyId = companyRepository.getCompany()?.companyId ?: 0
-            val token = sessionManager.getToken()
+            val token = sessionManager.getToken().toString()
+            val companyId = JwtUtils.getCompanyId(token)
 
             if (token.isNullOrBlank()) {
                 withContext(Dispatchers.Main) {
@@ -370,7 +416,7 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
             val phone = binding.editTextPhoneNumber.text.toString().trim()
 
             val request = TicketPaymentRequest(
-                CompanyId = companyId,
+                CompanyId = companyId!!,
                 UserId = userId,
                 Name = name,
                 tTranscationId = generateNumericTransactionReferenceID(),

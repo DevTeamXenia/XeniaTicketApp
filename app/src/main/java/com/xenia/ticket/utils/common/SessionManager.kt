@@ -21,6 +21,14 @@ class SessionManager(context: Context) {
         private const val KEY_SELECTED_PRINTER = "selected_printer"
     }
 
+    fun savePineLabsAppId(appId: String) {
+        editor.putString("PINE_LABS_APP_ID", appId)
+        editor.apply()
+    }
+
+    fun getPineLabsAppId(): String {
+        return sharedPreferences.getString("PINE_LABS_APP_ID", "") ?: ""
+    }
 
     fun saveToken(token: String) {
         editor.putString(KEY_TOKEN, token).apply()

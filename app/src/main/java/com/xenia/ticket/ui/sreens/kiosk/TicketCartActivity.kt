@@ -328,8 +328,9 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                 Base64.NO_WRAP
             )
 
-            val companyId = companyRepository.getCompany()?.companyId ?: 0
-            val token = sessionManager.getToken()
+
+            val token = sessionManager.getToken().toString()
+            val companyId = JwtUtils.getCompanyId(token)
 
             if (token.isNullOrBlank()) {
                 withContext(Dispatchers.Main) {
@@ -343,7 +344,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
             val phone = binding.editTextPhoneNumber.text.toString().trim()
 
             val request = TicketPaymentRequest(
-                CompanyId = companyId,
+                CompanyId = companyId!!,
                 UserId = userId,
                 Name = name,
                 tTranscationId = generateNumericTransactionReferenceID(),

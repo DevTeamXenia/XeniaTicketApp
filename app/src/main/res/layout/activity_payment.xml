@@ -25,9 +25,8 @@
 
             <ImageView
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="200dp"
                 android:src="@drawable/img_payment_sucess"
-                android:layout_marginTop="30dp"
                 android:layout_gravity="center_horizontal"/>
 
             <TextView
@@ -47,6 +46,8 @@
                 android:layout_marginTop="15dp"
                 android:fontFamily="@font/montserrat"
                 android:textColor="@color/black"
+                android:gravity="center"
+                android:textAlignment="center"
                 android:text="@string/your_payment_was_successful"
                 android:textSize="18sp" />
 

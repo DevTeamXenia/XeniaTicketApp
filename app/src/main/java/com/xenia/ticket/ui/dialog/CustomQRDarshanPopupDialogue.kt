@@ -39,6 +39,7 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
 import com.google.zxing.WriterException
 import com.journeyapps.barcodescanner.BarcodeEncoder
+import com.xenia.ticket.utils.common.JwtUtils
 import kotlinx.coroutines.*
 import org.koin.android.ext.android.inject
 import retrofit2.HttpException
@@ -283,12 +284,12 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
                 Base64.NO_WRAP
             )
 
-            val companyId = companyRepository.getCompany()?.companyId ?: 0
-            val token = sessionManager.getToken()
+            val token = sessionManager.getToken().toString()
+            val companyId = JwtUtils.getCompanyId(token)
 
 
             val request = TicketPaymentRequest(
-                CompanyId = companyId,
+                CompanyId = companyId!!,
                 UserId = sessionManager.getUserId(),
                 Name = name,
                 tTranscationId = transactionReferenceID,

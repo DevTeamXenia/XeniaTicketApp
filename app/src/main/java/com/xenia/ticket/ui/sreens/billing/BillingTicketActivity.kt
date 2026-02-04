@@ -106,7 +106,6 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
 
     }
 
-
     private fun setupUI() {
         binding.txtSelectTicket.text = getString(R.string.choose_your_tickets)
         binding.btnProceed.text = getString(R.string.proceed)
@@ -121,6 +120,7 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
 
             startActivity(intent)
         }
+
         binding.imgMenu.setOnClickListener {
             if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
                 binding.drawerLayout.closeDrawer(GravityCompat.START)
@@ -183,6 +183,7 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
                     finish()
                     false
                 }
+
                 R.id.nav_settings -> {
                     startActivity(Intent(applicationContext, PrinterSettingActivity::class.java))
                     binding.drawerLayout.closeDrawer(GravityCompat.START)
@@ -195,6 +196,7 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
                     menu.findItem(R.id.nav_summary).isVisible = reportsExpanded
                     true
                 }
+
                 R.id.nav_detailed -> {
                     startActivity(Intent(applicationContext, DetailedReportActivity::class.java))
                     binding.drawerLayout.closeDrawer(GravityCompat.START)
@@ -242,17 +244,19 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
         binding.relCart.adapter = ticketCartAdapter
 
     }
+
     private fun fetchDetails() {
         lifecycleScope.launch {
             val isCategoryEnabled = companyRepository.getString(CompanyKey.CATEGORY_ENABLE)
             if (isCategoryEnabled == "True") {
-                spanCount=2
+                if (getScreenSize(this@BillingTicketActivity).equals("Normal")){
+                    spanCount=2
+                }
                 getCategory()
             } else {
                 if (getScreenSize(this@BillingTicketActivity).equals("Normal")){
                     spanCount=2
                 }
-                spanCount=3
                 getTickets(selectedCategoryId)
                 binding.ticketCategory.visibility= View.GONE
             }

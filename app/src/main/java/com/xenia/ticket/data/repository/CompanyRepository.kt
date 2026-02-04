@@ -66,14 +66,13 @@ class CompanyRepository(
     suspend fun getDefaultLanguage(): String? {
         return getString(CompanyKey.DEFAULT_LANGUAGE)
     }
-    private fun CompanyResponse.toEntity() = Company(
-        companySettingsId = this.companySettingsId,
-        companyId = this.companyId,
-        keyCode = this.keyCode,
-        value = this.value ?: "",
-        active = this.active
-    )
-
+    fun CompanyResponse.toEntity(): Company {
+        return Company(
+            keyCode = this.keyCode,
+            value = this.value,
+            applicationId = this.paymentConfig?.applicationId
+        )
+    }
     suspend fun getCompanyPrintHeaderFile(): File? {
         val path = getString(CompanyKey.COMPANYPRINT_H)
         return path?.let { File(it) }

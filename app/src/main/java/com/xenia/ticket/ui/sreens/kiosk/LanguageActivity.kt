@@ -94,6 +94,7 @@ class LanguageActivity : AppCompatActivity(),
             if (!gateway.isNullOrEmpty()) {
                 setBankLogo()
             }
+
         }
         super.onResume()
     }
@@ -104,7 +105,6 @@ class LanguageActivity : AppCompatActivity(),
         }
         super.onRestart()
     }
-
 
 
     private fun setupBackgroundImage() {
@@ -215,6 +215,19 @@ class LanguageActivity : AppCompatActivity(),
                     showSnackbar(binding.root, "Company data missing in database!")
                     dismissLoader()
                     return@launch
+                }
+                val gateway = companyRepository.getString(CompanyKey.PAYMENT_GATEWAY)
+
+                if (gateway.equals("PineLabs", ignoreCase = true)) {
+
+                    val appId = company.applicationId
+
+                    if (!appId.isNullOrEmpty()) {
+
+                        sessionManager.savePineLabsAppId(appId)
+                        Log.e("APP_ID_CHECK", "AppId = ${sessionManager.getPineLabsAppId()}")
+                        Log.e("PINE_CONFIG", "Saved PineLabs AppId: $appId")
+                    }
                 }
 
                 enabledLanguages = companyRepository

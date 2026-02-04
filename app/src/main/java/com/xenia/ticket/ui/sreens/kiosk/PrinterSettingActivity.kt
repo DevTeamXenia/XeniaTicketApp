@@ -13,6 +13,7 @@ import com.xenia.ticket.utils.common.Constants.PRINTER_FALCON
 import com.xenia.ticket.utils.common.Constants.PRINTER_KIOSK
 import com.xenia.ticket.utils.common.SessionManager
 import com.urovo.sdk.print.PrinterProviderImpl
+import com.xenia.ticket.utils.common.Constants.PRINTER_PINELABS
 
 class PrinterSettingActivity : AppCompatActivity() {
 
@@ -82,6 +83,7 @@ class PrinterSettingActivity : AppCompatActivity() {
             )
         }
         binding.imgKiosk.setOnClickListener { selectPrinter(PRINTER_KIOSK, binding.imgKiosk) }
+        binding.imgPine.setOnClickListener { selectPrinter(PRINTER_PINELABS, binding.imgPine) }
 
 
         binding.btnSave.setOnClickListener {
@@ -110,6 +112,7 @@ class PrinterSettingActivity : AppCompatActivity() {
         binding.imgFalcon.setBackgroundResource(R.drawable.bg_printer_unselected)
         binding.imgBPOS200Max.setBackgroundResource(R.drawable.bg_printer_unselected)
         binding.imgKiosk.setBackgroundResource(R.drawable.bg_printer_unselected)
+        binding.imgPine.setBackgroundResource(R.drawable.bg_printer_unselected)
         selectedView.setBackgroundResource(R.drawable.bg_printer_selected)
     }
     private fun savePrinterSelection() {
@@ -154,6 +157,7 @@ class PrinterSettingActivity : AppCompatActivity() {
                 PRINTER_FALCON -> selectPrinter(PRINTER_FALCON, binding.imgFalcon)
                 PRINTER_B200MAX -> selectPrinter(PRINTER_B200MAX, binding.imgBPOS200Max)
                 PRINTER_KIOSK -> selectPrinter(PRINTER_KIOSK, binding.imgKiosk)
+                PRINTER_PINELABS -> selectPrinter(PRINTER_PINELABS, binding.imgPine)
             }
         }
     }

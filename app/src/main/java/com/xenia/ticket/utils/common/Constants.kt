@@ -18,7 +18,7 @@ object Constants {
     const val PRINTER_FALCON = "FALCON"
     const val PRINTER_B200MAX = "B200MAX"
     const val PRINTER_KIOSK = "KIOSK"
-    const val PRINTER_I900 = "I900"
+    const val PRINTER_PINELABS = "PineLabs"
     const val BASE_IMG_URL = "https://apiimage.xeniapos.com/Temple/assest/uploads?fileName="
 
 }

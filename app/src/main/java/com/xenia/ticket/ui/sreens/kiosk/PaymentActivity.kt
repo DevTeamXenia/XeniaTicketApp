@@ -54,6 +54,13 @@ import java.util.Date
 import java.util.Locale
 import kotlin.getValue
 import androidx.core.graphics.set
+import com.xenia.ticket.utils.common.PlutusConstants
+import com.xenia.ticket.utils.common.PlutusServiceManager
+import org.json.JSONArray
+import org.json.JSONObject
+import android.util.Base64
+import java.io.ByteArrayOutputStream
+
 
 
 class PaymentActivity : AppCompatActivity() {
@@ -75,7 +82,7 @@ class PaymentActivity : AppCompatActivity() {
     private var from: String? = null
     private var selectedLanguage: String? = null
     private var isBound = false
-
+    private lateinit var plutusManager: PlutusServiceManager
     private var printerService: IPrinterService? = null
     private var serviceConnection: ServiceConnection? = null
     private val handler = Handler(Looper.getMainLooper())
@@ -101,7 +108,10 @@ class PaymentActivity : AppCompatActivity() {
             sessionManager.getBillingSelectedLanguage()
         else
             sessionManager.getSelectedLanguage()
-
+        plutusManager = PlutusServiceManager(this) { response ->
+            Log.e("PLUTUS_RESP", response)
+            Toast.makeText(this, response, Toast.LENGTH_LONG).show()
+        }
         setLocale(this@PaymentActivity, selectedLanguage)
         if (status.equals("S")) {
             binding.linSuccess.visibility = View.VISIBLE
@@ -127,7 +137,6 @@ class PaymentActivity : AppCompatActivity() {
         }
 
     }
-
     private fun configPrinter() {
         val selectedPrinter = sessionManager.getSelectedPrinter()
         when (selectedPrinter) {
@@ -158,9 +167,11 @@ class PaymentActivity : AppCompatActivity() {
                 } catch (_: Exception) {
                     redirect()
                 }
-            }
 
+            }     "PineLabs" -> {
+            printReceiptPlutus()
 
+        }
             else -> {
                 val printIntent = Intent(this, PrinterSettingActivity::class.java).apply {
                     putExtra("from", from)
@@ -172,11 +183,10 @@ class PaymentActivity : AppCompatActivity() {
                     putExtra("ps", "pd")
                 }
                 startActivity(printIntent)
-                finish() // Optional: close current activity
+                finish()
             }
         }
     }
-
     private fun bindAndPrintSale() {
         if (isBound) {
             initReceiptPrint(true)
@@ -239,6 +249,9 @@ class PaymentActivity : AppCompatActivity() {
         curConnect = POSConnect.createDevice(POSConnect.DEVICE_TYPE_USB)
         curConnect!!.connect(pathName, connectListener)
     }
+
+
+
 
     @SuppressLint("DefaultLocale")
     private fun initReceiptPrint(isB1008: Boolean) {
@@ -327,6 +340,142 @@ class PaymentActivity : AppCompatActivity() {
             delay(2000)
 
             redirect()
+        }
+    }
+    @SuppressLint("DefaultLocale")
+    private fun printReceiptPlutus() {
+        lifecycleScope.launch {
+            val allVazhipaduItems = ticketRepository.getAllTicketsInCart()
+            val currentDate = SimpleDateFormat(
+                "dd-MMM-yyyy hh:mm a",
+                Locale.ENGLISH
+            ).format(Date())
+
+            // ✅ Load Header/Footer URLs (now using them directly as full URLs)
+            val headerFileName = companyRepository.getString(CompanyKey.COMPANYPRINT_H)
+            val footerFileName = companyRepository.getString(CompanyKey.COMPANYPRINT_F)
+
+            val headerUrl = headerFileName  // Direct assignment
+            val footerUrl = footerFileName  // Direct assignment
+
+            // ✅ Load Bitmaps (with enhanced logging)
+            val (headerBitmap, footerBitmap) = withContext(Dispatchers.IO) {
+                val header = headerUrl?.let {
+                    Log.d("PRINT_DEBUG", "Loading header from: $it")
+                    try {
+                        loadBitmapFromUrl(it)?.also { bmp -> Log.d("PRINT_DEBUG", "Header loaded successfully") } ?: run { Log.e("PRINT_DEBUG", "Header load failed: bitmap is null"); null }
+                    } catch (e: Exception) {
+                        Log.e("PRINT_DEBUG", "Header load exception: ${e.message}", e)
+                        null
+                    }
+                }
+                val footer = footerUrl?.let {
+                    Log.d("PRINT_DEBUG", "Loading footer from: $it")
+                    try {
+                        loadBitmapFromUrl(it)?.also { bmp -> Log.d("PRINT_DEBUG", "Footer loaded successfully") } ?: run { Log.e("PRINT_DEBUG", "Footer load failed: bitmap is null"); null }
+                    } catch (e: Exception) {
+                        Log.e("PRINT_DEBUG", "Footer load exception: ${e.message}", e)
+                        null
+                    }
+                }
+                header to footer
+            }
+
+            val receiptLines: List<String> =
+                if (companyRepository.getDefaultLanguage() == selectedLanguage) {
+                    generateReceiptTextDefault(
+                        currentDate,
+                        transID,
+                        orderID.toString(),
+                        allVazhipaduItems,
+                        selectedLanguage!!
+                    )
+                } else {
+                    generateReceiptText(
+                        currentDate,
+                        transID,
+                        orderID.toString(),
+                        allVazhipaduItems,
+                        selectedLanguage!!
+                    )
+                }
+
+            fun bitmapToBase64(bitmap: Bitmap): String {
+                val outputStream = ByteArrayOutputStream()
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+                return Base64.encodeToString(outputStream.toByteArray(), Base64.NO_WRAP)
+            }
+
+            val printArray = JSONArray()
+
+            // ✅ Header Image Print
+            headerBitmap?.let {
+                printArray.put(
+                    JSONObject().apply {
+                        put("PrintDataType", 2)
+                        put("PrinterWidth", 24)
+                        put("IsCenterAligned", true)
+                        put("DataToPrint", bitmapToBase64(it))
+                    }
+                )
+            }
+
+            receiptLines.forEach { line ->
+                printArray.put(
+                    JSONObject().apply {
+                        put("PrintDataType", 0) // TEXT
+                        put("PrinterWidth", 24)
+                        put("IsCenterAligned", false)
+                        put("DataToPrint", line)
+                    }
+                )
+            }
+
+            footerBitmap?.let {
+                printArray.put(
+                    JSONObject().apply {
+                        put("PrintDataType", 2)
+                        put("PrinterWidth", 24)
+                        put("IsCenterAligned", true)
+                        put("DataToPrint", bitmapToBase64(it))
+                    }
+                )
+            }
+
+            printArray.put(
+                JSONObject().apply {
+                    put("PrintDataType", 0)
+                    put("PrinterWidth", 24)
+                    put("IsCenterAligned", true)
+                    put("DataToPrint", "\n\n\n")
+                }
+            )
+
+            // ==============================
+            // ✅ Final Plutus Print Request
+            // ==============================
+
+            val request = JSONObject().apply {
+
+                put("Header", JSONObject().apply {
+                    put("ApplicationId", "d585cf57dc5f4dab9e99fc1d37fa1333")
+                    put("UserId", "cashier1")
+                    put("MethodId", PlutusConstants.METHOD_PRINT)
+                    put("VersionNo", "1.0")
+                })
+
+                put("Detail", JSONObject().apply {
+                    put("PrintRefNo", "PR${System.currentTimeMillis()}")
+                    put("SavePrintData", true)
+                    put("Data", printArray)
+                })
+            }
+            Log.e("PLUTUS_PRINT_REQ", request.toString())
+            plutusManager.sendRequest(request.toString())
+
+            delay(2000)
+            redirect()
+
         }
     }
 
@@ -797,6 +946,221 @@ class PaymentActivity : AppCompatActivity() {
             null
         }
     }
+    private suspend fun generateReceiptText(
+        currentDate: String,
+        transID: String?,
+        orderID: String?,
+        ticket: List<Ticket>,
+        selectedLanguage: String
+    ): List<String> {
+        val lines = mutableListOf<String>()
+        val defaultLang = companyRepository.getDefaultLanguage().toString()
+
+        // Localized labels
+        val labelReceiptNo = getLocalizedString("Receipt No", selectedLanguage)
+        val labelDate = getLocalizedString("Date", selectedLanguage)
+        val labelItem = getLocalizedString("Ticket", selectedLanguage)
+        val labelPrice = getLocalizedString("Price", selectedLanguage)
+        val labelAmount = getLocalizedString("Amount", selectedLanguage)
+        val labelUPI = getLocalizedString("UPI Reference No", selectedLanguage)
+        val labelQty = getLocalizedString("Qty", selectedLanguage)
+        val labelPhoneNumber = getLocalizedString("Phone No", selectedLanguage)
+        val labelTotalAmount = getLocalizedString("Total Amount", selectedLanguage)
+        val labelName = getLocalizedString("Name", selectedLanguage)
+        val labelDReceiptNo = getLocalizedString("Receipt No", defaultLang)
+        val labelDDate = getLocalizedString("Date", defaultLang)
+        val labelDPhonenumber = getLocalizedString("Phone No", defaultLang)
+        val labelDTotalAmount = getLocalizedString("Total Amount", defaultLang)
+        val labelDName = getLocalizedString("Name", defaultLang)
+        val labelDItem = getLocalizedString("Ticket", defaultLang)
+        val labelDPrice = getLocalizedString("Price", defaultLang)
+        val labelDAmount = getLocalizedString("Amount", defaultLang)
+        val labelDQty = getLocalizedString("Qty", defaultLang)
+
+        // Title (centered, in both languages)
+        val receiptTitle = when (selectedLanguage) {
+            "ml" -> "പ്രവേശന ടിക്കറ്റ്"
+            "kn" -> "ಪ್ರವೇಶ ಟಿಕೆಟ್"
+            "ta" -> "நுழைவு டிக்கெட்"
+            "te" -> "ప్రవేశ టికెట్"
+            "hi" -> "प्रवेश टिकट"
+            "pa" -> "ਪ੍ਰਵੇਸ਼ ਟਿਕਟ"
+            "mr" -> "प्रवेश तिकीट"
+            "si" -> "ප්‍රවේශ ටිකට්"
+            else -> "Entry Ticket"
+        }
+        val receiptDTitle = when (defaultLang) {
+            "ml" -> "പ്രവേശന ടിക്കറ്റ്"
+            "kn" -> "ಪ್ರವೇಶ ಟಿಕೆಟ್"
+            "ta" -> "நுழைவு டிக்கெட்"
+            "te" -> "ప్రవేశ టికెట్"
+            "hi" -> "प्रवेश टिकट"
+            "pa" -> "ਪ੍ਰਵੇਸ਼ ਟਿਕਟ"
+            "mr" -> "प्रवेश तिकीट"
+            "si" -> "ප්‍රවේශ ටිකට්"
+            else -> "Entry Ticket"
+        }
+        lines.add(receiptTitle.center(24))
+        lines.add(receiptDTitle.center(24))
+        lines.add("")
+
+        // Receipt No and Date
+        lines.add("$labelReceiptNo: ${prefix}$orderID")
+        lines.add("($labelDReceiptNo)")
+        lines.add("$labelDate: $currentDate")
+        lines.add("($labelDDate)")
+        lines.add("")
+
+        // Header for items
+        lines.add("$labelItem|$labelPrice|$labelQty|$labelAmount")
+        lines.add("$labelDItem|$labelDPrice|$labelDQty|$labelDAmount")
+        lines.add("-".repeat(24))
+
+        var totalAmount = 0.0
+        for (item in ticket) {
+            val priceStr = String.format(Locale.ENGLISH, "%.2f", item.daRate)
+            val qtyStr = item.daQty.toString()
+            val amountStr = String.format(Locale.ENGLISH, "%.2f", item.daTotalAmount)
+            totalAmount += item.daTotalAmount
+
+            val itemName = when (selectedLanguage.lowercase()) {
+                "ml" -> item.ticketNameMa
+                "hi" -> item.ticketNameHi
+                "ta" -> item.ticketNameTa
+                "kn" -> item.ticketNameKa
+                "te" -> item.ticketNameTe
+                "si" -> item.ticketNameSi!!
+                "pa" -> item.ticketNamePa
+                "mr" -> item.ticketNameMr
+                else -> item.ticketName
+            } ?: ""
+            val itemDName = when (defaultLang.lowercase()) {
+                "ml" -> item.ticketNameMa
+                "hi" -> item.ticketNameHi
+                "ta" -> item.ticketNameTa
+                "kn" -> item.ticketNameKa
+                "te" -> item.ticketNameTe
+                "si" -> item.ticketNameSi!!
+                "pa" -> item.ticketNamePa
+                "mr" -> item.ticketNameMr
+                else -> item.ticketName
+            } ?: ""
+
+            itemName.chunked(18).forEach { lines.add(it) }
+            itemDName.chunked(18).forEach { lines.add(it) }
+            lines.add("$priceStr|$qtyStr|$amountStr")
+        }
+
+        lines.add("-".repeat(24))
+        lines.add("$labelTotalAmount: ${String.format(Locale.ENGLISH, "%.2f", totalAmount)}")
+        lines.add("($labelDTotalAmount)")
+
+        if (!transID.isNullOrEmpty()) {
+            lines.add("$labelUPI: $transID")
+        }
+
+        lines.add("$labelName: $name")
+        lines.add("($labelDName)")
+        lines.add("$labelPhoneNumber: $phoneNo")
+        lines.add("($labelDPhonenumber)")
+
+        if (from.isNullOrEmpty() || from != "billing") {
+            lines.add("Scan QR for verification")
+        }
+
+        return lines
+    }
+
+    private fun generateReceiptTextDefault(
+        currentDate: String,
+        transID: String?,
+        orderID: String?,
+        ticket: List<Ticket>,
+        selectedLanguage: String
+    ): List<String> {
+        val lines = mutableListOf<String>()
+
+        val labelReceiptNo = getLocalizedString("Receipt No", selectedLanguage)
+        val labelDate = getLocalizedString("Date", selectedLanguage)
+        val labelItem = getLocalizedString("Ticket", selectedLanguage)
+        val labelPrice = getLocalizedString("Price", selectedLanguage)
+        val labelAmount = getLocalizedString("Amount", selectedLanguage)
+        val labelUPI = getLocalizedString("UPI Reference No", selectedLanguage)
+        val labelQty = getLocalizedString("Qty", selectedLanguage)
+        val labelPhoneNumber = getLocalizedString("Phone No", selectedLanguage)
+        val labelTotalAmount = getLocalizedString("Total Amount", selectedLanguage)
+        val labelName = getLocalizedString("Name", selectedLanguage)
+
+        val receiptTitle = when (selectedLanguage) {
+            "ml" -> "പ്രവേശന ടിക്കറ്റ്"
+            "kn" -> "ಪ್ರವೇಶ ಟಿಕೆಟ್"
+            "ta" -> "நுழைவு டிக்கெட்"
+            "te" -> "ప్రవేశ టికెట్"
+            "hi" -> "प्रवेश टिकट"
+            "pa" -> "ਪ੍ਰਵੇਸ਼ ਟਿਕਟ"
+            "mr" -> "प्रवेश तिकीट"
+            "si" -> "ප්‍රවේශ ටිකට්"
+            else -> "Entry Ticket"
+        }
+        lines.add(receiptTitle.center(24))
+        lines.add("")
+
+        lines.add("$labelReceiptNo: ${prefix}$orderID")
+        lines.add("$labelDate: $currentDate")
+        lines.add("")
+
+        lines.add("$labelItem|$labelPrice|$labelQty|$labelAmount")
+        lines.add("-".repeat(24))
+
+        var totalAmount = 0.0
+        for (item in ticket) {
+            val priceStr = String.format(Locale.ENGLISH, "%.2f", item.daRate)
+            val qtyStr = item.daQty.toString()
+            val amountStr = String.format(Locale.ENGLISH, "%.2f", item.daTotalAmount)
+            totalAmount += item.daTotalAmount
+
+            val itemName = when (selectedLanguage.lowercase()) {
+                "ml" -> item.ticketNameMa
+                "hi" -> item.ticketNameHi
+                "ta" -> item.ticketNameTa
+                "kn" -> item.ticketNameKa
+                "te" -> item.ticketNameTe
+                "si" -> item.ticketNameSi!!
+                "pa" -> item.ticketNamePa
+                "mr" -> item.ticketNameMr
+                else -> item.ticketName
+            } ?: ""
+
+            itemName.chunked(18).forEach { lines.add(it) }
+            lines.add("$priceStr|$qtyStr|$amountStr")
+        }
+
+        lines.add("-".repeat(24))
+        lines.add("$labelTotalAmount: ${String.format(Locale.ENGLISH, "%.2f", totalAmount)}")
+
+        if (!transID.isNullOrEmpty()) {
+            lines.add("$labelUPI: $transID")
+        }
+
+        lines.add("+".repeat(24))
+        lines.add("$labelName: $name")
+        lines.add("$labelPhoneNumber: $phoneNo")
+        lines.add("+".repeat(24))
+
+        if (from.isNullOrEmpty() || from != "billing") {
+            lines.add("Scan QR for verification")
+        }
+
+        return lines
+    }
+
+    // Helper to center text
+    private fun String.center(width: Int): String {
+        val padding = (width - this.length) / 2
+        return " ".repeat(maxOf(0, padding)) + this
+    }
+
+
     private fun getLocalizedString(key: String, languageCode: String): String {
         return when (languageCode.lowercase()) {
 

@@ -2,12 +2,9 @@ package com.xenia.ticket.data.network.model
 
 import com.google.gson.annotations.SerializedName
 
-data class CompanyResponse(
-    @SerializedName("CompanySettingsId")
-    val companySettingsId: Int,
 
-    @SerializedName("CompanyId")
-    val companyId: Int,
+
+data class CompanyResponse(
 
     @SerializedName("KeyCode")
     val keyCode: String,
@@ -15,7 +12,14 @@ data class CompanyResponse(
     @SerializedName("Value")
     val value: String?,
 
-    @SerializedName("Active")
-    val active: Boolean
+    @SerializedName("PaymentConfig")
+    val paymentConfig: PaymentConfig?
 )
+
+data class PaymentConfig(
+
+    @SerializedName("ApplicationId")
+    val applicationId: String
+)
+
 
