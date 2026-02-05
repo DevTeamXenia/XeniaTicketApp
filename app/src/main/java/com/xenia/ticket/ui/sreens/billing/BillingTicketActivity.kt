@@ -59,6 +59,7 @@ import org.koin.android.ext.android.inject
 import java.util.Locale
 import retrofit2.HttpException
 import kotlin.getValue
+import kotlin.toString
 
 class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
     CategoryAdapter.OnCategoryClickListener, OnBookingTicketClick,
@@ -83,6 +84,7 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
     private lateinit var ticketItemsItems: TicketDto
     private var formattedTotalAmount: String = ""
 
+    private lateinit var plutusManager: PlutusServiceManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         selectedLanguage = sessionManager.getBillingSelectedLanguage()
@@ -93,6 +95,12 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
         binding = ActivityBillinTicketBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        plutusManager = PlutusServiceManager(this) { response ->
+            Log.e("PLUTUS_RESP", response.toString())
+            Toast.makeText(this, response, Toast.LENGTH_LONG).show()
+        }
+
+        plutusManager.bindService()
         setupUI()
         fetchDetails()
         setupRecyclerViews()
@@ -128,7 +136,10 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
                 binding.drawerLayout.openDrawer(GravityCompat.START)
             }
         }
+
+
     }
+
     private fun getLabel() {
         lifecycleScope.launch {
 

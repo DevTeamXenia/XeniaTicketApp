@@ -8,17 +8,14 @@ class PlutusServiceManager(
     private val context: Context,
     private val callback: (String) -> Unit
 ) {
-
     private var serverMessenger: Messenger? = null
     private var isBound = false
-
     private val incomingHandler = object : Handler(Looper.getMainLooper()) {
         override fun handleMessage(msg: Message) {
             val response = msg.data.getString(PlutusConstants.RESPONSE_TAG)
             response?.let { callback(it) }
         }
     }
-
     private val clientMessenger = Messenger(incomingHandler)
 
     private val connection = object : ServiceConnection {

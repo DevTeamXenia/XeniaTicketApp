@@ -79,4 +79,7 @@ dependencies {
     implementation ("androidx.room:room-ktx:2.8.3")
     ksp("androidx.room:room-compiler:2.8.3")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.2.0")
+
+
+    implementation("androidx.lifecycle:lifecycle-process:2.8.7")
 }

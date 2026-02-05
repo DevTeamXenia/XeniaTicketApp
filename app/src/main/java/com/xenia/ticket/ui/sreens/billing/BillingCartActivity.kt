@@ -57,7 +57,7 @@ import kotlin.getValue
 
 class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartClickListener,
     OnTicketClickListener,
-    CustomInternetAvailabilityDialog.InternetAvailabilityListener{
+    CustomInternetAvailabilityDialog.InternetAvailabilityListener {
 
     private lateinit var binding: ActivityBillingCartBinding
     private val ticketRepository: TicketRepository by inject()
@@ -76,6 +76,8 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
     private var userId: Int = 0
     private var imageData: ByteArray? = null
     private lateinit var plutusManager: PlutusServiceManager
+    private var transactionId: String? = null
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -89,8 +91,17 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
         }
 
         plutusManager = PlutusServiceManager(this) { response ->
-            Log.e("PLUTUS_RESP", response)
-            Toast.makeText(this, response, Toast.LENGTH_LONG).show()
+            val jsonResponse = JSONObject(response)
+
+            val responseObj = jsonResponse.optJSONObject("Response")
+            val statusMsg = responseObj?.optString("ResponseMsg", "") ?: ""
+
+            if (statusMsg.equals("APPROVED", ignoreCase = true)) {
+                lifecycleScope.launch {
+                    postTicketPaymentHistory("S", "Successful")
+                }
+            }
+            Toast.makeText(this, statusMsg, Toast.LENGTH_LONG).show()
         }
 
         plutusManager.bindService()
@@ -187,28 +198,16 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                     showLoader(ctx, "Posting ticket...")
                     postTicketPaymentHistory("S", "Successful")
                     return@launch
-                }
-              else if (companyRepository.getBoolean(CompanyKey.ISPAYMENTGATEWAY)) {
+                } else if (companyRepository.getBoolean(CompanyKey.ISPAYMENTGATEWAY)) {
                     binding.btnPay.isEnabled = false
                     showLoader(ctx, "Generating Qr code...")
                     generatePayment()
-                } else {
-                    binding.btnPay.isEnabled = false
-                    showLoader(ctx, "Posting ticket...")
-                    postTicketPaymentHistory("S", "Successful")
                 }
             }
 
-            lifecycleScope.launch {
-                postTicketPaymentHistory(
-                    status = "S",
-                    statusDesc = "Payment Success"
-                )
-            }
+
         }
     }
-
-
     private fun generatePayment() {
         lifecycleScope.launch {
 
@@ -228,12 +227,15 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                     dismissLoader()
 //                    generateCanaraPaymentQrCode(formattedTotalAmount)
                 }
+
                 "FederalBank" -> {
                     //generateFederalPaymentQrCode(totalAmount)
                 }
+
                 "PineLabs" -> {
                     generatePineLabPaymentQrCode(totalAmount)
                 }
+
                 else -> {
                     dismissLoader()
 //                    generatePaymentQrCode(formattedTotalAmount)
@@ -243,11 +245,20 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
         }
     }
     private fun generatePineLabPaymentQrCode(totalAmount: Double) {
+        if (!::plutusManager.isInitialized) {
+            showSnackbar(binding.root, "Payment service not ready")
+            dismissLoader()
+            return
+        }
+        val transactionType = when (selectedPaymentMode) {
+            CARD -> 4001
+            else -> 5120
+        }
+        transactionId=generateNumericTransactionReferenceID()
 
-        val transactionType = 4001  // CARD ONLY
 
         val request = JSONObject().apply {
-
+            val formattedAmount = totalAmount * 100
             put("Header", JSONObject().apply {
                 put("ApplicationId", sessionManager.getPineLabsAppId())
                 put("UserId", "cashier1")
@@ -257,54 +268,15 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
 
             put("Detail", JSONObject().apply {
                 put("TransactionType", transactionType)
-                put("BillingRefNo", "TXN${System.currentTimeMillis()}")
-                put("PaymentAmount", totalAmount.toString())
+                put("BillingRefNo", transactionId)
+                put("PaymentAmount", formattedAmount.toString())
             })
         }
-
-        Log.e("PLUTUS_REQ", request.toString())
-
         plutusManager.sendRequest(request.toString())
+
 
     }
 
-
-
-
-    private fun printReceipt() {
-        val printArray = JSONArray().apply {
-            put(JSONObject().apply {
-                put("PrintDataType", 0)
-                put("PrinterWidth", 24)
-                put("IsCenterAligned", true)
-                put("DataToPrint", "PAYMENT SUCCESS")
-            })
-
-            put(JSONObject().apply {
-                put("PrintDataType", 0)
-                put("PrinterWidth", 24)
-                put("IsCenterAligned", false)
-                put("DataToPrint", "Amount: ₹100.00")
-            })
-        }
-
-        val request = JSONObject().apply {
-            put("Header", JSONObject().apply {
-                put("ApplicationId", "d585cf57dc5f4dab9e99fc1d37fa1333")
-                put("UserId", "cashier1")
-                put("MethodId", PlutusConstants.METHOD_PRINT)
-                put("VersionNo", "1.0")
-            })
-
-            put("Detail", JSONObject().apply {
-                put("PrintRefNo", "PR12345")
-                put("SavePrintData", true)
-                put("Data", printArray)
-            })
-        }
-        Log.e("PLUTUS_RESP", request.toString())
-        plutusManager.sendRequest(request.toString())
-    }
 
     @SuppressLint("SetTextI18n", "DefaultLocale")
     private fun loadDarshanItems() {
@@ -368,6 +340,7 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
             )
         }
     }
+
     private suspend fun postTicketPaymentHistory(
         status: String,
         statusDesc: String,
@@ -419,7 +392,7 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                 CompanyId = companyId!!,
                 UserId = userId,
                 Name = name,
-                tTranscationId = generateNumericTransactionReferenceID(),
+                tTranscationId = transactionId.toString(),
                 tCustRefNo = "",
                 tNpciTransId = "",
                 tIdProofNo = "",
@@ -491,6 +464,7 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
             }
         }
     }
+
     private fun handleRetry(
         e: Exception,
         status: String,
@@ -568,6 +542,7 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
     override fun onRetryClicked() {
         loadDarshanItems()
     }
+
     override fun onDialogInactive() {
         loadDarshanItems()
     }
@@ -575,19 +550,12 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
     override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
         return super.dispatchTouchEvent(ev)
     }
+
     fun showMessage(msg: String) {
         AlertDialog.Builder(this)
             .setMessage(msg)
             .setPositiveButton("OK", null)
             .show()
     }
-    override fun onBackPressed() {
-        val intent = Intent(this, BillingTicketActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                    Intent.FLAG_ACTIVITY_NEW_TASK or
-                    Intent.FLAG_ACTIVITY_CLEAR_TASK
-        }
-        startActivity(intent)
-        finish()
-    }
+
 }
