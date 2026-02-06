@@ -108,9 +108,8 @@ class SyncActivity : AppCompatActivity() {
                     }
 
                     val isFirstLoginKey = "isFirstLogin_$userId"
-                    val isFirstLogin = sharedPref.getBoolean(isFirstLoginKey, true)
-
-                    if (isFirstLogin) {
+                    val selectedPrinter = sessionManager.getSelectedPrinter()
+                    if (selectedPrinter==null) {
                         openPrinterSetup()
 
                         sharedPref.edit {

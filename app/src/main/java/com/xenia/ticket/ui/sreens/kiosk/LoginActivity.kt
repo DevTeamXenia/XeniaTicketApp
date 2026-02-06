@@ -20,6 +20,7 @@ import com.xenia.ticket.ui.sreens.billing.BillingTicketActivity
 import com.xenia.ticket.utils.common.CommonMethod.dismissLoader
 import com.xenia.ticket.utils.common.CommonMethod.isInternetAvailable
 import com.xenia.ticket.utils.common.CommonMethod.setLocale
+import com.xenia.ticket.utils.common.CommonMethod.showLoader
 import com.xenia.ticket.utils.common.CommonMethod.showSnackbar
 import com.xenia.ticket.utils.common.Constants.PRINTER_KIOSK
 import com.xenia.ticket.utils.common.JwtUtils
@@ -208,8 +209,12 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
             return
         }
 
+        showLoader(this, "Logging...")
+
+
         CoroutineScope(Dispatchers.Main).launch {
             try {
+
                 val response = loginRepository.login(userId, password)
                 val token = response.Token
 
@@ -226,27 +231,28 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
                         clear()
                     }
                 }
+
                 val userType = UserType.fromValue(
                     JwtUtils.getUserType(token)
                 )
+
                 val company = companyRepository.getCompany()
 
                 Log.d("LOGIN", "Company value = $company")
-                if (company == null) {
-                    startActivity(Intent(this@LoginActivity, SyncActivity::class.java))
-                    finish()
-                } else {
-                    startActivity(Intent(this@LoginActivity, SyncActivity::class.java))
-                    finish()
-                }
+
+                startActivity(Intent(this@LoginActivity, SyncActivity::class.java))
+                finish()
+
             } catch (e: HttpException) {
 
                 val errorBody = e.response()?.errorBody()?.string()
+
                 val msg = when (e.code()) {
                     404 -> "Incorrect Username!"
                     401 -> "Incorrect Password!"
                     else -> errorBody ?: e.message() ?: "Something went wrong!"
                 }
+
                 showSnackbar(binding.root, msg)
 
             } catch (e: Exception) {
@@ -255,9 +261,13 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
                     binding.root,
                     e.localizedMessage ?: "Something went wrong! Please try again."
                 )
+
+            } finally {
+                dismissLoader()   // ✅ ALWAYS HIDE LOADER
             }
         }
     }
+
 
     private fun hideKeyboard() {
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager

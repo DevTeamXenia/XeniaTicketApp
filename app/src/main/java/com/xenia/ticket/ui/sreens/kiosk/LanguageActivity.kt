@@ -75,6 +75,7 @@ class LanguageActivity : AppCompatActivity(),
         lifecycleScope.launch {
             ticketRepository.clearAllData()
         }
+
         requestOverlayPermission()
         loadCompanyDetails()
     }

@@ -25,6 +25,9 @@ import androidx.core.graphics.createBitmap
 import com.xenia.ticket.data.network.model.ItemSummaryReportResponse
 import com.xenia.ticket.data.network.model.OfferItem
 import com.xenia.ticket.data.repository.CompanyRepository
+import kotlinx.coroutines.withContext
+import org.json.JSONArray
+import org.json.JSONObject
 import kotlin.apply
 import kotlin.collections.forEach
 import kotlin.collections.isNotEmpty
@@ -34,6 +37,7 @@ import kotlin.text.format
 import kotlin.text.lowercase
 import kotlin.text.take
 import kotlin.text.uppercase
+import kotlin.time.Duration.Companion.convert
 
 class ReportPrint(
     private val context: Context,
@@ -47,19 +51,26 @@ class ReportPrint(
     private var printerService: IPrinterService? = null
     private var curConnect: IDeviceConnection? = null
     private var isBound = false
+    private lateinit var plutusManager: PlutusServiceManager
     private var serviceConnection: ServiceConnection? = null
 
     fun setLifecycleScope(scope: LifecycleCoroutineScope) {
         lifecycleScope = scope
+
+
+    }
+    fun initPlutus() {
+        plutusManager = PlutusServiceManager(context) { response ->
+            Log.e("PLUTUS_RESP", response)
+        }
+
+        plutusManager.bindService()
     }
 
     fun printDailySummary(
         reportStart: String,
-        donation: Double,
-        Seva_Particulars: Double,
-        pooja_items: Double,
-        darshan: Double,
         reportEnd: String,
+        order: Double,
         cash: Double,
         card: Double,
         upi: Double,
@@ -83,7 +94,21 @@ class ReportPrint(
             } else if (selectedPrinter == "FALCON" || selectedPrinter == "KIOSK") {
                 usbReady = connectUSBPrinter()
             }
-
+            if (selectedPrinter == "I900") {
+                initPlutus()
+                printDailySummaryPlutus(
+                    reportStart,
+                    reportEnd,
+                    order,
+                    cash,
+                    card,
+                    upi,
+                    net,
+                    createdOnStr,
+                    generatedBy,
+                    selectedLanguage
+                )
+            }
             if ((selectedPrinter == "FALCON" || selectedPrinter == "KIOSK") && !usbReady) {
                 Log.e("ReportPrint", "USB printer not ready — aborting print.")
                 return@launch
@@ -118,10 +143,7 @@ class ReportPrint(
                 reportTitle = "Summary Report",
                 reportStart = reportStart,
                 reportEnd = reportEnd,
-                donation = donation,
-                Seva_Particulars = Seva_Particulars,
-                pooja_items = pooja_items,
-                darshan = darshan,
+                order = order,
                 cash = cash,
                 card = card,
                 upi = upi,
@@ -210,6 +232,127 @@ class ReportPrint(
 
         }
     }
+
+    private suspend fun printDailySummaryPlutus(
+        reportStart: String,
+        reportEnd: String,
+        order: Double,
+        cash: Double,
+        card: Double,
+        upi: Double,
+        net: Double,
+        createdOn: String,
+        generatedBy: String,
+        selectedLanguage: String
+    ) {
+        try {
+
+            val companyId = JwtUtils.getCompanyId(sessionManager.getToken().toString())
+
+            val headerFile = File(context.cacheDir, "header_${companyId}.png")
+            val footerFile = File(context.cacheDir, "footer_${companyId}.png")
+            val (headerBitmap, footerBitmap) = withContext(Dispatchers.IO) {
+                val header = if (headerFile.exists())
+                    BitmapFactory.decodeFile(headerFile.absolutePath)?.scaleToWidth(384)
+                else null
+
+                val footer = if (footerFile.exists())
+                    BitmapFactory.decodeFile(footerFile.absolutePath)?.scaleToWidth(384)
+                else null
+
+                header to footer
+            }
+
+            // -------- REPORT CONTENT BITMAP --------
+            val contentBitmap = generateReceiptBitmap2inch(
+                reportTitle = "Daily Summary Report",
+                reportStart = reportStart,
+                reportEnd = reportEnd,
+                order = order,
+                cash = cash,
+                card = card,
+                upi = upi,
+                net = net,
+                createdOn = createdOn,
+                generatedBy = generatedBy,
+                selectedLanguage = selectedLanguage
+            )
+
+            val printArray = JSONArray()
+
+            // -------- HEADER --------
+            headerBitmap?.let {
+                val hexData = convert(it)
+
+                printArray.put(JSONObject().apply {
+                    put("PrintDataType", 2)
+                    put("PrinterWidth", 48)
+                    put("IsCenterAligned", true)
+                    put("DataToPrint", hexData)
+                })
+            }
+
+            // -------- CONTENT --------
+            contentBitmap?.let {
+                val hexData = convert(it)
+
+                printArray.put(JSONObject().apply {
+                    put("PrintDataType", 2)
+                    put("PrinterWidth", 48)
+                    put("IsCenterAligned", true)
+                    put("DataToPrint", hexData)
+                })
+            }
+
+            // -------- FOOTER --------
+            footerBitmap?.let {
+                val hexData = convert(it)
+
+                printArray.put(JSONObject().apply {
+                    put("PrintDataType", 2)
+                    put("PrinterWidth", 48)
+                    put("IsCenterAligned", true)
+                    put("DataToPrint", hexData)
+                })
+            }
+
+            // Feed lines
+            printArray.put(JSONObject().apply {
+                put("PrintDataType", 0)
+                put("PrinterWidth", 192)
+                put("IsCenterAligned", false)
+                put("DataToPrint", "\n\n")
+            })
+
+            // -------- REQUEST --------
+            val request = JSONObject().apply {
+                put("Header", JSONObject().apply {
+                    put("ApplicationId", "d585cf57dc5f4dab9e99fc1d37fa1333")
+                    put("UserId", "cashier1")
+                    put("MethodId", PlutusConstants.METHOD_PRINT)
+                    put("VersionNo", "1.0")
+                })
+
+                put("Detail", JSONObject().apply {
+                    put("PrintRefNo", createdOn)
+                    put("SavePrintData", true)
+                    put("Data", printArray)
+                })
+            }
+
+            Log.e("PLUTUS_PRINT_REQ", request.toString())
+
+            plutusManager.sendRequest(request.toString())
+
+            headerBitmap?.recycle()
+            footerBitmap?.recycle()
+            contentBitmap?.recycle()
+
+        } catch (e: Exception) {
+            Log.e("PRINT_ERROR", "Error printing daily summary: ${e.message}")
+        }
+    }
+
 
     fun printItemSummaryReport(
         response: ItemSummaryReportResponse,
@@ -424,11 +567,8 @@ class ReportPrint(
         reportTitle: String,
         reportStart: String,
         reportEnd: String,
+        order: Double,
         cash: Double,
-        donation: Double,
-        Seva_Particulars: Double,
-        pooja_items: Double,
-        darshan: Double,
         card: Double,
         upi: Double,
         net: Double,
@@ -537,7 +677,7 @@ class ReportPrint(
                 }
             }
         }
-        drawLineLocalized(labelDarshan, "Ticket", darshan)
+        drawLineLocalized(labelDarshan, "Ticket", order)
 
         y += 25f
         paint.textAlign = Paint.Align.LEFT
@@ -610,11 +750,8 @@ class ReportPrint(
         reportTitle: String,
         reportStart: String,
         reportEnd: String,
+        order: Double,
         cash: Double,
-        donation: Double,
-        Seva_Particulars: Double,
-        pooja_items: Double,
-        darshan: Double,
         card: Double,
         upi: Double,
         net: Double,
@@ -725,7 +862,7 @@ class ReportPrint(
                 }
             }
         }
-        drawLineLocalized(labelDarshan, "Ticket", darshan)
+        drawLineLocalized(labelDarshan, "Ticket", order)
 
         y += 20f
         paint.textAlign = Paint.Align.LEFT
@@ -1166,7 +1303,62 @@ class ReportPrint(
         }
     }
 
+    fun prepareBitmap(src: Bitmap, targetWidth: Int): Bitmap {
+        val ratio = targetWidth.toFloat() / src.width
+        val height = (src.height * ratio).toInt()
 
+        val resized = Bitmap.createScaledBitmap(src, targetWidth, height, true)
+
+        val bwBitmap =
+            Bitmap.createBitmap(resized.width, resized.height, Bitmap.Config.RGB_565)
+
+        for (y in 0 until resized.height) {
+            for (x in 0 until resized.width) {
+                val pixel = resized.getPixel(x, y)
+                val r = (pixel shr 16) and 0xff
+                val g = (pixel shr 8) and 0xff
+                val b = pixel and 0xff
+                val gray = (r + g + b) / 3
+
+                bwBitmap.setPixel(
+                    x,
+                    y,
+                    if (gray < 160) Color.BLACK else Color.WHITE
+                )
+            }
+        }
+        return bwBitmap
+    }
+
+
+    fun convert(bitmap: Bitmap): String {
+        val width = bitmap.width
+        val height = bitmap.height
+        val hex = StringBuilder()
+
+        for (y in 0 until height) {
+            var x = 0
+            while (x < width) {
+                var byteValue = 0
+                for (bit in 0 until 8) {
+                    if (x + bit < width) {
+                        val pixel = bitmap.getPixel(x + bit, y)
+                        val r = (pixel shr 16) and 0xff
+                        val g = (pixel shr 8) and 0xff
+                        val b = pixel and 0xff
+                        val gray = (r + g + b) / 3
+                        if (gray < 128) {
+                            byteValue = byteValue or (1 shl (7 - bit))
+                        }
+                    }
+                }
+                hex.append(String.format("%02X", byteValue))
+                x += 8
+            }
+        }
+
+        return hex.toString()
+    }
 
 
 }

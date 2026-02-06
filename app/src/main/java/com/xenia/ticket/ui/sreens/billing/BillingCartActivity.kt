@@ -54,7 +54,6 @@ import retrofit2.HttpException
 import java.util.Locale
 import kotlin.getValue
 
-
 class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartClickListener,
     OnTicketClickListener,
     CustomInternetAvailabilityDialog.InternetAvailabilityListener {
@@ -100,8 +99,13 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                 lifecycleScope.launch {
                     postTicketPaymentHistory("S", "Successful")
                 }
+            }else{
+                dismissLoader()
+                binding.btnPay.isEnabled = true
+                Toast.makeText(this, "Something went wrong please try again...", Toast.LENGTH_SHORT).show()
             }
-            Toast.makeText(this, statusMsg, Toast.LENGTH_LONG).show()
+
+
         }
 
         plutusManager.bindService()
@@ -116,7 +120,6 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
         binding.relTicketCart.adapter = ticketCartAdapter
 
         loadDarshanItems()
-
     }
     private fun initView() {
         binding.radioGroup.check(R.id.radiaCash)
@@ -191,21 +194,16 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
             binding.btnPay.isEnabled = false
 
             lifecycleScope.launch {
-                val amountValue = formattedTotalAmount.toDoubleOrNull() ?: 0.0
                 val ctx = this@BillingCartActivity
-
                 if (selectedPaymentMode == CASH) {
-                    showLoader(ctx, "Posting ticket...")
+                    showLoader(ctx,  "Generating ticket...")
                     postTicketPaymentHistory("S", "Successful")
                     return@launch
                 } else if (companyRepository.getBoolean(CompanyKey.ISPAYMENTGATEWAY)) {
-                    binding.btnPay.isEnabled = false
-                    showLoader(ctx, "Generating Qr code...")
+                    showLoader(ctx,  "Initiate Payment...")
                     generatePayment()
                 }
             }
-
-
         }
     }
     private fun generatePayment() {
@@ -233,6 +231,7 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                 }
 
                 "PineLabs" -> {
+
                     generatePineLabPaymentQrCode(totalAmount)
                 }
 
@@ -245,6 +244,7 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
         }
     }
     private fun generatePineLabPaymentQrCode(totalAmount: Double) {
+
         if (!::plutusManager.isInitialized) {
             showSnackbar(binding.root, "Payment service not ready")
             dismissLoader()
@@ -255,8 +255,6 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
             else -> 5120
         }
         transactionId=generateNumericTransactionReferenceID()
-
-
         val request = JSONObject().apply {
             val formattedAmount = totalAmount * 100
             put("Header", JSONObject().apply {
@@ -347,8 +345,6 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
         retryCount: Int = 0
     ) {
         try {
-
-
             val cartTickets = ticketRepository.getAllTicketsInCart()
             if (cartTickets.isEmpty()) {
                 withContext(Dispatchers.Main) {
@@ -373,7 +369,6 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                 firstTicket.daImg ?: ByteArray(0),
                 Base64.NO_WRAP
             )
-
             val token = sessionManager.getToken().toString()
             val companyId = JwtUtils.getCompanyId(token)
 
@@ -399,13 +394,11 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                 tImage = imageBase64String,
                 PhoneNumber = phone,
                 tPaymentStatus = status,
-                tPaymentMode = "CASH",
+                tPaymentMode = selectedPaymentMode,
                 tPaymentDes = statusDesc,
                 Items = itemsList
             )
-
             Log.d("PAYMENT_DEBUG", "Posting ${itemsList.size} items")
-
             ApiResponseHandler.handleApiCall(
                 activity = this@BillingCartActivity,
                 apiCall = {

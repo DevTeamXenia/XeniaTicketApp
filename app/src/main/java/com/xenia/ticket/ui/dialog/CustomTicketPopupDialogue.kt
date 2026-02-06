@@ -115,8 +115,6 @@ class CustomTicketPopupDialogue : DialogFragment() {
 
     }
 
-
-
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return object : Dialog(requireActivity(), theme) {
             @Deprecated("Deprecated in Java", ReplaceWith("dismiss()"))

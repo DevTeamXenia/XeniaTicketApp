@@ -12,7 +12,7 @@
     <string name="choose_your_language" translatable="false">Choose your language</string>
     <string name="p_o_w_e_r_e_d_b_y" translatable="false">p o w e r e d b y</string>
     <string name="b_a_n_k_i_n_g_p_a_r_t_n_e_r" translatable="false">b a n k i n g p a r t n e r</string>
-    <string name="login_as_a_admin_user" translatable="false">Login as a Admin User</string>
+    <string name="login_as_a_admin_user" translatable="false">Login</string>
     <string name="user_id" translatable="false">Username</string>
     <string name="password" translatable="false">Password</string>
     <string name="log_in" translatable="false">LOG IN</string>

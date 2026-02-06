@@ -26,6 +26,7 @@
             <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="200dp"
+                android:contentDescription="@string/todo"
                 android:src="@drawable/img_payment_sucess"
                 android:layout_gravity="center_horizontal"/>
 
@@ -84,16 +85,26 @@
                 android:textColor="@color/black"
                 android:textSize="22sp" />
 
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:visibility="visible"
+                android:layout_gravity="center"
+                android:indeterminate="true"/>
+
             <TextView
-                android:id="@+id/txt_star"
+                android:id="@+id/txtPrinting"
+                android:visibility="gone"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:layout_marginTop="16dp"
+                android:text="Printing..."
                 android:fontFamily="@font/montserrat"
+                android:textStyle="bold"
                 android:textColor="@color/black"
-                android:textSize="22sp" />
-
+                android:textSize="18sp" />
 
         </LinearLayout>
 

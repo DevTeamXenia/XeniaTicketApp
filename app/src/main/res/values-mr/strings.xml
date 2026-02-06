@@ -4,7 +4,7 @@
     <string name="todo">करायची कामं</string>
     <string name="p_o_w_e_r_e_d_b_y">पावर्ड बाय</string>
     <string name="b_a_n_k_i_n_g_p_a_r_t_n_e_r">बँकिंग भागीदार</string>
-    <string name="login_as_a_admin_user">प्रशासक वापरकर्ता म्हणून लॉगिन करा</string>
+    <string name="login_as_a_admin_user">लॉगिन करा</string>
     <string name="user_id">वापरकर्ता आयडी</string>
     <string name="password">पासवर्ड</string>
     <string name="log_in">लॉग इन</string>

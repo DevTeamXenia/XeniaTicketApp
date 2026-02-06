@@ -38,7 +38,7 @@ val roomModule = module {
 
     single { SessionManager(androidContext()) }
     single { LoginRepository() }
-    single { CompanyRepository(get()) }
+    single { CompanyRepository(get(),get()) }
     single { LabelSettingsRepository(get()) }
     single { CategoryRepository(get()) }
     single { ActiveTicketRepository(get()) }

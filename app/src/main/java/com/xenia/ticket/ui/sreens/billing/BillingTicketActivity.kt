@@ -128,7 +128,6 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
 
             startActivity(intent)
         }
-
         binding.imgMenu.setOnClickListener {
             if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
                 binding.drawerLayout.closeDrawer(GravityCompat.START)

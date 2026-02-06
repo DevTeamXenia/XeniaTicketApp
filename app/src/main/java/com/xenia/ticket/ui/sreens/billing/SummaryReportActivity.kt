@@ -80,7 +80,7 @@ class SummaryReportActivity : AppCompatActivity(),
         val endDateTime = dateTimeFormat.format(calendar.time)
 
         reportedTime = getString(R.string.report_generated_time)
-        binding.txtGeneratedTime.text = "$reportedTime : $endDateTime"
+        binding.txtGeneratedTime.text = "$reportedTime\n\n$endDateTime"
         binding.txtFromDateTime.setText(startDateTime)
         binding.txtToDateTime.setText(endDateTime)
         Log.d("SUMMARY_API_AUTH", "Token = $jwtToken")
@@ -103,8 +103,6 @@ class SummaryReportActivity : AppCompatActivity(),
                 )
             }
         }
-
-
         binding.txtToDateTime.setOnClickListener {
             showMaterialDateTimePicker(binding.txtToDateTime) { newToDate ->
 
@@ -140,13 +138,10 @@ class SummaryReportActivity : AppCompatActivity(),
                 reportPrint.printDailySummary(
                     reportStart = binding.txtFromDateTime.text.toString(),
                     reportEnd = binding.txtToDateTime.text.toString(),
+                    order = data.TotalOrderAmount.toDouble(),
                     cash = data.TotalCash.toDouble(),
                     card = data.TotalCard.toDouble(),
                     upi = data.TotalUpi.toDouble(),
-                    donation = data.TotalOrderAmount.toDouble(),
-                    Seva_Particulars = data.TotalVazhipaduOfferingsAmount.toDouble(),
-                    pooja_items = data.TotalPoojaItemAmount.toDouble(),
-                    darshan = data.TotalDarshanAmount.toDouble(),
                     net = data.TotalAmount.toDouble(),
                     generatedBy = userName.toString(),
                     selectedLanguage = selectedLanguage!!
@@ -203,7 +198,7 @@ class SummaryReportActivity : AppCompatActivity(),
                 )
 
                 binding.txtTotalDarshan.text =
-                    "Rs.${String.format(Locale.ENGLISH,"%.2f", response.TotalDarshanAmount.toDouble())}/-"
+                    "Rs.${String.format(Locale.ENGLISH,"%.2f", response.TotalOrderAmount.toDouble())}/-"
 
                 binding.txtCash.text =
                     "Cash\nRs.${String.format(Locale.ENGLISH,"%.2f", response.TotalCash.toDouble())}/-"
@@ -240,7 +235,7 @@ class SummaryReportActivity : AppCompatActivity(),
                     throw e
                 }
             } catch (e: Exception) {
-                showSnackbar(binding.root, "Error loading categories")
+                showSnackbar(binding.root, e.toString())
             }
             finally {
                 dismissLoader()

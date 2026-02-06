@@ -45,6 +45,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:textSize="13sp"
                 android:background="@drawable/rounded_light_stroke_rect"
                 android:focusable="false"
                 android:hint="dd/mm/yyyy"
@@ -56,6 +57,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:layout_weight="1"
+                android:textSize="13sp"
                 android:background="@drawable/rounded_light_stroke_rect"
                 android:focusable="false"
                 android:hint="dd/mm/yyyy"
@@ -85,14 +87,13 @@
 
                 <ImageView
                     android:id="@+id/btnPrint"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
                     android:padding="4dp"
+                    android:visibility="gone"
                     android:src="@drawable/printerimage"
                     android:contentDescription="Print"
                     app:tint="@color/primaryColor" />
-
-
             </RelativeLayout>
 
 
@@ -204,6 +205,7 @@
             android:background="@drawable/rounded_light_stroke_rect"
             android:gravity="center"
             android:padding="12dp"
+            android:textSize="12sp"
             android:textColor="@color/black" />
 
         <TextView
@@ -215,6 +217,7 @@
             android:background="@drawable/rounded_light_stroke_rect"
             android:gravity="center"
             android:padding="12dp"
+            android:textSize="12sp"
             android:textColor="@color/black" />
 
         <TextView
@@ -226,6 +229,7 @@
             android:background="@drawable/rounded_light_stroke_rect"
             android:gravity="center"
             android:padding="12dp"
+            android:textSize="12sp"
             android:textColor="@color/black" />
     </LinearLayout>
 

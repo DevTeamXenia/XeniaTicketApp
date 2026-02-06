@@ -32,6 +32,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Ticket">
         <activity
+            android:name=".ui.MainActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.sreens.billing.SummaryReportActivity"
             android:exported="false" />
         <activity

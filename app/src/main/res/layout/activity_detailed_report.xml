@@ -40,15 +40,7 @@
             android:padding="2dp"
             android:orientation="horizontal">
 
-            <Spinner
-                android:id="@+id/spinnerRange"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:layout_marginEnd="5dp"
-                android:layout_weight=".3"
-                android:background="@drawable/spinner_background_with_arrow"
-                android:entries="@array/date_range_options"
-                android:spinnerMode="dropdown" />
+
 
             <EditText
                 android:id="@+id/edtFromDate"
@@ -57,6 +49,7 @@
                 android:layout_weight="1"
                 android:background="@drawable/rounded_light_stroke_rect"
                 android:focusable="false"
+               android:textSize="13sp"
                 android:layout_marginEnd="5dp"
                 android:hint="dd/mm/yyyy"
                 android:padding="10dp" />
@@ -66,11 +59,13 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:textSize="13sp"
                 android:background="@drawable/rounded_light_stroke_rect"
                 android:focusable="false"
                 android:hint="dd/mm/yyyy"
                 android:layout_marginEnd="5dp"
                 android:padding="10dp" />
+
         </LinearLayout>
 
 
@@ -79,24 +74,28 @@
             android:layout_height="wrap_content"
             android:layout_margin="8dp">
 
-            <RelativeLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            <Spinner
+                android:id="@+id/spinnerRange"
+                android:layout_width="100dp"
+                android:layout_height="40dp"
+                android:background="@drawable/spinner_background_with_arrow"
+                android:entries="@array/date_range_options"
+                android:spinnerMode="dropdown"
+                android:layout_alignParentStart="true" />
+            <ImageView
+                android:id="@+id/btnPrint"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:padding="6dp"
+                android:src="@drawable/printerimage"
+                android:tint="@color/primaryColor"
+                android:contentDescription="Print"
+                android:visibility="gone"
                 android:layout_alignParentEnd="true"
-                android:padding="5dp"
-                android:background="@drawable/rounded_light_stroke_rect">
+                tools:ignore="UseAppTint" />
 
-                <ImageView
-                    android:id="@+id/btnPrint"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
-                    android:padding="2dp"
-                    android:src="@drawable/printerimage"
-                    android:tint="@color/primaryColor"
-                    android:contentDescription="Print"
-                    tools:ignore="UseAppTint" />
-            </RelativeLayout>
         </RelativeLayout>
+
     </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView

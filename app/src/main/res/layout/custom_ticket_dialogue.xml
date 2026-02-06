@@ -11,26 +11,25 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginStart="20dp"
+        android:layout_marginTop="20dp"
         android:layout_marginEnd="20dp"
         android:orientation="vertical">
 
         <TextView
-            android:id="@+id/txtTicket"
+            android:id="@+id/txtTicketName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="30dp"
+            android:layout_marginTop="10dp"
             android:fontFamily="@font/poppins_regular"
             android:textAlignment="center"
             android:textColor="@color/secondaryColor"
-            android:text="@string/no_of_tickets"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:textSize="14sp"/>
 
         <ImageView
             android:id="@+id/imgClose"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:src="@drawable/close_butten"
+            android:src="@drawable/ic_close"
             android:layout_alignParentEnd="true"
             android:layout_marginTop="15dp"
             android:textStyle="bold" />
@@ -43,20 +42,6 @@
             android:layout_below="@+id/imgClose"
             android:layout_marginTop="20dp"
             />
-
-
-        <TextView
-            android:id="@+id/txtTicketName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/view"
-            android:layout_marginTop="20dp"
-            android:fontFamily="@font/poppins_regular"
-            android:textAlignment="center"
-            android:textColor="@color/black"
-            android:textSize="20sp"
-            android:textStyle="bold" />
-
         <TextView
             android:id="@+id/txtTicketRate"
             android:layout_width="wrap_content"
@@ -75,15 +60,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/txtTicketName"
-            android:layout_marginTop="20dp"
             android:fontFamily="@font/poppins_regular"
             android:textColor="@color/black"
-            android:textSize="16sp" />
+            android:textSize="15sp" />
 
         <EditText
             android:id="@+id/editTextTickets"
             android:layout_width="match_parent"
-            android:layout_height="70dp"
+            android:layout_height="50dp"
             android:layout_below="@+id/txtTickets"
             android:layout_marginBottom="10dp"
             android:background="@drawable/edittext_bg"
@@ -109,7 +93,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/editTextTickets"
-                android:layout_marginTop="20dp"
                 android:layout_marginBottom="30dp"
                 android:orientation="vertical">
 
