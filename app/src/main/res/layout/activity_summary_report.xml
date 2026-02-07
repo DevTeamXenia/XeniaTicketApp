@@ -83,6 +83,7 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
                 android:padding="5dp"
+                android:visibility="visible"
                 android:background="@drawable/rounded_light_stroke_rect">
 
                 <ImageView
@@ -90,7 +91,6 @@
                     android:layout_width="35dp"
                     android:layout_height="35dp"
                     android:padding="4dp"
-                    android:visibility="gone"
                     android:src="@drawable/printerimage"
                     android:contentDescription="Print"
                     app:tint="@color/primaryColor" />

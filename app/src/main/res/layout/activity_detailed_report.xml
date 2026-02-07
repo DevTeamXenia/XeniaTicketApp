@@ -30,6 +30,7 @@
                 android:textSize="20sp"
                 android:textStyle="bold" />
         </RelativeLayout>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -37,64 +38,68 @@
             android:layout_marginEnd="5dp"
             android:layout_marginBottom="8dp"
             android:gravity="center"
-            android:padding="2dp"
-            android:orientation="horizontal">
-
+            android:orientation="horizontal"
+            android:padding="2dp">
 
 
             <EditText
                 android:id="@+id/edtFromDate"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginEnd="5dp"
                 android:layout_weight="1"
                 android:background="@drawable/rounded_light_stroke_rect"
                 android:focusable="false"
-               android:textSize="13sp"
-                android:layout_marginEnd="5dp"
                 android:hint="dd/mm/yyyy"
-                android:padding="10dp" />
+                android:padding="10dp"
+                android:textSize="13sp" />
 
             <EditText
                 android:id="@+id/edtToDate"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginEnd="5dp"
                 android:layout_weight="1"
-                android:textSize="13sp"
                 android:background="@drawable/rounded_light_stroke_rect"
                 android:focusable="false"
                 android:hint="dd/mm/yyyy"
-                android:layout_marginEnd="5dp"
-                android:padding="10dp" />
+                android:padding="10dp"
+                android:textSize="13sp" />
 
         </LinearLayout>
 
 
-        <RelativeLayout
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp">
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="5dp"
+            android:layout_marginBottom="8dp"
+            android:orientation="horizontal"
+            android:padding="2dp">
 
             <Spinner
                 android:id="@+id/spinnerRange"
-                android:layout_width="100dp"
-                android:layout_height="40dp"
+                android:layout_width="165dp"
+                android:layout_height="38dp"
+                android:layout_alignParentStart="true"
                 android:background="@drawable/spinner_background_with_arrow"
                 android:entries="@array/date_range_options"
-                android:spinnerMode="dropdown"
-                android:layout_alignParentStart="true" />
+                android:spinnerMode="dropdown" />
+
             <ImageView
                 android:id="@+id/btnPrint"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
+                android:layout_alignParentEnd="true"
+                android:contentDescription="Print"
                 android:padding="6dp"
                 android:src="@drawable/printerimage"
                 android:tint="@color/primaryColor"
-                android:contentDescription="Print"
                 android:visibility="gone"
-                android:layout_alignParentEnd="true"
                 tools:ignore="UseAppTint" />
 
-        </RelativeLayout>
+        </LinearLayout>
 
     </LinearLayout>
 
@@ -111,13 +116,14 @@
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:layout_marginTop="10dp"
-        android:background="@color/primaryColor"/>
+        android:background="@color/primaryColor" />
+
     <LinearLayout
         android:id="@+id/totalBar"
         android:layout_width="match_parent"
         android:layout_height="@dimen/dp30"
-        android:gravity="end|center_vertical"
-        >
+        android:gravity="end|center_vertical">
+
         <TextView
             android:id="@+id/tvTotalLabel"
             android:layout_width="wrap_content"
@@ -131,14 +137,15 @@
             android:id="@+id/tvTotalAmount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="0.00"
             android:layout_marginEnd="10dp"
+            android:text="0.00"
             android:textColor="@color/black"
             android:textSize="16sp" />
     </LinearLayout>
+
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:layout_marginTop="10dp"
-        android:background="@color/primaryColor"/>
+        android:background="@color/primaryColor" />
 </LinearLayout>

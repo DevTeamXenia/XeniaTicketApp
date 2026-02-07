@@ -10,8 +10,8 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginStart="20dp"
-        android:layout_marginTop="20dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
         android:layout_marginEnd="20dp"
         android:orientation="vertical">
 
@@ -20,35 +20,29 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
+            android:layout_marginEnd="3dp"
             android:fontFamily="@font/poppins_regular"
+            android:maxLines="3"
             android:textAlignment="center"
             android:textColor="@color/secondaryColor"
-            android:textSize="14sp"/>
+            android:textSize="14sp" />
 
         <ImageView
             android:id="@+id/imgClose"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:src="@drawable/ic_close"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:layout_alignParentEnd="true"
             android:layout_marginTop="15dp"
+            android:src="@drawable/ic_close"
             android:textStyle="bold" />
 
-        <View
-            android:id="@+id/view"
-            android:layout_width="match_parent"
-            android:layout_height="2dp"
-            android:background="@color/primaryColor"
-            android:layout_below="@+id/imgClose"
-            android:layout_marginTop="20dp"
-            />
         <TextView
             android:id="@+id/txtTicketRate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_below="@+id/txtTicketName"
             android:layout_alignParentEnd="true"
             android:layout_marginTop="20dp"
-            android:layout_below="@+id/txtTicketName"
             android:fontFamily="@font/roboto"
             android:textAlignment="center"
             android:textColor="@color/black"
@@ -60,6 +54,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/txtTicketName"
+            android:layout_marginTop="20dp"
             android:fontFamily="@font/poppins_regular"
             android:textColor="@color/black"
             android:textSize="15sp" />
@@ -82,12 +77,14 @@
             android:textColor="@color/black"
             android:textSize="30sp"
             tools:ignore="RtlSymmetry" />
+
         <ScrollView
             android:id="@+id/scrollkeybord"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:fillViewport="true"
-            android:layout_below="@+id/editTextTickets">
+            android:layout_below="@+id/editTextTickets"
+            android:fillViewport="true">
+
             <LinearLayout
                 android:id="@+id/linKeyboard"
                 android:layout_width="match_parent"
@@ -368,42 +365,43 @@
 
             </LinearLayout>
         </ScrollView>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="60dp"
-            android:layout_marginBottom="25dp"
             android:layout_below="@+id/scrollkeybord"
+            android:layout_marginBottom="25dp"
             android:orientation="horizontal">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="55dp"
-                android:background="@drawable/edittext_bg"
-                android:orientation="vertical"
                 android:layout_marginTop="4dp"
-                android:layout_weight="1">
+                android:layout_weight="1"
+                android:background="@drawable/edittext_bg"
+                android:orientation="vertical">
 
                 <TextView
                     android:id="@+id/txtQty"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="@color/black"
-                    android:fontFamily="@font/roboto"
-                    android:textSize="12sp"
+                    android:layout_marginStart="10dp"
                     android:layout_marginTop="5dp"
-                    android:layout_marginStart="10dp"/>
+                    android:fontFamily="@font/roboto"
+                    android:textColor="@color/black"
+                    android:textSize="12sp" />
 
                 <TextView
                     android:id="@+id/totalAmount"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="2000"
                     android:layout_gravity="end"
                     android:layout_marginEnd="10dp"
-                    android:textColor="@color/black"
                     android:fontFamily="@font/roboto"
-                    android:textStyle="bold"
-                    android:textSize="14sp" />
+                    android:text="2000"
+                    android:textColor="@color/black"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
 
             </LinearLayout>
 
@@ -420,7 +418,7 @@
                     android:backgroundTint="@color/primaryColor"
                     android:text="Done"
                     android:textColor="@color/white"
-                    android:textSize="20dp"
+                    android:textSize="16dp"
                     app:cornerRadius="10dp"
                     tools:ignore="RtlSymmetry" />
 

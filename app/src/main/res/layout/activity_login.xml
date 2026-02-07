@@ -8,58 +8,17 @@
     android:weightSum="100"
 >
 
-    <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:contentDescription="@string/todo"
-       />
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:weightSum="100">
-
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="20"
-    >
-
-            <ImageView
-                android:layout_width="200dp"
-                android:layout_height="200dp"
-                android:layout_centerInParent="true"
-                android:contentDescription="@string/todo"
-        />
-
-            <ImageView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:alpha="0.1"
-                android:contentDescription="@string/todo"
-                android:scaleType="fitEnd"
-                />
-
-            <ImageView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:contentDescription="@string/todo"
-                android:scaleType="fitEnd"
-                />
-        </RelativeLayout>
-
-        <ScrollView
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="60">
+        android:orientation="vertical">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="60"
+                android:layout_gravity="center"
+                android:layout_marginTop="50dp"
                 android:orientation="vertical">
 
                 <RelativeLayout
@@ -176,7 +135,6 @@
 
                     </LinearLayout>
 
-                    <!-- Remember Me -->
                     <LinearLayout
                         android:id="@+id/lin_remember_me"
                         android:layout_width="match_parent"
@@ -192,10 +150,10 @@
                             android:id="@+id/chkRememberMe"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:button="@drawable/checkbox_selector"
                             android:gravity="center_vertical"
                             android:paddingStart="8dp"
                             android:text="@string/remember_me"
-                            android:visibility="invisible"
                             android:textColor="@color/black"
                             android:textSize="16sp" />
 
@@ -217,7 +175,6 @@
                         app:cornerRadius="0dp" />
                 </RelativeLayout>
             </LinearLayout>
-        </ScrollView>
 
     </LinearLayout>
 </RelativeLayout>

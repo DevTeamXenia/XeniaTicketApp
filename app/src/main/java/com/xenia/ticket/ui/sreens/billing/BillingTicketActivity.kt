@@ -358,7 +358,6 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
     }
 
     private fun getTickets(categoryId: Int? = null) {
-        showLoader(this@BillingTicketActivity, "Loading Tickets...")
         try {
             val token = sessionManager.getToken()
             if (token.isNullOrEmpty()) return
@@ -400,7 +399,7 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
                             binding.ticketRecycler.adapter = ticketAdapter
 
                         } finally {
-                            dismissLoader()
+
                         }
                     }
                 }

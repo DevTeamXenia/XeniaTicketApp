@@ -1,6 +1,8 @@
 package com.xenia.ticket.ui.sreens.kiosk
 
 import android.R.attr.data
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
 import android.content.ComponentName
 import android.content.ContentValues.TAG
@@ -92,11 +94,7 @@ class PaymentActivity : AppCompatActivity() {
     private var selectedLanguage: String? = null
     private var isBound = false
     private var serverMessenger: Messenger? = null
-    private lateinit var plutusManager: PlutusServiceManager
     private var printerService: IPrinterService? = null
-    private val handler = Handler(Looper.getMainLooper())
-    private val isPlutusPrinting = AtomicBoolean(false)
-
 
     @SuppressLint("SetTextI18n", "DefaultLocale")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -121,13 +119,17 @@ class PaymentActivity : AppCompatActivity() {
             sessionManager.getSelectedLanguage()
 
         bindPineLabsService()
-        binding.txt.setOnClickListener {
-            lifecycleScope.launch {
-                    printReceiptPlutus2()
-            }
-        }
+
         setLocale(this@PaymentActivity, selectedLanguage)
         if (status.equals("S")) {
+           binding.lottieSuccess.visibility = View.VISIBLE
+            binding.lottieSuccess.playAnimation()
+
+            binding.lottieSuccess.addAnimatorListener(object : AnimatorListenerAdapter() {
+//                override fun onAnimationEnd(animation: Animator) {
+//                    binding.lottieSuccess.visibility = View.GONE
+//                }
+            })
             binding.linSuccess.visibility = View.VISIBLE
             binding.linFailed.visibility = View.GONE
             val amountDouble = amount?.toDoubleOrNull() ?: 0.00
@@ -147,6 +149,14 @@ class PaymentActivity : AppCompatActivity() {
         } else {
             binding.linSuccess.visibility = View.GONE
             binding.linFailed.visibility = View.VISIBLE
+            binding.lottiefail.visibility = View.VISIBLE
+            binding.lottiefail.playAnimation()
+
+            binding.lottiefail.addAnimatorListener(object : AnimatorListenerAdapter() {
+//                override fun onAnimationEnd(animation: Animator) {
+//                    binding.lottieSuccess.visibility = View.GONE
+//                }
+            })
             redirect()
         }
 
@@ -171,34 +181,6 @@ class PaymentActivity : AppCompatActivity() {
             isBound = false
             Log.d("PLUTUS", "Service disconnected")
         }
-    }
-
-
-    private fun printReceiptPlutus2() {
-
-        val base64Image = BitmapFactory.decodeResource(resources, R.drawable.logo).run {
-            ByteArrayOutputStream().also { compress(Bitmap.CompressFormat.PNG, 100, it) }
-                .toByteArray()
-                .let { Base64.encodeToString(it, Base64.NO_WRAP) }
-        }
-
-
-        val request = JSONObject().apply {
-            put("Header", JSONObject().apply {
-                put("ApplicationId", "d585cf57dc5f4dab9e99fc1d37fa1333")
-                put("UserId", "cashier1")
-                put("MethodId", PlutusConstants.METHOD_PRINT)
-                put("VersionNo", "1.0")
-            })
-
-            put("Detail", JSONObject().apply {
-                put("PrintRefNo", "PR12345")
-                put("SavePrintData", true)
-                put("Data", base64Image)
-            })
-        }
-        Log.e("PLUTUS_RESP", request.toString())
-        plutusManager.sendRequest(request.toString())
     }
     private fun configPrinter() {
         val selectedPrinter = sessionManager.getSelectedPrinter()
@@ -240,8 +222,6 @@ class PaymentActivity : AppCompatActivity() {
                     printReceiptPlutus()
                 }
             }
-
-
             else -> {
                 val printIntent = Intent(this, PrinterSettingActivity::class.java).apply {
                     putExtra("from", from)

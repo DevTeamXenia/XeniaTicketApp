@@ -36,6 +36,7 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import kotlin.getValue
+import kotlin.toString
 
 class SummaryReportActivity : AppCompatActivity(),
     CustomInternetAvailabilityDialog.InternetAvailabilityListener{
@@ -134,6 +135,7 @@ class SummaryReportActivity : AppCompatActivity(),
                 return@setOnClickListener
             }
             val userName = JwtUtils.getUsername(jwtToken)
+            showLoader(this@SummaryReportActivity,"Printing.....")
             lastReportData?.let { data ->
                 reportPrint.printDailySummary(
                     reportStart = binding.txtFromDateTime.text.toString(),
@@ -148,6 +150,7 @@ class SummaryReportActivity : AppCompatActivity(),
                 )
 
             }
+            dismissLoader()
             Log.d("SummaryReport", "Printing completed call")
 
         }
@@ -213,7 +216,7 @@ class SummaryReportActivity : AppCompatActivity(),
                     "${getString(R.string.total_amount)} : Rs.${
                         String.format(Locale.ENGLISH,"%.2f", response.TotalAmount.toDouble())
                     }/-"
-
+                binding.txtTotalDarshanCount.text = response.TotalOrderCount.toString()
 
                 lastReportData = response
 

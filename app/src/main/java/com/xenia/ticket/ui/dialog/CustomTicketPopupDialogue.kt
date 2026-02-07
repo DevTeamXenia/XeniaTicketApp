@@ -165,19 +165,23 @@ class CustomTicketPopupDialogue : DialogFragment() {
         val text = getString(R.string.no_of_tickets)
         txtTickets.text = wrapTextByLength(text, 20)
 
-        txtTicketName.text = when (currentLang) {
+        val displayTicketName = when (currentLang) {
             LANGUAGE_ENGLISH -> ticketName
             LANGUAGE_MALAYALAM -> ticketNameMa
             LANGUAGE_TAMIL -> ticketNameTa
             LANGUAGE_KANNADA -> ticketNameKa
             LANGUAGE_TELUGU -> ticketNameTe
             LANGUAGE_HINDI -> ticketNameHi
-            LANGUAGE_SINHALA-> ticketNameSi
+            LANGUAGE_SINHALA -> ticketNameSi
             LANGUAGE_PUNJABI -> ticketNamePa
             LANGUAGE_MARATHI -> ticketNameMr
             else -> ticketName
         }
-
+        txtTicketName.text = splitTextByWords(
+            displayTicketName,
+            maxCharsPerLine = 32,
+            maxLines = 2
+        )
 
         val formattedAmount = String.format(Locale.ENGLISH, "%.2f", ticketRate)
         txtTicketRate.text = "Rs. $formattedAmount /-"
@@ -297,8 +301,34 @@ class CustomTicketPopupDialogue : DialogFragment() {
             true
         }
     }
+    fun splitTextByWords(
+        text: String,
+        maxCharsPerLine: Int,
+        maxLines: Int
+    ): String {
 
-    fun wrapTextByLength(text: String, maxChars: Int = 20): String {
+        val words = text.trim().split("\\s+".toRegex())
+        val lines = mutableListOf<String>()
+        var currentLine = ""
+
+        for (word in words) {
+            if ((currentLine + " " + word).trim().length <= maxCharsPerLine) {
+                currentLine = if (currentLine.isEmpty()) word else "$currentLine $word"
+            } else {
+                lines.add(currentLine)
+                currentLine = word
+                if (lines.size == maxLines - 1) break
+            }
+        }
+
+        if (currentLine.isNotEmpty() && lines.size < maxLines) {
+            lines.add(currentLine)
+        }
+
+        return lines.joinToString("\n")
+    }
+
+    fun wrapTextByLength(text: String, maxChars: Int = 30): String {
         val builder = StringBuilder()
         var index = 0
         while (index < text.length) {

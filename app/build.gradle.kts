@@ -82,4 +82,7 @@ dependencies {
 
 
     implementation("androidx.lifecycle:lifecycle-process:2.8.7")
+
+
+    implementation("com.airbnb.android:lottie:6.4.0")
 }
