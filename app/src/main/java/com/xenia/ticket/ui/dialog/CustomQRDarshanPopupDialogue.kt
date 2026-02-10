@@ -28,10 +28,9 @@ import com.xenia.ticket.data.network.model.TicketPaymentRequest
 import com.xenia.ticket.data.repository.CompanyRepository
 import com.xenia.ticket.data.repository.PaymentRepository
 import com.xenia.ticket.data.repository.TicketRepository
-import com.xenia.ticket.ui.sreens.kiosk.LanguageActivity
-import com.xenia.ticket.ui.sreens.kiosk.PaymentActivity
+import com.xenia.ticket.ui.screens.kiosk.LanguageActivity
+import com.xenia.ticket.ui.screens.kiosk.PaymentActivity
 import com.xenia.ticket.utils.common.ApiResponseHandler
-import com.xenia.ticket.utils.common.CommonMethod.generateNumericTransactionReferenceID
 import com.xenia.ticket.utils.common.CommonMethod.showSnackbar
 import com.xenia.ticket.utils.common.CompanyKey
 import com.xenia.ticket.utils.common.SessionManager

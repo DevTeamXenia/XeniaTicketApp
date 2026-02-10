@@ -7,7 +7,8 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        tools:ignore="AllFilesAccessPolicy,ScopedStorage" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <uses-feature android:name="android.hardware.camera.any" />
@@ -32,41 +33,38 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Ticket">
         <activity
-            android:name=".ui.MainActivity"
+            android:name=".ui.screens.billing.SummaryReportActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.sreens.billing.SummaryReportActivity"
+            android:name=".ui.screens.billing.DetailedReportActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.sreens.billing.DetailedReportActivity"
+            android:name=".ui.screens.kiosk.LanguageActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.sreens.kiosk.LanguageActivity"
+            android:name=".ui.screens.kiosk.PrinterSettingActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.sreens.kiosk.PrinterSettingActivity"
+            android:name=".ui.screens.billing.BillingCartActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.sreens.billing.BillingCartActivity"
+            android:name=".ui.screens.billing.BillingTicketActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.sreens.billing.BillingTicketActivity"
+            android:name=".ui.screens.kiosk.PaymentActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.sreens.kiosk.PaymentActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.sreens.kiosk.TicketCartActivity"
+            android:name=".ui.screens.kiosk.TicketCartActivity"
             android:exported="false"
             android:launchMode="singleTop" />
         <activity
-            android:name=".ui.sreens.kiosk.SyncActivity"
+            android:name=".ui.screens.kiosk.SyncActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.sreens.kiosk.TicketActivity"
+            android:name=".ui.screens.kiosk.TicketActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.sreens.kiosk.LoginActivity"
+            android:name=".ui.screens.kiosk.LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

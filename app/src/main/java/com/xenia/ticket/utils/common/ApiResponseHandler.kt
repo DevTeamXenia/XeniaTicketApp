@@ -7,7 +7,7 @@ import android.content.Intent
 import androidx.appcompat.app.AlertDialog
 import com.xenia.ticket.data.repository.CategoryRepository
 import com.xenia.ticket.data.repository.TicketRepository
-import com.xenia.ticket.ui.sreens.kiosk.LoginActivity
+import com.xenia.ticket.ui.screens.kiosk.LoginActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

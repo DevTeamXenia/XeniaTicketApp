@@ -15,7 +15,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
 import com.xenia.ticket.R
 import com.xenia.ticket.data.repository.CompanyRepository
-import com.xenia.ticket.ui.sreens.kiosk.LanguageActivity
+import com.xenia.ticket.ui.screens.kiosk.LanguageActivity
 import com.xenia.ticket.utils.common.CommonMethod.setLocale
 import com.xenia.ticket.utils.common.Constants.LANGUAGE_ENGLISH
 import com.xenia.ticket.utils.common.SessionManager

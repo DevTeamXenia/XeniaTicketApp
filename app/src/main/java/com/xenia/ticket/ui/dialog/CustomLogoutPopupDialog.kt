@@ -15,7 +15,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
 import com.xenia.ticket.R
 import com.xenia.ticket.data.repository.TicketRepository
-import com.xenia.ticket.ui.sreens.kiosk.LoginActivity
+import com.xenia.ticket.ui.screens.kiosk.LoginActivity
 import com.xenia.ticket.utils.common.SessionManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

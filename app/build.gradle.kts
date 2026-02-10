@@ -22,6 +22,19 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file("D:/XENIA/DOC/KEYS/KEYSTORE/MOBI/your_keystore.jks")
+            storePassword = "Xeniatech@2025"
+            keyAlias = "xeniamobikey"
+            keyPassword = "Xeniatech@2025"
+
+            enableV1Signing = true
+            enableV2Signing = true
+        }
+    }
+
     buildFeatures {
         aidl = true
         dataBinding
@@ -30,6 +43,7 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
         }
         debug {
             isMinifyEnabled = false
