@@ -121,25 +121,30 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
             }
 
             lifecycleScope.launch {
+
                 val amountValue = formattedTotalAmount.toDoubleOrNull() ?: 0.0
                 val ctx = this@TicketCartActivity
+                val isPaymentGatewayEnabled =
+                    companyRepository.getBoolean(CompanyKey.ISPAYMENTGATEWAY)
 
-                if (amountValue < 2) {
-                    binding.btnPay.isEnabled = false
-                    showLoader(ctx, "Posting ticket...")
-                    postTicketPaymentHistory("S", "Successful")
-                } else if (companyRepository.getBoolean(CompanyKey.ISPAYMENTGATEWAY)) {
-                    binding.btnPay.isEnabled = false
-                    showLoader(ctx, "Generating Qr code...")
-                    generatePayment()
+                binding.btnPay.isEnabled = false
+
+                if (isPaymentGatewayEnabled) {
+                    if (amountValue >= 2) {
+                        showLoader(ctx, "Generating QR code...")
+                        generatePayment()
+                    } else {
+                        showLoader(ctx, "Generating QR code...")
+                        generatePayment()
+                    }
+
                 } else {
-                    binding.btnPay.isEnabled = false
                     showLoader(ctx, "Posting ticket...")
                     postTicketPaymentHistory("S", "Successful")
                 }
             }
-        }
 
+        }
         loadTicketItems()
     }
 
@@ -234,7 +239,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
             }
             val gateway = companyRepository.getString(CompanyKey.PAYMENT_GATEWAY)
 
-            when (gateway) {
+            when (gateway?.trim()) {
                 "CanaraBank" -> {
                     dismissLoader()
 //                    generateCanaraPaymentQrCode(formattedTotalAmount)
@@ -247,6 +252,12 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
 //                    generatePaymentQrCode(formattedTotalAmount)
                 }
             }
+            if (gateway.isNullOrEmpty()) {
+            dismissLoader()
+            showSnackbar(binding.root, "unable to generate QR code! Please try again...")
+            return@launch
+        }
+
 
         }
     }

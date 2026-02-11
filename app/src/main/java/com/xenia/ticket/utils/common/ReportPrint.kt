@@ -108,7 +108,6 @@ class ReportPrint(
                     }
                     return@launch
                 }
-
                 PineLabsPrinter(
                     context = appContext,
                     serverMessenger = messenger,
@@ -272,6 +271,34 @@ class ReportPrint(
                 SimpleDateFormat("yyyy-MM-dd hh:mm a", Locale.ENGLISH).format(currentDateTime)
             mPrintManager = PrinterProviderImpl.getInstance(appContext)
 
+
+            if (selectedPrinter == "PineLabs") {
+
+            val messenger = serverMessenger
+            if (messenger == null) {
+                Log.e("PINE_PRINT", "ServerMessenger is NULL. PineLabs service not connected.")
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(appContext, "Printer not connected", Toast.LENGTH_SHORT).show()
+                }
+                return@launch
+            }
+
+            PineLabsPrinter(
+                context = appContext,
+                serverMessenger = messenger,
+                sessionManager = sessionManager
+            ).printItemSummaryReport(
+                response = response,
+                fromDate = fromDate,
+                toDate = toDate,
+                generatedBy = generatedBy,
+                createdOn = createdOnStr,
+                selectedLanguage = selectedLanguage
+            )
+
+            return@launch
+        }
+
             if (selectedPrinter == "B200MAX") {
                 bindB200MAXPrinter()
                 delay(1000)
@@ -283,7 +310,6 @@ class ReportPrint(
                 Log.e("ReportPrint", "USB printer not ready — aborting print.")
                 return@launch
             }
-
             val isHeaderEnabled = companyRepository.getBoolean(CompanyKey.COMPANYPRINT_H)
             val isFooterEnabled = companyRepository.getBoolean(CompanyKey.COMPANYPRINT_F)
 

@@ -27,6 +27,8 @@ import kotlin.jvm.java
 class SyncActivity : AppCompatActivity() {
     private val sessionManager: SessionManager by inject()
     private val syncManager: InitialSyncManager by inject()
+    private var isSyncCompleted = false
+    private var isNavigated = false
 
 
     private lateinit var binding: ActivitySyncBinding
@@ -40,14 +42,30 @@ class SyncActivity : AppCompatActivity() {
 
     private fun startSyncProcess() {
         lifecycleScope.launch {
+
+            if (isSyncCompleted) return@launch  // prevent re-run
+
             showLoader()
+
             val result = syncManager.startInitialLoad()
+
             dismissLoader()
+
             when (result) {
+
                 is SyncResult.Success -> {
+
+                    isSyncCompleted = true
+
+                    if (isFinishing || isDestroyed) return@launch
+                    if (isNavigated) return@launch
+
+                    isNavigated = true
+
                     val userType = UserType.fromValue(
                         sessionManager.getUserType()
                     )
+
                     val userId = sessionManager.getUserId()
                     val sharedPref = getSharedPreferences("your_pref_name", MODE_PRIVATE)
 
@@ -69,10 +87,10 @@ class SyncActivity : AppCompatActivity() {
                         userId = userId.toString(),
                         sharedPref = sharedPref
                     )
-
-
                 }
+
                 is SyncResult.Error -> {
+                    isSyncCompleted = false
                     showRetryDialog(result.error)
                 }
             }
@@ -181,6 +199,10 @@ class SyncActivity : AppCompatActivity() {
         binding.loaderView.visibility = View.VISIBLE
         binding.loadingText.visibility = View.VISIBLE
         binding.loadingText.text = getString(R.string.loading_syncing_data)
+    }
+    override fun onDestroy() {
+        super.onDestroy()
+        isNavigated = true
     }
 
 

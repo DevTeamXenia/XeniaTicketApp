@@ -39,6 +39,7 @@ class LoginActivity : AppCompatActivity() {
     private val sessionManager: SessionManager by inject()
     private val loginRepository: LoginRepository by inject()
     private val companyRepository: CompanyRepository by inject()
+
     private var selectedLanguage: String? = ""
     private var isPasswordVisible = false
 
@@ -59,7 +60,6 @@ class LoginActivity : AppCompatActivity() {
             navigateAfterLogin(userType)
             return
         }
-
 
         val sharedPref = getSharedPreferences("LoginPrefs", MODE_PRIVATE)
         val remembered = sharedPref.getBoolean("rememberMe", false)
@@ -107,7 +107,6 @@ class LoginActivity : AppCompatActivity() {
                     android.text.method.PasswordTransformationMethod.getInstance()
                 toggleIcon.setImageResource(R.drawable.ic_eye)
             }
-
             passwordField.setSelection(passwordField.text?.length ?: 0)
         }
     }

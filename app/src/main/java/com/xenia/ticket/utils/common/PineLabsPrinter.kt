@@ -12,6 +12,7 @@ import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.File
 import androidx.core.graphics.scale
+import com.xenia.ticket.data.network.model.ItemSummaryReportResponse
 
 class PineLabsPrinter(
     private val context: Context,
@@ -164,7 +165,6 @@ class PineLabsPrinter(
         override fun handleMessage(msg: Message) {
             val response = msg.data.getString(PlutusConstants.RESPONSE_TAG)
             Log.d("PLUTUS_RESPONSE", response ?: "NULL")
-
             if (response.isNullOrEmpty()) return
 
             try {
@@ -241,31 +241,23 @@ class PineLabsPrinter(
             "si" -> "සාරාංශ වාර්තාව"
             else -> "Summary Report"
         }
-
-        // ===== TITLE =====
         lines.add(title.center(WIDTH))
         lines.add(divider())
-
-        // ===== REPORT PERIOD =====
         lines.add("Report Period:")
+
         lines.add(reportStart)
         lines.add(reportEnd)
         lines.add(divider())
 
-        // ===== AMOUNTS =====
         amountRow("Ticket", order)
         amountRow("Cash", cash)
         amountRow("Card", card)
         amountRow("UPI", upi)
 
         lines.add(divider())
-
-        // ===== NET AMOUNT =====
         amountRow("Net Amount", net)
-
         lines.add(divider())
 
-        // ===== FOOTER =====
         lines.add("Created : $createdOn")
         lines.add("Generated : $generatedBy")
         lines.add(divider())
@@ -274,20 +266,228 @@ class PineLabsPrinter(
     }
 
 
+    fun printItemSummaryReport(
+        response: ItemSummaryReportResponse,
+        fromDate: String,
+        toDate: String,
+        generatedBy: String,
+        createdOn: String,
+        selectedLanguage: String
+    ) {
+        scope.launch {
+            try {
+                val json = createItemSummaryPrintJson(
+                    response,
+                    fromDate,
+                    toDate,
+                    generatedBy,
+                    createdOn,
+                    selectedLanguage
+                )
+
+                val message = Message.obtain(null, PlutusConstants.MESSAGE_CODE)
+                message.data = Bundle().apply {
+                    putString(PlutusConstants.REQUEST_TAG, json)
+                }
+                message.replyTo = Messenger(IncomingHandler())
+
+                Log.d("PINE_PRINT", "Sending Item Summary print request")
+                serverMessenger.send(message)
+
+            } catch (e: Exception) {
+                Log.e("PINE_PRINT", "Item Summary print error", e)
+            }
+        }
+    }
+    private suspend fun createItemSummaryPrintJson(
+        response: ItemSummaryReportResponse,
+        fromDate: String,
+        toDate: String,
+        generatedBy: String,
+        createdOn: String,
+        selectedLanguage: String
+    ): String = withContext(Dispatchers.IO) {
+
+        val headerBitmap = bitmapFileToHex("company_header.png", context.cacheDir) ?: ""
+        val footerBitmap = bitmapFileToHex("company_footer.png", context.cacheDir) ?: ""
+
+        val lines = generatePineLabsItemSummaryLines(
+            response,
+            fromDate,
+            toDate,
+            generatedBy,
+            createdOn,
+            selectedLanguage
+        )
+
+        val header = JSONObject().apply {
+            put("ApplicationId", sessionManager.getPineLabsAppId())
+            put("UserId", "admin")
+            put("MethodId", PlutusConstants.METHOD_PRINT)
+            put("VersionNo", "1.0")
+        }
+
+        val dataArray = JSONArray()
+
+        if (headerBitmap.isNotEmpty()) {
+            dataArray.put(imageLine(headerBitmap))
+        }
+
+        lines.forEach { line ->
+            dataArray.put(textLine(line))
+        }
+
+        dataArray.put(smallSpaceLine)
+
+        if (footerBitmap.isNotEmpty()) {
+            dataArray.put(imageLine(footerBitmap))
+        }
+
+        dataArray.put(largeSpaceLine)
+
+        val detail = JSONObject().apply {
+            put("PrintRefNo", "PRN_${System.currentTimeMillis()}")
+            put("SavePrintData", true)
+            put("Data", dataArray)
+        }
+
+        JSONObject().apply {
+            put("Header", header)
+            put("Detail", detail)
+        }.toString()
+    }
+
+    @SuppressLint("DefaultLocale")
+    private fun generatePineLabsItemSummaryLines(
+        response: ItemSummaryReportResponse,
+        fromDate: String,
+        toDate: String,
+        generatedBy: String,
+        createdOn: String,
+        selectedLanguage: String
+    ): List<String> {
+
+        val lines = mutableListOf<String>()
+
+        val WIDTH = 30
+        val QTY_WIDTH = 4
+        val AMT_WIDTH = 8
+        val NAME_WIDTH = WIDTH - QTY_WIDTH - AMT_WIDTH
+
+
+        fun divider() = "-".repeat(WIDTH)
+
+        fun center(text: String): String {
+            if (text.length >= WIDTH) return text
+            val padding = (WIDTH - text.length) / 4
+            return " ".repeat(padding) + text
+        }
+
+        fun wrapText(text: String, width: Int): List<String> {
+            val result = mutableListOf<String>()
+            var remaining = text.trim()
+
+            while (remaining.length > width) {
+                var splitIndex = remaining.lastIndexOf(' ', width)
+                if (splitIndex == -1) splitIndex = width
+                result.add(remaining.substring(0, splitIndex))
+                remaining = remaining.substring(splitIndex).trim()
+            }
+
+            if (remaining.isNotEmpty()) {
+                result.add(remaining)
+            }
+
+            return result
+        }
+
+        fun row(name: String, qty: Double, amt: Double) {
+
+            val wrappedName = wrapText(name, NAME_WIDTH)
+
+            if (wrappedName.size == 1) {
+                lines.add(
+                    wrappedName[0].padEnd(NAME_WIDTH) +
+                            String.format("%.0f", qty).padStart(QTY_WIDTH) +
+                            String.format("%.2f", amt).padStart(AMT_WIDTH)
+                )
+            } else {
+
+                // Print all lines except last (name only)
+                for (i in 0 until wrappedName.size - 1) {
+                    lines.add(wrappedName[i])
+                }
+
+                // Last line with qty & amount
+                lines.add(
+                    wrappedName.last().padEnd(NAME_WIDTH) +
+                            String.format("%.0f", qty).padStart(QTY_WIDTH) +
+                            String.format("%.2f", amt).padStart(AMT_WIDTH)
+                )
+            }
+        }
+
+
+        val title = "Detailed Report"
+
+        lines.add(center(title))
+        lines.add(divider())
+        lines.add("From : $fromDate")
+        lines.add("To   : $toDate")
+        lines.add("By   : $generatedBy")
+        lines.add("On   : $createdOn")
+        lines.add(divider())
+
+
+        if (response.darshanTickets.isNotEmpty()) {
+
+            lines.add(center("Tickets"))
+            lines.add(divider())
+
+            lines.add(
+                "Item".padEnd(NAME_WIDTH) +
+                        "Qty".padStart(QTY_WIDTH) +
+                        "Amt".padStart(AMT_WIDTH)
+            )
+
+            lines.add(divider())
+
+            response.darshanTickets.forEach {
+                row(
+                    it.offerName ?: it.ticketName ?: "",
+                    it.totalQty,
+                    it.totalAmount
+                )
+            }
+
+            lines.add(divider())
+
+            lines.add(
+                "Section Total".padEnd(WIDTH - AMT_WIDTH) +
+                        String.format("%.2f",
+                            response.summary.darshanTickets.GrandTotalAmount
+                        ).padStart(AMT_WIDTH)
+            )
+
+            lines.add(divider())
+        }
+
+
+        lines.add(
+            "GRAND TOTAL".padEnd(WIDTH - AMT_WIDTH) +
+                    String.format("%.2f",
+                        response.summary.GrandTotalAmountAll
+                    ).padStart(AMT_WIDTH)
+        )
+
+        lines.add(divider())
+
+        return lines
+    }
+    
     private fun String.center(width: Int): String {
         if (length >= width) return this
         val pad = (width - length) / 2
         return " ".repeat(pad) + this
-    }
-
-    private fun getLocalizedString(key: String, lang: String, includeBracket: Boolean): String {
-        return when (lang) {
-            "ml" -> mapOf(
-                "Report Period" to "റിപ്പോർട്ട് കാലയളവ്",
-                "Ticket" to "ടിക്കറ്റ്",
-                "Net Amount" to "ആകെ തുക"
-            )[key] ?: key
-            else -> key
-        }
     }
 }
