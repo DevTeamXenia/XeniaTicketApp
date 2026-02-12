@@ -2,15 +2,19 @@ package com.xenia.ticket.data.network.service
 
 import com.xenia.ticket.data.network.model.CategoryResponse
 import com.xenia.ticket.data.network.model.CompanyResponse
-import com.xenia.ticket.data.network.model.GenerateQrRequest
-import com.xenia.ticket.data.network.model.GenerateQrResponse
+import com.xenia.ticket.data.network.model.FedQrRequest
+import com.xenia.ticket.data.network.model.FedQrResponse
 import com.xenia.ticket.data.network.model.ItemSummaryReportResponse
 import com.xenia.ticket.data.network.model.LabelSettingsResponse
 import com.xenia.ticket.data.network.model.LoginRequest
 import com.xenia.ticket.data.network.model.LoginResponse
 import com.xenia.ticket.data.network.model.LogoutResponse
 import com.xenia.ticket.data.network.model.OrderResponse
+import com.xenia.ticket.data.network.model.SibQrRequest
 import com.xenia.ticket.data.network.model.PaymentStatusResponse
+import com.xenia.ticket.data.network.model.SibPaymentStatusResponse
+import com.xenia.ticket.data.network.model.SibQrResponse
+import com.xenia.ticket.data.network.model.SibStatusRequest
 import com.xenia.ticket.data.network.model.SummaryReportResponse
 import com.xenia.ticket.data.network.model.TicketPaymentRequest
 import com.xenia.ticket.data.network.model.TicketResponse
@@ -77,15 +81,28 @@ interface ApiService {
     ): ItemSummaryReportResponse
 
     @POST("payments/fed/generateQr")
-    suspend fun generateQr(
+    suspend fun generateFedQr(
         @Header("Authorization") token: String,
-        @Body request: GenerateQrRequest
-    ): GenerateQrResponse
+        @Body request: FedQrRequest
+    ): FedQrResponse
 
     @GET("payments/fed/status/{orderId}")
     suspend fun getFedPaymentStatus(
         @Path("orderId") orderId: String,
         @Header("Authorization") token: String
     ): PaymentStatusResponse
+    @POST("payments/sib/qr")
+    suspend fun generateSibQr(
+        @Header("Authorization") token: String,
+        @Query("payFor") payFor: String,
+        @Body request: SibQrRequest
+    ): SibQrResponse
+
+    @POST("payments/sib/status")
+    suspend fun getSibPaymentStatus(
+        @Query("payFor") payFor: String = "Common",
+        @Body request: SibStatusRequest,
+        @Header("Authorization") token: String
+    ): SibPaymentStatusResponse
 
 }

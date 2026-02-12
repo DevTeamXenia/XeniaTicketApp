@@ -20,6 +20,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.xenia.ticket.R
 import com.xenia.ticket.data.listeners.OnBookingTicketClick
 import com.xenia.ticket.data.listeners.OnTicketClickListener
+import com.xenia.ticket.data.network.local.InitialSyncManager
+import com.xenia.ticket.data.network.local.SyncResult
 import com.xenia.ticket.data.network.model.TicketDto
 import com.xenia.ticket.data.repository.ActiveTicketRepository
 import com.xenia.ticket.data.repository.CategoryRepository
@@ -65,6 +67,7 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
     private val sessionManager: SessionManager by inject()
     private val companyRepository: CompanyRepository by inject()
     private val labelSettingsRepository: LabelSettingsRepository by inject()
+    private val initialSyncManager: InitialSyncManager by inject()
 
     private lateinit var categoryAdapter: CategoryAdapter
 
@@ -185,6 +188,11 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
                     startActivity(Intent(applicationContext, LanguageActivity::class.java))
                     finish()
                     false
+                }
+                R.id.nav_refresh -> {
+                    binding.drawerLayout.closeDrawer(GravityCompat.START)
+                    refreshAllApis()
+                    true
                 }
 
                 R.id.nav_settings -> {
@@ -631,5 +639,28 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
         TODO("Not yet implemented")
     }
 
+    private fun refreshAllApis() {
+        lifecycleScope.launch {
+            showLoader(true)
+            val result = initialSyncManager.startInitialLoad()
+            showLoader(false)
+            when (result) {
+                is SyncResult.Success -> {
+                    showSnackbar(binding.root, "Data Refreshed")
+                    setupRecyclerViews()
+                    getCartTicket()
+                    getTickets()
+                    updateCartUI()
+                }
+                is SyncResult.Error -> {
+                    showSnackbar(binding.root, "Sync failed")
+                }
+            }
+        }
+    }
+    private fun showLoader(show: Boolean) {
+        binding.loaderView?.visibility = if (show) View.VISIBLE else View.GONE
+
+    }
 
 }

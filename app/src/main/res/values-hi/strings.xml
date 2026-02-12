@@ -23,6 +23,7 @@
     <string name="cancel">रद्द करें</string>
     <string name="yes">हाँ</string>
     <string name="no">नहीं</string>
+    <string name="sync">समन्वय</string>
     <string name="no_internet_connection">इंटरनेट कनेक्शन नहीं है</string>
     <string name="retry">पुनः प्रयास करें</string>
     <string name="you_have_been_inactive_for_a_while_please_touch_the_screen_to_continue">आप कुछ समय से निष्क्रिय हैं। कृपया जारी रखने के लिए स्क्रीन को स्पर्श करें।</string>

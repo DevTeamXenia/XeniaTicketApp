@@ -580,6 +580,7 @@ class PaymentActivity : AppCompatActivity() {
         val labelPhoneNumber = getLocalizedString("Phone No", selectedLanguage)
         val labelTotalAmount = getLocalizedString("Total Amount", selectedLanguage)
         val labelName = getLocalizedString("Name", selectedLanguage)
+
         val labelDReceiptNo = getLocalizedString("Receipt No", defaultLang)
         val labelDDate = getLocalizedString("Date", defaultLang)
         val labelDPhonenumber = getLocalizedString("Phone No", defaultLang)
@@ -589,6 +590,8 @@ class PaymentActivity : AppCompatActivity() {
         val labelDPrice = getLocalizedString("Price", defaultLang)
         val labelDAmount = getLocalizedString("Amount", defaultLang)
         val labelDQty = getLocalizedString("Qty", defaultLang)
+
+        val printDefaultLang = !(selectedLanguage.lowercase() == "en" && defaultLang.lowercase() == "en")
 
         val tempBitmap = createBitmap(width, 10000)
         val tempCanvas = Canvas(tempBitmap)
@@ -607,10 +610,9 @@ class PaymentActivity : AppCompatActivity() {
             "mr" -> "प्रवेश तिकीट"
             "si" -> "ප්‍රවේශ ටිකට්"
             else -> "Entry Ticket"
-
         }
-        val receiptDTitle = when (defaultLang) {
 
+        val receiptDTitle = when (defaultLang) {
             "ml" -> "പ്രവേശന ടിക്കറ്റ്"
             "kn" -> "ಪ್ರವೇಶ ಟಿಕೆಟ್"
             "ta" -> "நுழைவு டிக்கெட்"
@@ -620,15 +622,19 @@ class PaymentActivity : AppCompatActivity() {
             "mr" -> "प्रवेश तिकीट"
             "si" -> "ප්‍රවේශ ටිකට්"
             else -> "Entry Ticket"
-
         }
+
+        // Draw receipt titles
         tempCanvas.drawText(receiptTitle, width / 2f, 40f, paint)
-        tempCanvas.drawText(receiptDTitle, width / 2f, 80f, paint)
+        if (printDefaultLang) {
+            tempCanvas.drawText(receiptDTitle, width / 2f, 80f, paint)
+        }
 
         var yOffset = 130f
         paint.textAlign = Paint.Align.LEFT
         paint.textSize = 22f
 
+        // Receipt No & Date
         tempCanvas.drawText(
             "$labelReceiptNo($labelDReceiptNo): ${prefix}$orderID",
             20f,
@@ -639,6 +645,7 @@ class PaymentActivity : AppCompatActivity() {
         tempCanvas.drawText("$labelDate($labelDDate): $currentDate", 20f, yOffset, paint)
         yOffset += 35f
 
+        // Column headers
         yOffset += 30f
         paint.textAlign = Paint.Align.LEFT
         tempCanvas.drawText(labelItem, 20f, yOffset, paint)
@@ -648,14 +655,18 @@ class PaymentActivity : AppCompatActivity() {
         paint.textAlign = Paint.Align.RIGHT
         tempCanvas.drawText(labelAmount, width - 30f, yOffset, paint)
         yOffset += 30f
-        paint.textAlign = Paint.Align.LEFT
-        tempCanvas.drawText(labelDItem, 20f, yOffset, paint)
-        paint.textAlign = Paint.Align.CENTER
-        tempCanvas.drawText(labelDPrice, width * 0.5f, yOffset, paint)
-        tempCanvas.drawText(labelDQty, width * 0.65f, yOffset, paint)
-        paint.textAlign = Paint.Align.RIGHT
-        tempCanvas.drawText(labelDAmount, width - 30f, yOffset, paint)
-        yOffset += 30f
+
+        if (printDefaultLang) {
+            paint.textAlign = Paint.Align.LEFT
+            tempCanvas.drawText(labelDItem, 20f, yOffset, paint)
+            paint.textAlign = Paint.Align.CENTER
+            tempCanvas.drawText(labelDPrice, width * 0.5f, yOffset, paint)
+            tempCanvas.drawText(labelDQty, width * 0.65f, yOffset, paint)
+            paint.textAlign = Paint.Align.RIGHT
+            tempCanvas.drawText(labelDAmount, width - 30f, yOffset, paint)
+            yOffset += 30f
+        }
+
         paint.strokeWidth = 2f
         tempCanvas.drawLine(20f, yOffset, width - 20f, yOffset, paint)
         yOffset += 40f
@@ -670,7 +681,6 @@ class PaymentActivity : AppCompatActivity() {
             paint.textAlign = Paint.Align.LEFT
             paint.isAntiAlias = true
 
-
             val itemName = when (selectedLanguage.lowercase()) {
                 "ml" -> item.ticketNameMa
                 "hi" -> item.ticketNameHi
@@ -682,17 +692,22 @@ class PaymentActivity : AppCompatActivity() {
                 "mr" -> item.ticketNameMr
                 else -> item.ticketName
             }
-            val itemDName = when (defaultLang.lowercase()) {
-                "ml" -> item.ticketNameMa
-                "hi" -> item.ticketNameHi
-                "ta" -> item.ticketNameTa
-                "kn" -> item.ticketNameKa
-                "te" -> item.ticketNameTe
-                "si" -> item.ticketNameSi!!
-                "pa" -> item.ticketNamePa
-                "mr" -> item.ticketNameMr
-                else -> item.ticketName
+
+            var itemDName: String? = null
+            if (printDefaultLang) {
+                itemDName = when (defaultLang.lowercase()) {
+                    "ml" -> item.ticketNameMa
+                    "hi" -> item.ticketNameHi
+                    "ta" -> item.ticketNameTa
+                    "kn" -> item.ticketNameKa
+                    "te" -> item.ticketNameTe
+                    "si" -> item.ticketNameSi!!
+                    "pa" -> item.ticketNamePa
+                    "mr" -> item.ticketNameMr
+                    else -> item.ticketName
+                }
             }
+
             val maxItemNameWidth = width * 0.95f
 
             yOffset = drawMultilineText(
@@ -706,16 +721,18 @@ class PaymentActivity : AppCompatActivity() {
 
             yOffset += 15f
 
-            yOffset = drawMultilineText(
-                canvas = tempCanvas,
-                text = itemDName ?: "",
-                x = 20f,
-                startY = yOffset,
-                maxWidth = maxItemNameWidth,
-                paint = paint
-            ) + 10f
+            if (printDefaultLang) {
+                yOffset = drawMultilineText(
+                    canvas = tempCanvas,
+                    text = itemDName ?: "",
+                    x = 20f,
+                    startY = yOffset,
+                    maxWidth = maxItemNameWidth,
+                    paint = paint
+                ) + 10f
+                yOffset += 35f
+            }
 
-            yOffset += 35f
             paint.textAlign = Paint.Align.CENTER
             tempCanvas.drawText(priceStr, width * 0.5f, yOffset, paint)
             tempCanvas.drawText(qtyStr, width * 0.65f, yOffset, paint)
@@ -729,16 +746,12 @@ class PaymentActivity : AppCompatActivity() {
         tempCanvas.drawLine(20f, yOffset, width - 20f, yOffset, paint)
         yOffset += 60f
 
-
+        // Total amount
         paint.textSize = 24f
         paint.textAlign = Paint.Align.RIGHT
         tempCanvas.drawText(
             "$labelTotalAmount ($labelDTotalAmount): ${
-                String.format(
-                    Locale.ENGLISH,
-                    "%.2f",
-                    totalAmount
-                )
+                String.format(Locale.ENGLISH, "%.2f", totalAmount)
             }",
             width - 20f,
             yOffset,
@@ -746,6 +759,7 @@ class PaymentActivity : AppCompatActivity() {
         )
         yOffset += 30f
 
+        // UPI reference
         if (!transID.isNullOrEmpty()) {
             paint.textSize = 18f
             paint.textAlign = Paint.Align.RIGHT
@@ -762,14 +776,12 @@ class PaymentActivity : AppCompatActivity() {
         paint.textSize = 22f
         paint.textAlign = Paint.Align.CENTER
 
-
+        // User info box
         val padding = 20f
         val textPadding = 20f
         val rectTop = yOffset
         val rectRight = width - padding
-
         var tempYOffset = yOffset + textPadding
-
         tempYOffset += 20f
         val imageSize = 100f
         val textHeight = 35f * 3
@@ -794,13 +806,14 @@ class PaymentActivity : AppCompatActivity() {
         var textY = rectTop + innerPadding - paint.fontMetrics.ascent
         tempCanvas.drawText("$labelName : $name", textX, textY, paint)
         textY += 25f
-        tempCanvas.drawText(labelDName, textX, textY, paint)
+        if (printDefaultLang) tempCanvas.drawText(labelDName, textX, textY, paint)
         textY += 35f
         tempCanvas.drawText("$labelPhoneNumber: $phoneNo", textX, textY, paint)
         textY += 25f
-        tempCanvas.drawText(labelDPhonenumber, textX, textY, paint)
+        if (printDefaultLang) tempCanvas.drawText(labelDPhonenumber, textX, textY, paint)
         yOffset = textY + 60f
 
+        // QR Code
         if (from.isNullOrEmpty() || from != "billing") {
             generateQRCode()?.let { qrBitmap ->
                 val qrSize = 300
@@ -809,12 +822,14 @@ class PaymentActivity : AppCompatActivity() {
                 yOffset += qrSize
             }
         }
+
         val finalBitmap = createBitmap(width, (yOffset + 20f).toInt())
         Canvas(finalBitmap).drawBitmap(tempBitmap, 0f, 0f, null)
         tempBitmap.recycle()
 
         return finalBitmap
     }
+
 
     @SuppressLint("DefaultLocale")
     private fun generateReceiptBitmapDefault(

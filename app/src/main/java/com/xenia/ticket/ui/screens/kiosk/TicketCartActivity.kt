@@ -14,7 +14,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.xenia.ticket.R
 import com.xenia.ticket.data.listeners.InactivityHandlerActivity
 import com.xenia.ticket.data.listeners.OnTicketClickListener
-import com.xenia.ticket.data.network.model.GenerateQrRequest
+import com.xenia.ticket.data.network.model.FedQrRequest
+import com.xenia.ticket.data.network.model.SibQrRequest
 import com.xenia.ticket.data.network.model.TicketDto
 import com.xenia.ticket.data.network.model.TicketPaymentRequest
 import com.xenia.ticket.data.repository.CompanyRepository
@@ -126,7 +127,6 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                 val ctx = this@TicketCartActivity
                 val isPaymentGatewayEnabled =
                     companyRepository.getBoolean(CompanyKey.ISPAYMENTGATEWAY)
-
                 binding.btnPay.isEnabled = false
 
                 if (isPaymentGatewayEnabled) {
@@ -249,12 +249,11 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                 }
                 else -> {
                     dismissLoader()
-//                    generatePaymentQrCode(formattedTotalAmount)
+                    generateSibQrCode(totalAmount)
                 }
             }
             if (gateway.isNullOrEmpty()) {
             dismissLoader()
-            showSnackbar(binding.root, "unable to generate QR code! Please try again...")
             return@launch
         }
 
@@ -262,7 +261,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
         }
     }
     private fun generateFederalPaymentQrCode(donationAmount: Double) {
-        val request = GenerateQrRequest(
+        val request = FedQrRequest(
             Amount = donationAmount.toInt(),
             name ="",
             phone = "",
@@ -272,7 +271,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
             try {
 
                 val response = withContext(Dispatchers.IO) {
-                    paymentRepository.generateQr(
+                    paymentRepository.generateFedQr(
                         token = sessionManager.getToken().toString(),
                         request = request
                     )
@@ -305,6 +304,56 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
             }
         }
     }
+
+    private fun generateSibQrCode(donationAmount: Double) {
+
+        val transactionId = generateNumericTransactionReferenceID()
+
+        val paymentRequest = SibQrRequest(
+            transactionReferenceID = transactionId,
+            amount = donationAmount.toString(),
+            name = "",
+            phoneNumber = ""
+        )
+
+        lifecycleScope.launch {
+            try {
+
+                val response = paymentRepository.generateSibQr(
+                    token = sessionManager.getToken().toString(),
+                    payFor = "Common",
+                    request = paymentRequest
+                )
+                val orderId = response.transactionReferenceId
+                val upiUrl = response.intentUrl
+                val name = binding.editTextName.text.toString().trim()
+                val phone = binding.editTextPhoneNumber.text.toString().trim()
+                if (!orderId.isNullOrEmpty() && !upiUrl.isNullOrEmpty()) {
+                    customQRDarshanPopupDialogue.setData(
+                        donationAmount.toInt().toString(),
+                        upiUrl,
+                        orderId,
+                        name,
+                        phone
+
+                    )
+                    dismissLoader()
+                    customQRDarshanPopupDialogue.show(
+                        supportFragmentManager,
+                        "CustomPopup"
+                    )
+                } else {
+                    dismissLoader()
+                    showSnackbar(binding.root, "Unable to generate QR code!")
+                }
+
+            } catch (e: Exception) {
+                dismissLoader()
+                showSnackbar(binding.root, "Something went wrong!")
+            }
+        }
+    }
+
     private suspend fun postTicketPaymentHistory(
         status: String,
         statusDesc: String,

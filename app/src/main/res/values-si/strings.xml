@@ -13,6 +13,7 @@
     <string name="amount_10_000">මුදලරු.. 10,000 /-</string>
     <string name="scan_this_code_to_pay">ගෙවීමට මෙම කේතය ස්කෑන් කරන්න</string>
     <string name="expire">QR අවසන් වන්නේ :</string>
+    <string name="sync">සමමුහුර්ත කිරීම</string>
 
     <string name="thank_you">ස්තුතියි!</string>
     <string name="your_payment_was_successful">ඔබගේ ගෙවීම සාර්ථකයි!</string>

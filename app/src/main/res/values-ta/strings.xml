@@ -10,7 +10,7 @@
     <string name="amount_10_000">தொகை  Rs. 10,000 /-</string>
     <string name="scan_this_code_to_pay">இந்த கோடு ஸ்கேன் செய்து\nபணம் செலுத்துங்கள்</string>
     <string name="expire">QR காலாவதி ஆகும் :</string>
-
+    <string name="sync">ஒத்திசைவு</string>
     //payment_Screen
     <string name="thank_you">நன்றி!</string>
     <string name="your_payment_was_successful">உங்கள் பணப்பலம் வெற்றிகரமாக முடிந்தது! </string>

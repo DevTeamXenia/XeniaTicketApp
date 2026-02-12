@@ -90,7 +90,8 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
 
         plutusManager = PlutusServiceManager(this) { response ->
             val jsonResponse = JSONObject(response)
-
+            Toast.makeText(this, response, Toast.LENGTH_LONG).show()
+            Log.d("PlutusResponse", response.toString())
             val responseObj = jsonResponse.optJSONObject("Response")
             val statusMsg = responseObj?.optString("ResponseMsg", "") ?: ""
 
@@ -103,8 +104,6 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                 binding.btnPay.isEnabled = true
                 Toast.makeText(this, "Something went wrong please try again...", Toast.LENGTH_SHORT).show()
             }
-
-
         }
 
         plutusManager.bindService()
@@ -257,7 +256,7 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
         val request = JSONObject().apply {
             val formattedAmount = totalAmount * 100
             put("Header", JSONObject().apply {
-                put("ApplicationId", sessionManager.getPineLabsAppId())
+                put("ApplicationId", "d585cf57dc5f4dab9e99fc1d37fa1333")
                 put("UserId", "cashier1")
                 put("MethodId", PlutusConstants.METHOD_DO_TRANSACTION)
                 put("VersionNo", "1.0")
@@ -269,7 +268,10 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                 put("PaymentAmount", formattedAmount.toString())
             })
         }
+        Log.d("PlutusRequest", request.toString())
         plutusManager.sendRequest(request.toString())
+        Toast.makeText(this, request.toString(), Toast.LENGTH_LONG).show()
+
 
 
     }

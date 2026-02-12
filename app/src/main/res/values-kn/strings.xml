@@ -9,7 +9,7 @@
     <string name="phone_number">ದೂರವಾಣಿ ಸಂಖ್ಯೆ</string>
     <string name="_91">+91</string>
     <string name="name">ಹೆಸರು</string>
-
+    <string name="sync">ಸಮನ್ವಯ</string>
     //Popup_Screen
     <string name="amount_10_000">ಮೊತ್ತ   Rs. 10,000 /-</string>
     <string name="scan_this_code_to_pay">ಈ ಕೋಡ್‌ ಅನ್ನು ಸ್ಕ್ಯಾನ್ ಮಾಡಿ ಪಾವತಿಸಿ</string>

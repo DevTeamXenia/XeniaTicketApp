@@ -38,6 +38,7 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
 import com.google.zxing.WriterException
 import com.journeyapps.barcodescanner.BarcodeEncoder
+import com.xenia.ticket.utils.common.CommonMethod.generateNumericTransactionReferenceID
 import com.xenia.ticket.utils.common.JwtUtils
 import kotlinx.coroutines.*
 import org.koin.android.ext.android.inject
@@ -158,7 +159,6 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
 
             startTimer()
 
-
             view.findViewById<ImageView>(R.id.btnClose).setOnClickListener {
                 dismiss()
             }
@@ -191,8 +191,7 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
                         "FederalBank" -> checkFedPaymentStatus()
                         "CanaraBank" -> {
 
-                        }
-//                        else -> checkPaymentStatus()
+                        }else -> checkSibPaymentStatus()
                     }
                 }
             }
@@ -239,9 +238,6 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
                         "PENDING" -> {
 
                         }
-                        "PENDING" -> {
-                            // ✅ Keep polling until timer ends
-                        }
 
                         else -> {
                             stopCheckingPaymentStatus()
@@ -258,6 +254,77 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
             }
         }
     }
+
+    private fun checkSibPaymentStatus() {
+
+        if (isCheckingPaymentStatus) return
+        isCheckingPaymentStatus = true
+
+        paymentStatusJob = lifecycleScope.launch {
+
+            try {
+
+                while (isCheckingPaymentStatus) {
+
+                    Log.d("SIB_STATUS", "Checking OrderId: $transactionReferenceID")
+
+                    val response = withContext(Dispatchers.IO) {
+                        paymentRepository.getSibPaymentStatus(
+                            orderId = transactionReferenceID,
+                            token = sessionManager.getToken().toString()
+                        )
+                    }
+
+                    val status = response.Status?.uppercase()
+                    val statusDesc = response.statusDesc?.trim()
+
+                    Log.d("SIB_STATUS", "Status: $status")
+                    Log.d("SIB_STATUS", "StatusDesc: $statusDesc")
+
+                    when (status) {
+
+                        "S" -> {
+                            Log.d("SIB_STATUS", "Payment SUCCESS")
+                            postTicketPaymentHistory("S", "Payment Success")
+                            break
+                        }
+
+                        "F" -> {
+
+                            if (!statusDesc.equals("Invalid PspRefNo", ignoreCase = true)) {
+                                Log.d("SIB_STATUS", "Payment FAILED: $statusDesc")
+                                postTicketPaymentHistory(
+                                    "F",
+                                    statusDesc ?: "Transaction Failed"
+                                )
+                                break
+
+                            } else {
+
+                                Log.d("SIB_STATUS", "Invalid PspRefNo - Ignoring")
+                            }
+                        }
+
+                        "P" -> {
+                            Log.d("SIB_STATUS", "Payment PENDING")
+                        }
+
+                        else -> {
+                            Log.d("SIB_STATUS", "Unknown Status: $status")
+                        }
+                    }
+
+                    delay(2000)
+                }
+
+            } catch (e: Exception) {
+                Log.e("SIB_STATUS", "Error: ${e.message}", e)
+            } finally {
+                isCheckingPaymentStatus = false
+            }
+        }
+    }
+
 
     private suspend fun postTicketPaymentHistory(
         status: String,
@@ -316,15 +383,18 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
                     }
                 },
                 onSuccess = { response ->
-                    if (response.status.equals("Success", ignoreCase = true)
-                        && !response.receipt.isNullOrBlank()
+                    val apiStatus = response.status?.trim()
+                    val gatewayStatus = response.status?.trim()?.uppercase()
+
+                    if (
+                        (apiStatus.equals("Success", ignoreCase = true) || gatewayStatus == "S")
                     ) {
+                        // Optional: check receipt if you need it for printing
                         lifecycleScope.launch {
                             val (totalAmount) = ticketRepository.getCartStatus()
-
                             handleTicketTransactionStatus(
                                 status = "S",
-                                orderId = response.receipt,
+                                orderId = response.receipt ?: transactionReferenceID,
                                 ticket = response.ticket,
                                 totalAmount = totalAmount.toDouble(),
                                 receiptPrefix = companyRepository.getString(CompanyKey.PREFIX) ?: ""
@@ -333,6 +403,7 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
                     } else {
                         showSnackbar(requireView(), "Failed to post order")
                     }
+
                 }
             )
         } catch (e: HttpException) {
