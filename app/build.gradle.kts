@@ -17,15 +17,15 @@ android {
         applicationId = "com.xenia.ticket"
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 11
+        versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs {
         create("release") {
-            storeFile = file("D:/XENIA/DOC/KEYS/KEYSTORE/MOBI/your_keystore.jks")
+            storeFile = file("D:/XENIA/DOC/KEYS/KEYSTORE/MOBI/xeniamobi.jks")
             storePassword = "Xeniatech@2025"
             keyAlias = "xeniamobikey"
             keyPassword = "Xeniatech@2025"
