@@ -29,8 +29,6 @@ class SyncActivity : AppCompatActivity() {
     private val syncManager: InitialSyncManager by inject()
     private var isSyncCompleted = false
     private var isNavigated = false
-
-
     private lateinit var binding: ActivitySyncBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -129,7 +127,6 @@ class SyncActivity : AppCompatActivity() {
                     val selectedPrinter = sessionManager.getSelectedPrinter()
                     if (selectedPrinter==null) {
                         openPrinterSetup()
-
                         sharedPref.edit {
                             putBoolean(isFirstLoginKey, false)
                         }
@@ -149,7 +146,6 @@ class SyncActivity : AppCompatActivity() {
                     )
                     return@launch
                 }
-
                 UserType.CUSTOMER -> {
 
                     if (screenSizeMask != Configuration.SCREENLAYOUT_SIZE_XLARGE || !isPortrait) {

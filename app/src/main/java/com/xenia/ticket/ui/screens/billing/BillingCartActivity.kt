@@ -105,13 +105,9 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                 Toast.makeText(this, "Something went wrong please try again...", Toast.LENGTH_SHORT).show()
             }
         }
-
         plutusManager.bindService()
-
         initView()
-
         binding.relTicketCart.layoutManager = LinearLayoutManager(this)
-
         ticketCartAdapter =
             TicketCartAdapter(this, sessionManager.getBillingSelectedLanguage(), "Booking", this)
 
@@ -271,9 +267,6 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
         Log.d("PlutusRequest", request.toString())
         plutusManager.sendRequest(request.toString())
         Toast.makeText(this, request.toString(), Toast.LENGTH_LONG).show()
-
-
-
     }
 
 

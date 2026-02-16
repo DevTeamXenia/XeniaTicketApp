@@ -165,7 +165,6 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
 
         }
     }
-
     private var companyGateway: String? = null
 
     private fun startTimer() {

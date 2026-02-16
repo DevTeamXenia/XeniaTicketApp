@@ -29,7 +29,9 @@ class SessionManager(context: Context) {
     fun getPineLabsAppId(): String {
         return sharedPreferences.getString("PINE_LABS_APP_ID", "") ?: ""
     }
-
+    fun clearPineLabsAppId(){
+        editor.remove("PINE_LABS_APP_ID").apply()
+    }
     fun saveToken(token: String) {
         editor.putString(KEY_TOKEN, token).apply()
     }

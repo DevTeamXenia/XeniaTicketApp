@@ -435,13 +435,12 @@ class PaymentActivity : AppCompatActivity() {
             }
 
         val header = JSONObject().apply {
-            put("ApplicationId", sessionManager.getPineLabsAppId())
+            put("ApplicationId", "d585cf57dc5f4dab9e99fc1d37fa1333")
             put("UserId", "admin")
             put("MethodId", PlutusConstants.METHOD_PRINT)
             put("VersionNo", "1.0")
         }
 
-        // Header image
         val headerImageLine = JSONObject().apply {
             put("PrintDataType", 2) // 2 = image
             put("PrinterWidth", 24)
@@ -829,8 +828,6 @@ class PaymentActivity : AppCompatActivity() {
 
         return finalBitmap
     }
-
-
     @SuppressLint("DefaultLocale")
     private fun generateReceiptBitmapDefault(
         currentDate: String,

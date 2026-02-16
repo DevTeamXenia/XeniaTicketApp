@@ -261,7 +261,7 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
                 )
 
             } finally {
-                dismissLoader()   // ✅ ALWAYS HIDE LOADER
+                dismissLoader()
             }
         }
     }

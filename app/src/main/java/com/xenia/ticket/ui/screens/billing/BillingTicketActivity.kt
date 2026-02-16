@@ -647,6 +647,11 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
             when (result) {
                 is SyncResult.Success -> {
                     showSnackbar(binding.root, "Data Refreshed")
+                    val company = companyRepository.getCompany()
+                    company?.applicationId?.let { newAppId->
+                        sessionManager.clearPineLabsAppId()
+                        sessionManager.savePineLabsAppId(newAppId.toString())
+                    }
                     setupRecyclerViews()
                     getCartTicket()
                     getTickets()

@@ -19,6 +19,7 @@
 
     <queries>
         <package android:name="net.nyx.printerservice" />
+        <package android:name="com.pinelabs.masterapp" />
     </queries>
 
     <application

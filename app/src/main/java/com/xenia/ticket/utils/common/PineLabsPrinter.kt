@@ -92,7 +92,7 @@ class PineLabsPrinter(
         )
 
         val header = JSONObject().apply {
-            put("ApplicationId", sessionManager.getPineLabsAppId())
+            put("ApplicationId", "d585cf57dc5f4dab9e99fc1d37fa1333")
             put("UserId", "admin")
             put("MethodId", PlutusConstants.METHOD_PRINT)
             put("VersionNo", "1.0")
@@ -321,7 +321,7 @@ class PineLabsPrinter(
         )
 
         val header = JSONObject().apply {
-            put("ApplicationId", sessionManager.getPineLabsAppId())
+            put("ApplicationId", "d585cf57dc5f4dab9e99fc1d37fa1333")
             put("UserId", "admin")
             put("MethodId", PlutusConstants.METHOD_PRINT)
             put("VersionNo", "1.0")

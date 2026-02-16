@@ -428,7 +428,11 @@ class LanguageActivity : AppCompatActivity(),
             val result = initialSyncManager.startInitialLoad()
 
             binding.swipeRefreshLayout?.isRefreshing = false
-
+            val company = companyRepository.getCompany()
+            company?.applicationId?.let { newAppId->
+                sessionManager.clearPineLabsAppId()
+                sessionManager.savePineLabsAppId(newAppId.toString())
+            }
             when (result) {
                 is SyncResult.Success -> {
                     showSnackbar(binding.root, "Data Refreshed")
