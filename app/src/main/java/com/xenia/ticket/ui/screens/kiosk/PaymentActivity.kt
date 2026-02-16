@@ -435,7 +435,7 @@ class PaymentActivity : AppCompatActivity() {
             }
 
         val header = JSONObject().apply {
-            put("ApplicationId", "d585cf57dc5f4dab9e99fc1d37fa1333")
+            put("ApplicationId", sessionManager.getPineLabsAppId())
             put("UserId", "admin")
             put("MethodId", PlutusConstants.METHOD_PRINT)
             put("VersionNo", "1.0")
