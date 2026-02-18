@@ -9,16 +9,13 @@ android {
     compileSdk = 36
     ndkVersion = "27.0.12077973"
 
-    buildFeatures {
-        viewBinding = true
-        buildConfig = true
-    }
+
     defaultConfig {
         applicationId = "com.xenia.ticket"
         minSdk = 24
         targetSdk = 36
-        versionCode = 12
-        versionName = "1.2"
+        versionCode = 13
+        versionName = "1.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -36,10 +33,12 @@ android {
     }
 
     buildFeatures {
+        buildConfig = true
+        viewBinding = true
+        dataBinding = true
         aidl = true
-        dataBinding
-        viewBinding
     }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -51,11 +50,11 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "21"
+        jvmTarget = "17"
     }
 }
 

@@ -91,7 +91,7 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
         plutusManager = PlutusServiceManager(this) { response ->
             val jsonResponse = JSONObject(response)
             Toast.makeText(this, response, Toast.LENGTH_LONG).show()
-            Log.d("PlutusResponse", response.toString())
+            Log.d("PlutusResponse", response)
             val responseObj = jsonResponse.optJSONObject("Response")
             val statusMsg = responseObj?.optString("ResponseMsg", "") ?: ""
 
@@ -305,24 +305,24 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
         }
     }
 
-    override fun onEditClick(ticketItem: Ticket) {
+    override fun onEditClick(ticket: Ticket) {
 
-        ticketItemsItems = ticketItem
+        ticketItemsItems = ticket
 
         customTicketPopupDialogue.setData(
-            ticketId = ticketItem.ticketId,
-            ticketName = ticketItem.ticketName,
-            ticketNameMa = ticketItem.ticketNameMa ?: "",
-            ticketNameTa = ticketItem.ticketNameTa ?: "",
-            ticketNameKa = ticketItem.ticketNameKa ?: "",
-            ticketNameTe = ticketItem.ticketNameTe ?: "",
-            ticketNameHi = ticketItem.ticketNameHi ?: "",
-            ticketNameSi = ticketItem.ticketNameSi ?: "",
-            ticketNamePa = ticketItem.ticketNamePa ?: "",
-            ticketNameMr = ticketItem.ticketNameMr ?: "",
-            ticketCtegoryId = ticketItem.ticketCategoryId,
-            ticketCompanyId = ticketItem.ticketCompanyId,
-            ticketRate = ticketItem.ticketAmount
+            ticketId = ticket.ticketId,
+            ticketName = ticket.ticketName,
+            ticketNameMa = ticket.ticketNameMa ?: "",
+            ticketNameTa = ticket.ticketNameTa ?: "",
+            ticketNameKa = ticket.ticketNameKa ?: "",
+            ticketNameTe = ticket.ticketNameTe ?: "",
+            ticketNameHi = ticket.ticketNameHi ?: "",
+            ticketNameSi = ticket.ticketNameSi ?: "",
+            ticketNamePa = ticket.ticketNamePa ?: "",
+            ticketNameMr = ticket.ticketNameMr ?: "",
+            ticketCtegoryId = ticket.ticketCategoryId,
+            ticketCompanyId = ticket.ticketCompanyId,
+            ticketRate = ticket.ticketAmount
         )
         customTicketPopupDialogue.setListener(this)
         if (!customTicketPopupDialogue.isAdded) {
@@ -360,13 +360,13 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
 
             val firstTicket = cartTickets.first()
             val imageBase64String = Base64.encodeToString(
-                firstTicket.daImg ?: ByteArray(0),
+                firstTicket.daImg,
                 Base64.NO_WRAP
             )
             val token = sessionManager.getToken().toString()
             val companyId = JwtUtils.getCompanyId(token)
 
-            if (token.isNullOrBlank()) {
+            if (token.isBlank()) {
                 withContext(Dispatchers.Main) {
                     binding.btnPay.isEnabled = true
                     showSnackbar(binding.root, "Authorization token missing")
@@ -392,7 +392,6 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                 tPaymentDes = statusDesc,
                 Items = itemsList
             )
-            Log.d("PAYMENT_DEBUG", "Posting ${itemsList.size} items")
             ApiResponseHandler.handleApiCall(
                 activity = this@BillingCartActivity,
                 apiCall = {
@@ -499,11 +498,11 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
         finish()
     }
 
-    override fun onTicketClick(darshanItem: TicketDto) {
+    override fun onTicketClick(ticketItem: TicketDto) {
         TODO("Not yet implemented")
     }
 
-    override fun onTicketClear(darshanItem: TicketDto) {
+    override fun onTicketClear(ticketItem: TicketDto) {
         TODO("Not yet implemented")
     }
 
