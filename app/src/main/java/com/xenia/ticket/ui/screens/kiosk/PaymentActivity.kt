@@ -196,8 +196,7 @@ class PaymentActivity : AppCompatActivity() {
                         }
                     } else {
                         redirect()
-                        Toast.makeText(this, "No USB printer devices found", Toast.LENGTH_LONG)
-                            .show()
+
                     }
                 } catch (_: Exception) {
                     redirect()
@@ -513,7 +512,7 @@ class PaymentActivity : AppCompatActivity() {
             Log.d("PLUTUS_RESPONSE", response ?: "NULL")
 
             if (response.isNullOrEmpty()) {
-                Toast.makeText(this@PaymentActivity, "No response from printer", Toast.LENGTH_SHORT).show()
+
                 return
             }
             try {
@@ -531,7 +530,7 @@ class PaymentActivity : AppCompatActivity() {
                     redirect()
                 }
             } catch (_: Exception) {
-                Toast.makeText(this@PaymentActivity, "Invalid printer response", Toast.LENGTH_SHORT).show()
+
             }
         }
     }

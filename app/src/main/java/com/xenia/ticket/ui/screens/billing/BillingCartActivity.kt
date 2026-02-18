@@ -90,7 +90,6 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
 
         plutusManager = PlutusServiceManager(this) { response ->
             val jsonResponse = JSONObject(response)
-            Toast.makeText(this, response, Toast.LENGTH_LONG).show()
             Log.d("PlutusResponse", response)
             val responseObj = jsonResponse.optJSONObject("Response")
             val statusMsg = responseObj?.optString("ResponseMsg", "") ?: ""
@@ -266,7 +265,6 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
         }
         Log.d("PlutusRequest", request.toString())
         plutusManager.sendRequest(request.toString())
-        Toast.makeText(this, request.toString(), Toast.LENGTH_LONG).show()
     }
 
 
