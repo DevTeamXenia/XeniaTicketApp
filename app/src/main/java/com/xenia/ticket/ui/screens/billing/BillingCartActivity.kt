@@ -96,6 +96,7 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
 
             if (statusMsg.equals("APPROVED", ignoreCase = true)) {
                 lifecycleScope.launch {
+                    dismissLoader()
                     postTicketPaymentHistory("S", "Successful")
                 }
             }else{

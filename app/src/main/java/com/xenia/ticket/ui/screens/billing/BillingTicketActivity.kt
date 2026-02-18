@@ -111,7 +111,6 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
     }
 
     private fun setupUI() {
-        binding.txtSelectTicket.text = getString(R.string.choose_your_tickets)
         binding.btnProceed.text = getString(R.string.proceed)
         val menu = binding.navView.menu
         menu.findItem(R.id.nav_language).title = getString(R.string.language_settings)
@@ -261,12 +260,12 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
             val isCategoryEnabled = companyRepository.getString(CompanyKey.CATEGORY_ENABLE)
             if (isCategoryEnabled == "True") {
                 if (getScreenSize(this@BillingTicketActivity).equals("Normal")){
-                    spanCount=2
+                    spanCount=3
                 }
                 getCategory()
             } else {
                 if (getScreenSize(this@BillingTicketActivity).equals("Normal")){
-                    spanCount=2
+                    spanCount=3
                 }
                 getTickets(selectedCategoryId)
                 binding.ticketCategory.visibility= View.GONE
