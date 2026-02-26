@@ -245,7 +245,27 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
 //                    generateCanaraPaymentQrCode(formattedTotalAmount)
                 }
                 "FederalBank" -> {
-                    generateFederalPaymentQrCode(totalAmount)
+                    when {
+                        totalAmount == 0.0 -> {
+                            dismissLoader()
+                            postTicketPaymentHistory(
+                                status = "S",
+                                statusDesc = "ZERO AMOUNT PAYMENT"
+                            )
+                            return@launch
+                        }
+                        totalAmount == 1.0 -> {
+                            dismissLoader()
+                            showSnackbar(
+                                findViewById(android.R.id.content),
+                                "Please select an amount greater than 1"
+                            )
+                            return@launch
+                        }
+                        totalAmount >= 2.0 -> {
+                            generateFederalPaymentQrCode(totalAmount)
+                        }
+                    }
                 }
                 else -> {
                     dismissLoader()
@@ -256,7 +276,6 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
             dismissLoader()
             return@launch
         }
-
 
         }
     }

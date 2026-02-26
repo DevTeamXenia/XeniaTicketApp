@@ -38,7 +38,6 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
 import com.google.zxing.WriterException
 import com.journeyapps.barcodescanner.BarcodeEncoder
-import com.xenia.ticket.utils.common.CommonMethod.generateNumericTransactionReferenceID
 import com.xenia.ticket.utils.common.JwtUtils
 import kotlinx.coroutines.*
 import org.koin.android.ext.android.inject
@@ -382,15 +381,15 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
                     }
                 },
                 onSuccess = { response ->
-                    val apiStatus = response.status?.trim()
-                    val gatewayStatus = response.status?.trim()?.uppercase()
 
-                    if (
-                        (apiStatus.equals("Success", ignoreCase = true) || gatewayStatus == "S")
-                    ) {
-                        // Optional: check receipt if you need it for printing
+                    val apiStatus = response.status?.trim()?.uppercase()
+                    val paramStatus = status.trim().uppercase()
+
+                    if (paramStatus == "S" && apiStatus == "SUCCESS") {
+
                         lifecycleScope.launch {
                             val (totalAmount) = ticketRepository.getCartStatus()
+
                             handleTicketTransactionStatus(
                                 status = "S",
                                 orderId = response.receipt ?: transactionReferenceID,
@@ -399,10 +398,20 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
                                 receiptPrefix = companyRepository.getString(CompanyKey.PREFIX) ?: ""
                             )
                         }
-                    } else {
-                        showSnackbar(requireView(), "Failed to post order")
-                    }
 
+                    } else {
+                        lifecycleScope.launch {
+                            val (totalAmount) = ticketRepository.getCartStatus()
+
+                            handleTicketTransactionStatus(
+                                status = "F",
+                                orderId = response.receipt ?: transactionReferenceID,
+                                ticket = response.ticket,
+                                totalAmount = totalAmount.toDouble(),
+                                receiptPrefix = companyRepository.getString(CompanyKey.PREFIX) ?: ""
+                            )
+                        }
+                    }
                 }
             )
         } catch (e: HttpException) {
@@ -422,9 +431,7 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
                     handleRetry(e, status, statusDesc, retryCount)
                 }
             }
-
-
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             withContext(Dispatchers.Main) {
                 showSnackbar(requireView(), "Something went wrong")
             }

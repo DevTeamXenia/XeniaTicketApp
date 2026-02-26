@@ -3,6 +3,7 @@ package com.xenia.ticket.ui.screens.kiosk
 import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.graphics.Bitmap
@@ -62,6 +63,7 @@ import org.json.JSONObject
 import androidx.lifecycle.ProcessLifecycleOwner
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.FileOutputStream
 
 
 class PaymentActivity : AppCompatActivity() {
@@ -293,23 +295,23 @@ class PaymentActivity : AppCompatActivity() {
     @SuppressLint("DefaultLocale")
     private fun initReceiptPrint(isB1008: Boolean) {
         lifecycleScope.launch {
+
             val allVazhipaduItems = ticketRepository.getAllTicketsInCart()
+
             val currentDate = SimpleDateFormat(
                 "dd-MMM-yyyy hh:mm a",
                 Locale.ENGLISH
             ).format(Date())
 
-            val headerUrl = companyRepository.getString(CompanyKey.COMPANYPRINT_H)
-            val footerUrl = companyRepository.getString(CompanyKey.COMPANYPRINT_F)
 
-            Log.d("ReceiptPrint", "Full Header URL: $headerUrl")
-            Log.d("ReceiptPrint", "Full Footer URL: $footerUrl")
-
-            val (headerBitmap, footerBitmap) = withContext(Dispatchers.IO) {
-                val header = headerUrl?.let { safeLoadBitmap(it) }
-                val footer = footerUrl?.let { safeLoadBitmap(it) }
-                header to footer
+            val headerBitmap = withContext(Dispatchers.IO) {
+                loadBitmapFromCache(cacheDir, "company_header.png")
             }
+
+            val footerBitmap = withContext(Dispatchers.IO) {
+                loadBitmapFromCache(cacheDir, "company_footer.png")
+            }
+
             val receiptBitmap: Bitmap =
                 if (companyRepository.getDefaultLanguage() == selectedLanguage) {
                     generateReceiptBitmapDefault(
@@ -329,45 +331,75 @@ class PaymentActivity : AppCompatActivity() {
                     )
                 }
 
+
             if (isB1008) {
                 try {
                     headerBitmap?.scale(550, 200)?.let { scaled ->
-                        printerService?.printBitmap(scaled, 0, POSConst.ALIGNMENT_CENTER)
+                        printerService?.printBitmap(
+                            scaled,
+                            0,
+                            POSConst.ALIGNMENT_CENTER
+                        )
                         scaled.recycle()
                     }
 
-                    printerService?.printBitmap(receiptBitmap, 0, POSConst.ALIGNMENT_CENTER)
+                    printerService?.printBitmap(
+                        receiptBitmap,
+                        0,
+                        POSConst.ALIGNMENT_CENTER
+                    )
+
                     printerService?.printText("\n\n", null)
 
                     footerBitmap?.scale(500, 100)?.let { scaled ->
-                        printerService?.printBitmap(scaled, 0, POSConst.ALIGNMENT_CENTER)
+                        printerService?.printBitmap(
+                            scaled,
+                            0,
+                            POSConst.ALIGNMENT_CENTER
+                        )
                         scaled.recycle()
                     }
 
                     printerService?.printEndAutoOut()
+
                 } catch (e: RemoteException) {
                     Log.e("PrinterService", "Printing error: ${e.message}")
                 }
 
             } else {
+
                 val printer = POSPrinter(curConnect)
 
                 headerBitmap?.scale(550, 200)?.let { scaled ->
-                    printer.printBitmap(scaled, POSConst.ALIGNMENT_CENTER, 500).feedLine(2)
+                    printer.printBitmap(
+                        scaled,
+                        POSConst.ALIGNMENT_CENTER,
+                        500
+                    ).feedLine(2)
                     scaled.recycle()
                 }
 
-                printer.printBitmap(receiptBitmap, POSConst.ALIGNMENT_CENTER, 600).feedLine(2)
+                printer.printBitmap(
+                    receiptBitmap,
+                    POSConst.ALIGNMENT_CENTER,
+                    600
+                ).feedLine(2)
+
                 delay(100)
 
                 try {
                     footerBitmap?.scale(550, 100)?.let { scaled ->
-                        printer.printBitmap(scaled, POSConst.ALIGNMENT_CENTER, 500)
+                        printer.printBitmap(
+                            scaled,
+                            POSConst.ALIGNMENT_CENTER,
+                            500
+                        )
                         printer.feedLine(3)
                         delay(300)
                         printer.cutHalfAndFeed(1)
                         scaled.recycle()
                     } ?: printer.cutHalfAndFeed(1)
+
                 } catch (e: Exception) {
                     Log.e("ReceiptPrint", "Footer printing error: ${e.message}")
                     printer.cutHalfAndFeed(1)
@@ -375,13 +407,22 @@ class PaymentActivity : AppCompatActivity() {
             }
 
             receiptBitmap.recycle()
-            delay(2000)
+            headerBitmap?.recycle()
+            footerBitmap?.recycle()
 
+            delay(2000)
             redirect()
         }
     }
 
-
+    fun loadBitmapFromCache(
+        cacheDir: File,
+        fileName: String
+    ): Bitmap? {
+        val file = File(cacheDir, fileName)
+        if (!file.exists()) return null
+        return BitmapFactory.decodeFile(file.absolutePath)
+    }
 
     private suspend fun printReceiptPlutus() {
         lifecycleScope.launch {
@@ -1332,6 +1373,31 @@ class PaymentActivity : AppCompatActivity() {
             }
         }
     }
+
+    suspend fun cacheImageIfNeeded(
+        context: Context,
+        imageUrl: String,
+        cacheFileName: String
+    ) = withContext(Dispatchers.IO) {
+
+        val file = File(context.cacheDir, cacheFileName)
+        if (file.exists()) return@withContext
+
+        try {
+            val url = URL(imageUrl)
+            val connection = url.openConnection()
+            connection.connect()
+
+            connection.getInputStream().use { input ->
+                FileOutputStream(file).use { output ->
+                    input.copyTo(output)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("ImageCache", "Cache failed: ${e.message}")
+        }
+    }
+
     private fun getLocalizedString(key: String, languageCode: String): String {
         return when (languageCode.lowercase()) {
 
