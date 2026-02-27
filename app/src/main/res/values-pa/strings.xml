@@ -13,7 +13,7 @@
     <string name="name">ਨਾਮ</string>
     <string name="phone_number">ਫੋਨ ਨੰਬਰ</string>
 
-
+    <string name="transactions">ਲੈਣ-ਦੇਣ</string>
     <!-- Popup_Screen -->
     <string name="amount_10_000">ਰਕਮ Rs. 10,000 /-</string>
     <string name="scan_this_code_to_pay">ਭੁਗਤਾਨ ਕਰਨ ਲਈ ਇਹ ਕੋਡ ਸਕੈਨ ਕਰੋ</string>

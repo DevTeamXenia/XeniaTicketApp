@@ -204,6 +204,7 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
                     reportsExpanded = !reportsExpanded
                     menu.findItem(R.id.nav_detailed).isVisible = reportsExpanded
                     menu.findItem(R.id.nav_summary).isVisible = reportsExpanded
+                    menu.findItem(R.id.nav_transaction).isVisible = reportsExpanded
                     true
                 }
 
@@ -216,6 +217,12 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
                 R.id.nav_summary -> {
 
                     startActivity(Intent(applicationContext, SummaryReportActivity::class.java))
+                    binding.drawerLayout.closeDrawer(GravityCompat.START)
+                    true
+                }
+                R.id.nav_transaction -> {
+
+                    startActivity(Intent(applicationContext, TransctionActivity::class.java))
                     binding.drawerLayout.closeDrawer(GravityCompat.START)
                     true
                 }

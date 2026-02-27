@@ -13,6 +13,7 @@
     <string name="name">పేరు</string>
     <string name="select_your_janma_nakshatra">మీ జన్మ నక్షత్రాన్ని ఎంచుకోండి</string>
     //Popup_Screen
+    <string name="transactions">లావాదేవీలు</string>
     <string name="amount_10_000">మొత్తం   Rs. 10,000 /-</string>
     <string name="scan_this_code_to_pay">ఈ కోడ్‌ను స్కాన్ చేసి చెల్లించండి</string>
     <string name="expire">QR కాలం ముగుస్తుంది :</string>

@@ -48,8 +48,6 @@
                     android:title="@string/reports"
                     app:actionLayout="@layout/nav_dropdown_action" />
 
-
-                Child items (hidden initially)
                 <item
                     android:id="@+id/nav_detailed"
                     android:title="@string/detailed_report"
@@ -60,17 +58,22 @@
                     android:title="@string/summary_report"
                     android:visible="false" />
 
+                <item
+                    android:id="@+id/nav_transaction"
+                    android:title="@string/transactions"
+                    android:visible="false" />
+
 
                 <!--            <item-->
                 <!--                    android:id="@+id/nav_delete_account"-->
                 <!--                    android:icon="@drawable/ic_delete"-->
                 <!--                    android:title="@string/delete_account" />-->
-
+            </group>
                 <item
                     android:id="@+id/nav_logout"
                     android:icon="@drawable/ic_logout"
                     android:title="@string/logout" />
-            </group>
+
 
         </menu>
     </item>

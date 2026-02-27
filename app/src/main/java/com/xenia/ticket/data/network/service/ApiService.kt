@@ -18,12 +18,14 @@ import com.xenia.ticket.data.network.model.SibStatusRequest
 import com.xenia.ticket.data.network.model.SummaryReportResponse
 import com.xenia.ticket.data.network.model.TicketPaymentRequest
 import com.xenia.ticket.data.network.model.TicketResponse
+import com.xenia.ticket.data.network.model.TransactionReportResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
+import retrofit2.Response
 
 interface ApiService {
 
@@ -80,6 +82,15 @@ interface ApiService {
         @Query("endDateTime") endDateTime: String
     ): ItemSummaryReportResponse
 
+    @GET("Report/TransactionReport")
+    suspend fun getTransactionReport(
+        @Header("Authorization") token: String,
+        @Query("startDate") startDate: String,
+        @Query("endDate") endDate: String,
+        @Query("status") status: String,
+        @Query("pageIndex") pageIndex: Int,
+        @Query("pageSize") pageSize: Int
+    ): Response<TransactionReportResponse>
     @POST("payments/fed/generateQr")
     suspend fun generateFedQr(
         @Header("Authorization") token: String,

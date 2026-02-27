@@ -477,14 +477,14 @@ class PaymentActivity : AppCompatActivity() {
             }
 
         val header = JSONObject().apply {
-            put("ApplicationId", sessionManager.getPineLabsAppId())
+            put("ApplicationId", "d585cf57dc5f4dab9e99fc1d37fa1333")
             put("UserId", "admin")
             put("MethodId", PlutusConstants.METHOD_PRINT)
             put("VersionNo", "1.0")
         }
 
         val headerImageLine = JSONObject().apply {
-            put("PrintDataType", 2) // 2 = image
+            put("PrintDataType", 2)
             put("PrinterWidth", 24)
             put("IsCenterAligned", true)
             put("DataToPrint", "")

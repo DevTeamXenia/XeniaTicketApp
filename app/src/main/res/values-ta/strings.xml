@@ -14,6 +14,7 @@
     <string name="transcation_id">பரிவர்த்தனை ஐடி : </string>
     <string name="star">தாரா</string>
     <string name="pay_name">பெயர் :</string>
+    <string name="transactions">பரிவர்த்தனைகள்</string>
     <string name="payment_failed">பணம் செலுத்துதல் தோல்வியுற்றது</string>
     <string name="it_seems_we_have_not_received_money">எங்களுக்கு பணம் கிடைக்கவில்லை போல தெரிகிறது</string>
     <string name="do_you_want_to_do_close_this_page">இந்த பக்கத்தை மூட விரும்புகிறீர்களா?</string>

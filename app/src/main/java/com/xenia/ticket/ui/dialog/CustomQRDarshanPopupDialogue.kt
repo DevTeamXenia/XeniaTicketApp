@@ -154,7 +154,8 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
             val qrCodeBitmap = generateUPIQRCode(url)
             qrCodeImageView.setImageBitmap(qrCodeBitmap)
 
-           startTimer()
+//           startTimer()
+            postTicketPaymentHistory( "S","Payment Success")
             view.findViewById<ImageView>(R.id.btnClose).setOnClickListener {
                 dismiss()
             }

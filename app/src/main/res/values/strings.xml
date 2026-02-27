@@ -22,7 +22,7 @@
     <string name="sync">Sync</string>
     <string name="loading_syncing_data">Syncing data...</string>
     <string name="amount_zero">0.00</string>
-
+    <string name="transactions">Transactions</string>
     <string name="home">Home</string>
 
 

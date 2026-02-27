@@ -10,6 +10,7 @@
     <string name="name">नाम</string>
     <string name="phone_number">फोन नंबर</string>
     //payment_Screen
+    <string name="transactions">लेन-देन</string>
     <string name="thank_you">धन्यवाद!</string>
     <string name="your_payment_was_successful">आपका भुगतान सफल रहा!</string>
     <string name="amount">राशि : </string>

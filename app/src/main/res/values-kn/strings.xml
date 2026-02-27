@@ -14,7 +14,7 @@
     <string name="amount_10_000">ಮೊತ್ತ   Rs. 10,000 /-</string>
     <string name="scan_this_code_to_pay">ಈ ಕೋಡ್‌ ಅನ್ನು ಸ್ಕ್ಯಾನ್ ಮಾಡಿ ಪಾವತಿಸಿ</string>
     <string name="expire">QR ಅವಧಿ ಮುಗಿಯುತ್ತದೆ  :</string>
-
+    <string name="transactions">ವಹಿವಾಟುಗಳು</string>
     //payment_Screen
     <string name="thank_you">ಧನ್ಯವಾದಗಳು!</string>
     <string name="your_payment_was_successful">ನಿಮ್ಮ ಪಾವತಿ ಯಶಸ್ವಿಯಾಗಿದೆ!</string>
