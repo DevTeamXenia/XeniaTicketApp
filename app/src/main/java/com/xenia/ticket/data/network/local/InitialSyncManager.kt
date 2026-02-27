@@ -10,13 +10,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
+import retrofit2.HttpException
+
 
 class InitialSyncManager(
     private val companyRepository: CompanyRepository,
     private val categoryRepository: CategoryRepository,
     private val activeTicketRepository: ActiveTicketRepository,
     private val labelSettingsRepository: LabelSettingsRepository,
-
     private val sessionManager: SessionManager
 ) {
 
@@ -25,46 +26,96 @@ class InitialSyncManager(
             coroutineScope {
 
                 val token = sessionManager.getToken()
-                    ?: return@coroutineScope SyncResult.Error("Token missing")
+                    ?: return@coroutineScope SyncResult.Error("Token missing", code = 401)
 
-                if (!companyRepository.loadCompanySettings(token))
-                    return@coroutineScope SyncResult.Error("Company API failed")
-
-
-                val categoryEnabled =
-                    companyRepository.getBoolean(CompanyKey.CATEGORY_ENABLE)
-
-
-                val labelApi = async { labelSettingsRepository.loadLabelSettings(token) }
-                val offeringApi = async { activeTicketRepository.loadTickets(token) }
-
-
-
-                val categoryApi = async {
-                    if (categoryEnabled)
-                        categoryRepository.loadCategories(token)
-                    else
-                        true
+                // Company API
+                val companyResult = try {
+                    companyRepository.loadCompanySettings(token)
+                } catch (e: HttpException) {
+                    return@coroutineScope SyncResult.Error(
+                        e.message() ?: "Company API failed",
+                        code = e.code()
+                    )
+                } catch (e: Exception) {
+                    return@coroutineScope SyncResult.Error(
+                        e.message ?: "Company API failed",
+                        code = null
+                    )
                 }
 
+                if (!companyResult)
+                    return@coroutineScope SyncResult.Error("Company API failed")
 
+                val categoryEnabled = companyRepository.getBoolean(CompanyKey.CATEGORY_ENABLE)
 
-                if (!labelApi.await())
-                    return@coroutineScope SyncResult.Error("Label API failed")
+                // Parallel API calls
+                val labelApi = async {
+                    try {
+                        labelSettingsRepository.loadLabelSettings(token)
+                    } catch (e: HttpException) {
+                        throw SyncException(
+                            e.message() ?: "Label API failed",
+                            e.code()
+                        )
+                    } catch (e: Exception) {
+                        throw SyncException(
+                            e.message ?: "Label API failed"
+                        )
+                    }
+                }
 
-                if (!offeringApi.await())
-                    return@coroutineScope SyncResult.Error("Offering API failed")
+                val offeringApi = async {
+                    try {
+                        activeTicketRepository.loadTickets(token)
+                    } catch (e: HttpException) {
+                        throw SyncException(
+                            e.message() ?: "Offering API failed",
+                            e.code()
+                        )
+                    } catch (e: Exception) {
+                        throw SyncException(
+                            e.message ?: "Offering API failed"
+                        )
+                    }
+                }
 
+                val categoryApi = async {
+                    if (categoryEnabled) {
+                        try {
+                            categoryRepository.loadCategories(token)
+                        } catch (e: HttpException) {
+                            throw SyncException(
+                                e.message() ?: "Category API failed",
+                                e.code()
+                            )
+                        } catch (e: Exception) {
+                            throw SyncException(
+                                e.message ?: "Category API failed"
+                            )
+                        }
+                    } else true
+                }
 
-                if (!categoryApi.await())
-                    return@coroutineScope SyncResult.Error("Category API failed")
+                // Await results and handle SyncException
+                try {
+                    if (!labelApi.await()) return@coroutineScope SyncResult.Error("Label API failed")
+                    if (!offeringApi.await()) return@coroutineScope SyncResult.Error("Offering API failed")
+                    if (!categoryApi.await()) return@coroutineScope SyncResult.Error("Category API failed")
+                } catch (e: SyncException) {
+                    return@coroutineScope SyncResult.Error(e.message ?: "Unknown sync error", e.code)
+                }
+
                 sessionManager.setFirstLoad(false)
                 SyncResult.Success("Initial sync completed successfully")
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            SyncResult.Error("Initial load failed: ${e.message}")
+            SyncResult.Error(
+                message = e.message ?: "Unknown sync error",
+                code = null
+            )
         }
     }
-
 }
+
+class SyncException(message: String, val code: Int? = null) : Exception(message)

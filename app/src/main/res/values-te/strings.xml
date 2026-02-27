@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="home">హోమ్</string>
-
-
-
+    <string name="home">Home</string>
     <string name="sync">సమన్వయం</string>
     donation_screen
     <string name="fill_out_your_details">మీ వివరాలను పూరించండి</string>

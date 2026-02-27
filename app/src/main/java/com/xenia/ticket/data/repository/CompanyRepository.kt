@@ -43,10 +43,9 @@ class CompanyRepository(
     suspend fun cacheCompanyImages(apiCompanies: List<CompanyResponse>, cacheDir: File) {
         if (apiCompanies.isEmpty()) return
 
-        // Map keyCode -> value
+
         val companyMap = apiCompanies.associate { it.keyCode to it.value }
 
-        // Get URLs by key
         val headerUrl = companyMap["COMPANYPRINT_H"]
         val footerUrl = companyMap["COMPANYPRINT_F"]
         val logoUrl = companyMap["COMPANYLOGO_P"]

@@ -122,6 +122,8 @@ class PaymentActivity : AppCompatActivity() {
 //                    binding.lottieSuccess.visibility = View.GONE
 //                }
             })
+            Log.d("QRCodeDebug", ticket.toString()) // Log dimensions
+
             binding.linSuccess.visibility = View.VISIBLE
             binding.linFailed.visibility = View.GONE
             val amountDouble = amount?.toDoubleOrNull() ?: 0.00
@@ -490,9 +492,8 @@ class PaymentActivity : AppCompatActivity() {
             put("ImageData", headerBitmap)
         }
 
-        // Footer image
         val footerImageLine = JSONObject().apply {
-            put("PrintDataType", 2) // 2 = image
+            put("PrintDataType", 2)
             put("PrinterWidth", 24)
             put("IsCenterAligned", true)
             put("DataToPrint", "")
@@ -501,7 +502,7 @@ class PaymentActivity : AppCompatActivity() {
 
         }
         val smallSpaceLine = JSONObject().apply {
-            put("PrintDataType", 0) // 2 = image
+            put("PrintDataType", 0)
             put("PrinterWidth", 24)
             put("IsCenterAligned", true)
             put("DataToPrint", " ")
@@ -1054,6 +1055,7 @@ class PaymentActivity : AppCompatActivity() {
     private fun generateQRCode(): Bitmap? {
         val data = ticket.orEmpty()
         val qrCodeWriter = QRCodeWriter()
+        Log.d("QRCodeDebug", ticket.toString())
         return try {
             val size = 300
             val bitMatrix: BitMatrix = qrCodeWriter.encode(data, BarcodeFormat.QR_CODE, size, size)

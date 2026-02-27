@@ -5,6 +5,7 @@ import UserType
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -14,6 +15,7 @@ import com.xenia.ticket.R
 import com.xenia.ticket.data.network.local.InitialSyncManager
 import com.xenia.ticket.data.network.local.SyncResult
 import com.xenia.ticket.databinding.ActivitySyncBinding
+import com.xenia.ticket.utils.common.ApiResponseHandler
 import com.xenia.ticket.utils.common.CommonMethod
 import com.xenia.ticket.utils.common.CommonMethod.showSnackbar
 import com.xenia.ticket.utils.common.Constants.PRINTER_KIOSK
@@ -88,8 +90,25 @@ class SyncActivity : AppCompatActivity() {
                 }
 
                 is SyncResult.Error -> {
-                    isSyncCompleted = false
-                    showRetryDialog(result.error)
+                    val errorMessage = result.message.ifEmpty { "Unknown sync error" }
+                    val code = result.code // Int?
+
+                    Log.e("SYNC_ERROR", "Sync failed: $errorMessage, HTTP code: ${code ?: "N/A"}")
+
+                    if (code == null || code == 401 || code == 403) {
+                        AlertDialog.Builder(this@SyncActivity)
+                            .setTitle("Logout !!")
+                            .setMessage(
+                                "You have been logged out because your account was used on another device."
+                            )
+                            .setCancelable(false)
+                            .setPositiveButton("Logout") { _, _ ->
+                                ApiResponseHandler.logoutUser(this@SyncActivity)
+                            }
+                            .show()
+                    } else {
+                        showRetryDialog(errorMessage)
+                    }
                 }
             }
         }

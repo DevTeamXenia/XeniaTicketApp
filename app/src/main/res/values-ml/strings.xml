@@ -2,7 +2,7 @@
 <resources>
 
 
-    <string name="home">ഹോം</string>
+    <string name="home">Home</string>
     <string name="_10_000">Rs.</string>
     <string name="pay">അടയ്ക്കുക</string>
     <string name="phone_number">ഫോൺ നമ്പർ</string>
@@ -17,7 +17,7 @@
 
     //payment_Screen
     <string name="thank_you">നന്ദി!</string>
-    <string name="your_payment_was_successful">നിങ്ങളുടെ പണമടക്കം വിജയകരമായിരിക്കുന്നു! </string>
+    <string name="your_payment_was_successful">നിങ്ങൾ വിജയകരമായി പണം അടച്ചിരിക്കുന്നു! </string>
     <string name="amount">തുക :</string>
     <string name="txt_amount">തുക</string>
     <string name="transcation_id">ഇടപാട് ഐഡി :</string>
@@ -58,7 +58,7 @@
 
     <string name="do_you_want_to_logout">നിങ്ങൾക്ക് ലോഗ്ഔട്ട് ചെയ്യണോ?</string>
     <string name="choose_item">ഇനം തിരഞ്ഞെടുക്കുക</string>
-    <string name="done">ചെയ്തു</string>
+    <string name="done">തുടരുക</string>
     <string name="sub_temple">ഉപക്ഷേത്രം</string>
     <string name="my_cart">കാർട്ട്</string>
     <string name="edit">എഡിറ്റ്</string>

@@ -76,10 +76,10 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
         lifecycleScope.launch {
             updateCartUI()
         }
+        setupRecyclerViews()
         fetchDetails()
 
     }
-
     private fun setupUI() {
         binding.txtHome.text = getString(R.string.home)
         binding.txtselectTicket.text = getString(R.string.choose_your_tickets)
@@ -94,7 +94,6 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
             startActivity(intent)
 
         }
-
     }
     private fun fetchDetails() {
         lifecycleScope.launch {
@@ -121,7 +120,6 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
             onTicketClickListener = this,
             ticketRepository = ticketRepository
         )
-
         binding.ticketRecycler.layoutManager = GridLayoutManager(this, 4)
         binding.ticketRecycler.adapter = ticketAdapter
     }
@@ -134,7 +132,6 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
                 binding.ticketCat.visibility = View.GONE
                 return
             }
-
 
             ApiResponseHandler.handleApiCall(
                 activity = this@TicketActivity,
@@ -291,25 +288,24 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
             updateCartUI()
         }
     }
+
+    override fun onTicketAdded(ticketId: Int) {
+        lifecycleScope.launch {
+            ticketAdapter.updateSingleTicket(ticketId)
+            updateCartUI()
+        }
+    }
     override fun onResume() {
         super.onResume()
-        setupRecyclerViews()
         getTickets(selectedCategoryId)
         inactivityHandler.resumeInactivityCheck()
         lifecycleScope.launch {
             updateCartUI()
         }
     }
-    override fun onTicketAdded() {
-        lifecycleScope.launch {
-            getTickets(selectedCategoryId)
-            updateCartUI()
-        }
-    }
 
     override fun onRestart() {
         super.onRestart()
-        setupRecyclerViews()
         getTickets(selectedCategoryId)
         lifecycleScope.launch {
             updateCartUI()

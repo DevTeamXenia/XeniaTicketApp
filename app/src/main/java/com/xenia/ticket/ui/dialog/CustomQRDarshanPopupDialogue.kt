@@ -93,8 +93,6 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
 
         return dialog
     }
-
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -156,12 +154,10 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
             val qrCodeBitmap = generateUPIQRCode(url)
             qrCodeImageView.setImageBitmap(qrCodeBitmap)
 
-            startTimer()
-
+           startTimer()
             view.findViewById<ImageView>(R.id.btnClose).setOnClickListener {
                 dismiss()
             }
-
         }
     }
     private var companyGateway: String? = null
@@ -204,8 +200,6 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
             }
         }.start()
     }
-
-
     private fun checkFedPaymentStatus() {
         if (isCheckingPaymentStatus) return
 
@@ -245,6 +239,21 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
 
                     delay(2000)
                 }
+            } catch (e: HttpException) {
+
+                if (e.code() == 401) {
+                    AlertDialog.Builder(requireContext())
+                        .setTitle("Logout !!")
+                        .setMessage(
+                            "You have been logged out because your account was used on another device."
+                        )
+                        .setCancelable(false)
+                        .setPositiveButton("Logout") { _, _ ->
+                            ApiResponseHandler.logoutUser(requireActivity())
+                        }
+                        .show()
+                }
+
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {
@@ -288,7 +297,6 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
                         }
 
                         "F" -> {
-
                             if (!statusDesc.equals("Invalid PspRefNo", ignoreCase = true)) {
                                 Log.d("SIB_STATUS", "Payment FAILED: $statusDesc")
                                 postTicketPaymentHistory(
@@ -296,9 +304,7 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
                                     statusDesc ?: "Transaction Failed"
                                 )
                                 break
-
                             } else {
-
                                 Log.d("SIB_STATUS", "Invalid PspRefNo - Ignoring")
                             }
                         }
@@ -315,8 +321,25 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
                     delay(2000)
                 }
 
+            } catch (e: HttpException) {
+
+                if (e.code() == 401) {
+                    AlertDialog.Builder(requireContext())
+                        .setTitle("Logout !!")
+                        .setMessage(
+                            "You have been logged out because your account was used on another device."
+                        )
+                        .setCancelable(false)
+                        .setPositiveButton("Logout") { _, _ ->
+                            ApiResponseHandler.logoutUser(requireActivity())
+                        }
+                        .show()
+                }
+
             } catch (e: Exception) {
+
                 Log.e("SIB_STATUS", "Error: ${e.message}", e)
+
             } finally {
                 isCheckingPaymentStatus = false
             }

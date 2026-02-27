@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="home">මුල් පිටුව</string>
+    <string name="home">Home</string>
     <string name="fill_out_your_details">ඔබගේ විස්තර පුරවන්න</string>
     <string name="_10_000">Rs..</string>
     <string name="pay">ගෙවන්න</string>

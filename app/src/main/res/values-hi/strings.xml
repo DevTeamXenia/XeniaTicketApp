@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="home">होम</string>
+    <string name="home">Home</string>
 
     //Popup_Screen
     <string name="amount_10_000">राशि  Rs. 10,000 /-</string>

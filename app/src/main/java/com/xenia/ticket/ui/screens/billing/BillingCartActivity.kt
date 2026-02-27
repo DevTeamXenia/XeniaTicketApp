@@ -505,7 +505,7 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
         TODO("Not yet implemented")
     }
 
-    override fun onTicketAdded() {
+    override fun onTicketAdded(ticketId: Int) {
         loadDarshanItems()
     }
 

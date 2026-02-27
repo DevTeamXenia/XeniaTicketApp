@@ -1,16 +1,21 @@
 package com.xenia.ticket.ui.screens.kiosk
 
 import android.annotation.SuppressLint
+import android.app.Dialog
 import android.content.Intent
 import android.graphics.BitmapFactory
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.util.Base64
 import android.view.MotionEvent
+import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.button.MaterialButton
 import com.xenia.ticket.R
 import com.xenia.ticket.data.listeners.InactivityHandlerActivity
 import com.xenia.ticket.data.listeners.OnTicketClickListener
@@ -106,11 +111,24 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
         binding.btnPay.setOnClickListener {
             val name = binding.editTextName.text.toString()
             val phone = binding.editTextPhoneNumber.text.toString().trim()
-            if (phone.isNotEmpty() && phone.length != 10) {
-                showMessage("Enter valid phone number")
+
+
+            if (phone.isEmpty()) {
+                binding.editTextPhoneNumber.error = "Phone number is required"
+                binding.editTextPhoneNumber.requestFocus()
                 return@setOnClickListener
             }
-
+            if (name.isEmpty()) {
+                binding.editTextName.error = "Name is required"
+                binding.editTextName.requestFocus()
+                return@setOnClickListener
+            }
+            if (phone.length < 10) {
+                binding.editTextPhoneNumber.error =
+                    "Enter valid phone number with at least 10 digits"
+                binding.editTextPhoneNumber.requestFocus()
+                return@setOnClickListener
+            }
             lifecycleScope.launch {
                 ticketRepository.updateCartItemsInfo(
                     newName = name,
@@ -154,9 +172,41 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
         binding.btnPay.text = getString(R.string.pay)
         binding.editTextName.enableInactivityReset(inactivityHandler)
         binding.editTextPhoneNumber.enableInactivityReset(inactivityHandler)
+        binding.ivBack.setOnClickListener {
+            val intent = Intent(applicationContext, TicketActivity::class.java)
+            startActivity(intent)
 
+        }
+        binding.linHome.setOnClickListener {
+
+            val dialog = Dialog(this)
+            dialog.setContentView(R.layout.dialog_quit_cart)
+            dialog.setCancelable(false)
+            dialog.window?.apply {
+                setLayout(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+                setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            }
+            val btnYes = dialog.findViewById<MaterialButton>(R.id.buttonyes)
+            val btnNo = dialog.findViewById<MaterialButton>(R.id.buttonCancel)
+
+            btnYes.setOnClickListener {
+                lifecycleScope.launch {
+                    ticketRepository.clearAllData()
+                }
+                dialog.dismiss()
+                finish()
+            }
+
+            btnNo.setOnClickListener {
+                dialog.dismiss()
+            }
+
+            dialog.show()
+        }
     }
-
     @SuppressLint("SetTextI18n", "DefaultLocale")
     private fun loadTicketItems() {
         lifecycleScope.launch {
@@ -192,6 +242,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
             }
         }
     }
+
     override fun onDeleteClick(ticket: Ticket) {
         lifecycleScope.launch(Dispatchers.IO) {
             ticketRepository.deleteTicketById(ticket.ticketId)
@@ -244,6 +295,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                     dismissLoader()
 //                    generateCanaraPaymentQrCode(formattedTotalAmount)
                 }
+
                 "FederalBank" -> {
                     when {
                         totalAmount == 0.0 -> {
@@ -254,6 +306,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                             )
                             return@launch
                         }
+
                         totalAmount == 1.0 -> {
                             dismissLoader()
                             showSnackbar(
@@ -262,27 +315,30 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                             )
                             return@launch
                         }
+
                         totalAmount >= 2.0 -> {
                             generateFederalPaymentQrCode(totalAmount)
                         }
                     }
                 }
+
                 else -> {
                     dismissLoader()
                     generateSibQrCode(totalAmount)
                 }
             }
             if (gateway.isNullOrEmpty()) {
-            dismissLoader()
-            return@launch
-        }
+                dismissLoader()
+                return@launch
+            }
 
         }
     }
+
     private fun generateFederalPaymentQrCode(donationAmount: Double) {
         val request = FedQrRequest(
             Amount = donationAmount.toInt(),
-            name ="",
+            name = "",
             phone = "",
         )
 
@@ -316,6 +372,21 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                     )
                 }
             } catch (e: HttpException) {
+                if (e.code() == 401) {
+                    AlertDialog.Builder(this@TicketCartActivity)
+                        .setTitle("Logout !!")
+                        .setMessage(
+                            "You have been logged out because your account was used on another device."
+                        )
+                        .setCancelable(false)
+                        .setPositiveButton("Logout") { _, _ ->
+                            ApiResponseHandler.logoutUser(this@TicketCartActivity)
+                        }
+                        .show()
+                } else {
+                    showSnackbar(binding.root, "Unable to load settings!")
+                }
+            } catch (e: HttpException) {
                 showSnackbar(
                     binding.root,
                     "unable to generate QR code! Please try again..."
@@ -323,11 +394,8 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
             }
         }
     }
-
     private fun generateSibQrCode(donationAmount: Double) {
-
         val transactionId = generateNumericTransactionReferenceID()
-
         val paymentRequest = SibQrRequest(
             transactionReferenceID = transactionId,
             amount = donationAmount.toString(),
@@ -365,7 +433,21 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                     dismissLoader()
                     showSnackbar(binding.root, "Unable to generate QR code!")
                 }
-
+            } catch (e: HttpException) {
+                if (e.code() == 401) {
+                    AlertDialog.Builder(this@TicketCartActivity)
+                        .setTitle("Logout !!")
+                        .setMessage(
+                            "You have been logged out because your account was used on another device."
+                        )
+                        .setCancelable(false)
+                        .setPositiveButton("Logout") { _, _ ->
+                            ApiResponseHandler.logoutUser(this@TicketCartActivity)
+                        }
+                        .show()
+                } else {
+                    showSnackbar(binding.root, "Unable to load settings!")
+                }
             } catch (e: Exception) {
                 dismissLoader()
                 showSnackbar(binding.root, "Something went wrong!")
@@ -547,12 +629,6 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
         finish()
     }
 
-    fun showMessage(msg: String) {
-        AlertDialog.Builder(this)
-            .setMessage(msg)
-            .setPositiveButton("OK", null)
-            .show()
-    }
 
     override fun onTicketClick(darshanItem: TicketDto) {
         TODO("Not yet implemented")
@@ -562,9 +638,10 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
         TODO("Not yet implemented")
     }
 
-    override fun onTicketAdded() {
+    override fun onTicketAdded(ticketId: Int) {
         loadTicketItems()
     }
+
 
     override fun onResume() {
         super.onResume()

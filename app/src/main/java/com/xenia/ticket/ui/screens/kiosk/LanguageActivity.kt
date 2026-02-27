@@ -84,12 +84,12 @@ class LanguageActivity : AppCompatActivity(),
         lifecycleScope.launch {
             ticketRepository.clearAllData()
             if (!isSubscriptionDialogShown) {
-                lifecycleScope.launch {
-                    sessionManager.getToken()?.let { token ->
-                        showSubscriptionDialog(token)
-                        isSubscriptionDialogShown = true
-                    }
-                }
+//                lifecycleScope.launch {
+//                    sessionManager.getToken()?.let { token ->
+//                        showSubscriptionDialog(token)
+//                        isSubscriptionDialogShown = true
+//                    }
+//                }
             }
             val gateway = companyRepository.getGateway()
             if (!gateway.isNullOrEmpty()) {
@@ -428,22 +428,56 @@ class LanguageActivity : AppCompatActivity(),
             val result = initialSyncManager.startInitialLoad()
 
             binding.swipeRefreshLayout?.isRefreshing = false
+
             val company = companyRepository.getCompany()
-            company?.applicationId?.let { newAppId->
+            company?.applicationId?.let { newAppId ->
                 sessionManager.clearPineLabsAppId()
                 sessionManager.savePineLabsAppId(newAppId.toString())
             }
+
             when (result) {
                 is SyncResult.Success -> {
                     showSnackbar(binding.root, "Data Refreshed")
                     loadCompanyDetails()
                 }
+
                 is SyncResult.Error -> {
-                    showSnackbar(binding.root, "Sync failed")
+                    val errorMessage = result.message.ifEmpty { "Unknown sync error" }
+                    val code = result.code // Int?
+
+                    Log.e("SYNC_ERROR", "Sync failed: $errorMessage, HTTP code: ${code ?: "N/A"}")
+
+                    if (code == null || code == 401 || code == 403) {
+                        AlertDialog.Builder(this@LanguageActivity)
+                            .setTitle("Logout !!")
+                            .setMessage(
+                                "You have been logged out because your account was used on another device."
+                            )
+                            .setCancelable(false)
+                            .setPositiveButton("Logout") { _, _ ->
+                                ApiResponseHandler.logoutUser(this@LanguageActivity)
+                            }
+                            .show()
+                    } else {
+                        // Show retry dialog for other errors
+                        showRetryDialog(errorMessage)
+                    }
                 }
             }
         }
     }
-
+    private fun showRetryDialog(msg: String) {
+        AlertDialog.Builder(this)
+            .setTitle("Sync Failed")
+            .setMessage(msg)
+            .setCancelable(false)
+            .setPositiveButton("Retry") { _, _ ->
+                recreate()
+            }
+            .setNegativeButton("Exit") { _, _ ->
+                finish()
+            }
+            .show()
+    }
 
 }

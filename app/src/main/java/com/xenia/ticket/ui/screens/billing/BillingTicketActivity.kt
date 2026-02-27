@@ -455,13 +455,13 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
             updateCartUI()
         }
     }
-    override fun onTicketAdded() {
+
+    override fun onTicketAdded(ticketId: Int) {
         lifecycleScope.launch {
             getTickets(selectedCategoryId)
             updateCartUI()
         }
     }
-
     override fun onRestart() {
         super.onRestart()
         setupRecyclerViews()
@@ -657,10 +657,42 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
                     updateCartUI()
                 }
                 is SyncResult.Error -> {
-                    showSnackbar(binding.root, "Sync failed")
+                    val errorMessage = result.message.ifEmpty { "Unknown sync error" }
+                    val code = result.code // Int?
+
+                    Log.e("SYNC_ERROR", "Sync failed: $errorMessage, HTTP code: ${code ?: "N/A"}")
+
+                    if (code == null || code == 401 || code == 403) {
+                        AlertDialog.Builder(this@BillingTicketActivity)
+                            .setTitle("Logout !!")
+                            .setMessage(
+                                "You have been logged out because your account was used on another device."
+                            )
+                            .setCancelable(false)
+                            .setPositiveButton("Logout") { _, _ ->
+                                ApiResponseHandler.logoutUser(this@BillingTicketActivity)
+                            }
+                            .show()
+                    } else {
+                        showRetryDialog(errorMessage)
+                    }
                 }
+
             }
         }
+    }
+    private fun showRetryDialog(msg: String) {
+        AlertDialog.Builder(this)
+            .setTitle("Sync Failed")
+            .setMessage(msg)
+            .setCancelable(false)
+            .setPositiveButton("Retry") { _, _ ->
+                recreate()
+            }
+            .setNegativeButton("Exit") { _, _ ->
+                finish()
+            }
+            .show()
     }
     private fun showLoader(show: Boolean) {
         binding.loaderView?.visibility = if (show) View.VISIBLE else View.GONE

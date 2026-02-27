@@ -99,11 +99,10 @@ class TicketAdapter(
                                 String.format(Locale.ENGLISH, "Amount %.2f*%d", ticketRate, qty)
 
                                 quantity.text =
-                                    context.getString(R.string.txt_amount) +
+                                    context.getString(R.string.txt_amount) +" "+
                                             String.format(Locale.ENGLISH, "%.2f", ticketRate) +
                                             " * " +
                                             String.format(Locale.ENGLISH, "%d", qty)
-
 
                                 val total = ticketRate * qty
                                 txtTotalAmount.text = String.format(Locale.ENGLISH, "%.2f/-", total)
@@ -165,6 +164,13 @@ class TicketAdapter(
         tickets.clear()
         tickets.addAll(newTickets)
         notifyDataSetChanged()
+    }
+    @SuppressLint("NotifyDataSetChanged")
+    fun updateSingleTicket(ticketId: Int) {
+        val index = ticketItems.indexOfFirst { it.ticketId == ticketId }
+        if (index != -1) {
+            notifyItemChanged(index)
+        }
     }
 
 }

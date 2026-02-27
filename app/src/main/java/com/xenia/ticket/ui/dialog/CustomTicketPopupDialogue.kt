@@ -283,7 +283,7 @@ class CustomTicketPopupDialogue : DialogFragment() {
             )
             lifecycleScope.launch {
                 ticketRepository.insertCartItem(cartItem)
-                listener?.onTicketAdded()
+                listener?.onTicketAdded(ticketId)
                 firstClick = true
                 dismiss()
             }

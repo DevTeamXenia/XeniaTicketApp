@@ -15,7 +15,6 @@ import org.json.JSONObject
 import retrofit2.HttpException
 import org.koin.android.ext.android.inject
 import android.widget.Toast
-
 object ApiResponseHandler {
 
     fun <T> handleApiCall(
