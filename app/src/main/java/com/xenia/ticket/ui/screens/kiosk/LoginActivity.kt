@@ -208,8 +208,6 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
         }
 
         showLoader(this, "Logging...")
-
-
         CoroutineScope(Dispatchers.Main).launch {
             try {
 
@@ -242,31 +240,23 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
                 finish()
 
             } catch (e: HttpException) {
-
                 val errorBody = e.response()?.errorBody()?.string()
-
                 val msg = when (e.code()) {
                     404 -> "Incorrect Username!"
                     401 -> "Incorrect Password!"
                     else -> errorBody ?: e.message() ?: "Something went wrong!"
                 }
-
                 showSnackbar(binding.root, msg)
-
             } catch (e: Exception) {
-
                 showSnackbar(
                     binding.root,
                     e.localizedMessage ?: "Something went wrong! Please try again."
                 )
-
             } finally {
                 dismissLoader()
             }
         }
     }
-
-
     private fun hideKeyboard() {
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         val view = currentFocus ?: View(this)

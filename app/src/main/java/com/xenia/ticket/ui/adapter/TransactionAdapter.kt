@@ -25,12 +25,10 @@ class TransactionAdapter :
         items.addAll(list)
         notifyItemRangeInserted(start, list.size)
     }
-
     fun clear() {
         items.clear()
         notifyDataSetChanged()
     }
-
     override fun getItemCount() = items.size
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TransactionViewHolder {
@@ -38,11 +36,9 @@ class TransactionAdapter :
             .inflate(R.layout.item_transaction, parent, false)
         return TransactionViewHolder(view)
     }
-
     override fun onBindViewHolder(holder: TransactionViewHolder, position: Int) {
         holder.bind(items[position])
     }
-
     class TransactionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val tvReceipt: TextView = itemView.findViewById(R.id.tvReceipt)
         private val tvTicket: TextView = itemView.findViewById(R.id.tvTicket)

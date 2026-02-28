@@ -12,6 +12,8 @@ import com.xenia.ticket.data.network.model.LogoutResponse
 import com.xenia.ticket.data.network.model.OrderResponse
 import com.xenia.ticket.data.network.model.SibQrRequest
 import com.xenia.ticket.data.network.model.PaymentStatusResponse
+import com.xenia.ticket.data.network.model.PineLabGenerateRequest
+import com.xenia.ticket.data.network.model.PineLabGenerateResponse
 import com.xenia.ticket.data.network.model.SibPaymentStatusResponse
 import com.xenia.ticket.data.network.model.SibQrResponse
 import com.xenia.ticket.data.network.model.SibStatusRequest
@@ -84,7 +86,7 @@ interface ApiService {
 
     @GET("Report/TransactionReport")
     suspend fun getTransactionReport(
-        @Header("Authorization") token: String,
+        @Header("Authorization") bearerToken: String,
         @Query("startDate") startDate: String,
         @Query("endDate") endDate: String,
         @Query("status") status: String,
@@ -96,7 +98,6 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Body request: FedQrRequest
     ): FedQrResponse
-
     @GET("payments/fed/status/{orderId}")
     suspend fun getFedPaymentStatus(
         @Path("orderId") orderId: String,
@@ -116,4 +117,9 @@ interface ApiService {
         @Header("Authorization") token: String
     ): SibPaymentStatusResponse
 
+    @POST("payments/pineLab/generate")
+    suspend fun generatePineLabPayment(
+        @Header("Authorization") token: String,
+        @Body request: PineLabGenerateRequest
+    ): Response<PineLabGenerateResponse>
 }

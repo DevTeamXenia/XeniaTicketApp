@@ -10,5 +10,6 @@ data class TransactionItem(
     val PhoneNumber: String?,
     val Amount: Double,
     val SourceType: String,
-    val Status: String
+    val Status: String,
+    val CancelReason: String
 )

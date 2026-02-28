@@ -114,7 +114,7 @@ class PaymentActivity : AppCompatActivity() {
 
         setLocale(this@PaymentActivity, selectedLanguage)
         if (status.equals("S")) {
-           binding.lottieSuccess.visibility = View.VISIBLE
+            binding.lottieSuccess.visibility = View.VISIBLE
             binding.lottieSuccess.playAnimation()
 
             binding.lottieSuccess.addAnimatorListener(object : AnimatorListenerAdapter() {
@@ -155,6 +155,7 @@ class PaymentActivity : AppCompatActivity() {
         }
 
     }
+
     private fun bindPineLabsService() {
         val intent = Intent().apply {
             action = PlutusConstants.PLUTUS_ACTION
@@ -176,6 +177,7 @@ class PaymentActivity : AppCompatActivity() {
             Log.d("PLUTUS", "Service disconnected")
         }
     }
+
     private fun configPrinter() {
         val selectedPrinter = sessionManager.getSelectedPrinter()
         when (selectedPrinter) {
@@ -215,6 +217,7 @@ class PaymentActivity : AppCompatActivity() {
                     printReceiptPlutus()
                 }
             }
+
             else -> {
                 val printIntent = Intent(this, PrinterSettingActivity::class.java).apply {
                     putExtra("from", from)
@@ -446,6 +449,7 @@ class PaymentActivity : AppCompatActivity() {
             }
         }
     }
+
     private suspend fun createPrintJson(): String {
         val allVazhipaduItems = ticketRepository.getAllTicketsInCart()
 
@@ -547,6 +551,7 @@ class PaymentActivity : AppCompatActivity() {
 
         }.toString()
     }
+
     inner class IncomingHandler : Handler(Looper.getMainLooper()) {
         override fun handleMessage(msg: Message) {
 
@@ -565,7 +570,7 @@ class PaymentActivity : AppCompatActivity() {
                 if (status.equals("SUCCESS", true)) {
                     binding.progressBar.visibility = View.GONE
                     binding.txtPrinting.visibility = View.GONE
-                  redirect()
+                    redirect()
                 } else {
                     binding.progressBar.visibility = View.GONE
                     binding.txtPrinting.visibility = View.GONE
@@ -576,6 +581,7 @@ class PaymentActivity : AppCompatActivity() {
             }
         }
     }
+
     private suspend fun safeLoadBitmap(url: String): Bitmap? = try {
         loadBitmapFromUrl(url)
     } catch (e: Exception) {
@@ -631,7 +637,8 @@ class PaymentActivity : AppCompatActivity() {
         val labelDAmount = getLocalizedString("Amount", defaultLang)
         val labelDQty = getLocalizedString("Qty", defaultLang)
 
-        val printDefaultLang = !(selectedLanguage.lowercase() == "en" && defaultLang.lowercase() == "en")
+        val printDefaultLang =
+            !(selectedLanguage.lowercase() == "en" && defaultLang.lowercase() == "en")
 
         val tempBitmap = createBitmap(width, 10000)
         val tempCanvas = Canvas(tempBitmap)
@@ -869,6 +876,7 @@ class PaymentActivity : AppCompatActivity() {
 
         return finalBitmap
     }
+
     @SuppressLint("DefaultLocale")
     private fun generateReceiptBitmapDefault(
         currentDate: String,
@@ -1084,11 +1092,14 @@ class PaymentActivity : AppCompatActivity() {
     ): List<String> {
 
         val lines = mutableListOf<String>()
-        val LINE_WIDTH = 45  // Changed to match first function's center width
-        val ITEM_WIDTH = 16  // Changed to match first function
-        val PRICE_WIDTH = 6  // Changed to match first function
-        val QTY_WIDTH = 4    // Changed to match first function
-        val AMT_WIDTH = 8    // Changed to match first function
+        val LINE_WIDTH = 45
+        val ITEM_WIDTH = 16
+        val PRICE_WIDTH = 6
+        val QTY_WIDTH = 4
+        val AMT_WIDTH = 8
+        val BOLD_ON = "\u001B\u0045\u0001"
+
+        val BOLD_OFF = "\u001B\u0045\u0000"
         val totalWidth = ITEM_WIDTH + PRICE_WIDTH + QTY_WIDTH + AMT_WIDTH + 3  // ~37, for dashes
         val defaultLang = companyRepository.getDefaultLanguage().toString()
 
@@ -1106,17 +1117,10 @@ class PaymentActivity : AppCompatActivity() {
         /* ---------- Labels ---------- */
         val labelReceiptNo = getLocalizedString("Receipt No", selectedLanguage)
         val labelDate = getLocalizedString("Date", selectedLanguage)
-        val labelItem = getLocalizedString("Ticket", selectedLanguage)
-        val labelPrice = getLocalizedString("Price", selectedLanguage)
-        val labelQty = getLocalizedString("Qty", selectedLanguage)
-        val labelAmount = getLocalizedString("Amount", selectedLanguage)
         val labelUPI = getLocalizedString("UPI Reference No", selectedLanguage)
         val labelTotalAmount = getLocalizedString("Total Amount", selectedLanguage)
         val labelName = getLocalizedString("Name", selectedLanguage)
         val labelPhone = getLocalizedString("Phone No", selectedLanguage)
-
-        val labelDReceiptNo = getLocalizedString("Receipt No", defaultLang)
-        val labelDDate = getLocalizedString("Date", defaultLang)
         val labelDItem = getLocalizedString("Ticket", defaultLang)
         val labelDPrice = getLocalizedString("Price", defaultLang)
         val labelDQty = getLocalizedString("Qty", defaultLang)
@@ -1150,12 +1154,11 @@ class PaymentActivity : AppCompatActivity() {
             else -> "Entry Ticket"
         }
 
-        // Header - Changed to match first function's style
-        lines.add(receiptTitle.center(45))
-        lines.add(receiptDTitle.center(45))
+        lines.add("$BOLD_ON${receiptTitle.center(45)}$BOLD_OFF")
+        lines.add("$BOLD_ON${receiptDTitle.center(45)}$BOLD_OFF")
         lines.add("")
 
-        lines.add("${labelReceiptNo.padEnd(12)}: ${orderID ?: ""}")
+        lines.add("${labelReceiptNo.padEnd(12)}: $prefix${orderID ?: ""}")
         lines.add("${labelDate.padEnd(12)}  : $currentDate")
         lines.add("")
 
@@ -1168,7 +1171,6 @@ class PaymentActivity : AppCompatActivity() {
         lines.add("-".repeat(totalWidth))
 
         var totalAmount = 0.0
-
         for (item in ticket) {
             val priceStr = String.format(Locale.ENGLISH, "%.2f", item.daRate)
             val qtyStr = item.daQty.toString()
@@ -1199,17 +1201,13 @@ class PaymentActivity : AppCompatActivity() {
                 else -> item.ticketName
             } ?: ""
 
-            // Add a blank line before each item
             lines.add(" ")
 
-            // Add all chunks of the item name first
-            itemName.chunked(totalWidth+10).forEach { lines.add(it) }
-            itemDName.chunked(totalWidth+10).forEach { lines.add(it) }
+            itemName.chunked(totalWidth + 10).forEach { lines.add(it) }
+            itemDName.chunked(totalWidth + 10).forEach { lines.add(it) }
 
-            // Added extra space between item name and rates
             lines.add("")
 
-            // Then add the price, qty, and amount on the next line
             lines.add(
                 "".padRight(ITEM_WIDTH) +
                         priceStr.padLeft(PRICE_WIDTH) + " " +
@@ -1217,9 +1215,9 @@ class PaymentActivity : AppCompatActivity() {
                         amtStr.padLeft(AMT_WIDTH)
             )
         }
-        lines.add("-".repeat(totalWidth))  // Changed to totalWidth
+        lines.add("-".repeat(totalWidth))
         lines.add(
-            labelTotalAmount.padRight(totalWidth - AMT_WIDTH) +  // Adjusted for totalWidth
+            labelTotalAmount.padRight(totalWidth - AMT_WIDTH) +
                     String.format(Locale.ENGLISH, "%.2f", totalAmount).padRight(AMT_WIDTH)
         )
         lines.add("($labelDTotalAmount)")
@@ -1273,7 +1271,7 @@ class PaymentActivity : AppCompatActivity() {
         lines.add(receiptTitle.center(45))
         lines.add("")
 
-        lines.add("${labelReceiptNo.padEnd(12)}: ${orderID ?: ""}")
+        lines.add("${labelReceiptNo.padEnd(12)}: $prefix${orderID ?: ""}")
         lines.add("${labelDate.padEnd(12)}: $currentDate")
         lines.add("")
 
@@ -1311,8 +1309,8 @@ class PaymentActivity : AppCompatActivity() {
             val qtyStr = item.daQty.toString()
             val amountStr = String.format(Locale.ENGLISH, "%.2f", item.daTotalAmount)
             lines.add(" ")
-            itemName.chunked(totalWidth+10).forEach { lines.add(it.padEnd(itemColWidth)) }
-           lines.add("")
+            itemName.chunked(totalWidth + 10).forEach { lines.add(it.padEnd(itemColWidth)) }
+            lines.add("")
             lines.add(
                 "".padEnd(itemColWidth) +
                         priceStr.padStart(priceColWidth) + " " +
@@ -1321,7 +1319,15 @@ class PaymentActivity : AppCompatActivity() {
             )
         }
         lines.add("-".repeat(totalWidth))
-        lines.add("${labelTotalAmount.padEnd(itemColWidth + priceColWidth + qtyColWidth + 1)}: ${String.format(Locale.ENGLISH, "%.2f", totalAmount)}")
+        lines.add(
+            "${labelTotalAmount.padEnd(itemColWidth + priceColWidth + qtyColWidth + 1)}: ${
+                String.format(
+                    Locale.ENGLISH,
+                    "%.2f",
+                    totalAmount
+                )
+            }"
+        )
 
         if (!transID.isNullOrEmpty()) {
             lines.add("${labelUPI.padEnd(itemColWidth + priceColWidth + qtyColWidth + 1)}: $transID")
@@ -1334,7 +1340,6 @@ class PaymentActivity : AppCompatActivity() {
 
         return lines
     }
-
 
 
     fun String.center(width: Int): String {
@@ -1361,7 +1366,8 @@ class PaymentActivity : AppCompatActivity() {
                 // Resize to printer width
                 val ratio = printerWidth.toFloat() / originalBitmap.width
                 val newHeight = (originalBitmap.height * ratio).toInt()
-                val resizedBitmap = Bitmap.createScaledBitmap(originalBitmap, printerWidth, newHeight, true)
+                val resizedBitmap =
+                    Bitmap.createScaledBitmap(originalBitmap, printerWidth, newHeight, true)
 
                 // Convert to HEX
                 val outputStream = ByteArrayOutputStream()

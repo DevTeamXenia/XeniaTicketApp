@@ -16,8 +16,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.xenia.ticket.R
 import com.xenia.ticket.data.listeners.OnTicketClickListener
+import com.xenia.ticket.data.network.model.PineLabGenerateRequest
 import com.xenia.ticket.data.network.model.TicketDto
 import com.xenia.ticket.data.network.model.TicketPaymentRequest
+import com.xenia.ticket.data.network.service.ApiClient
 import com.xenia.ticket.data.repository.CompanyRepository
 import com.xenia.ticket.data.repository.PaymentRepository
 import com.xenia.ticket.data.repository.TicketRepository
@@ -225,8 +227,8 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                 }
 
                 "PineLabs" -> {
-
-                    generatePineLabPaymentQrCode(totalAmount)
+                    transactionId = generateNumericTransactionReferenceID()
+                    generatePineLabPayment(transactionId.toString(), totalAmount)
                 }
 
                 else -> {
@@ -237,7 +239,44 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
 
         }
     }
-    private fun generatePineLabPaymentQrCode(totalAmount: Double) {
+    private fun generatePineLabPayment(transactionId: String, totalAmount: Double) {
+        lifecycleScope.launch {
+            try {
+                val token = sessionManager.getToken()
+                val request = PineLabGenerateRequest(
+                    transcationId = transactionId,
+                    Amount = totalAmount.toInt(),
+                    name = "string",
+                    phone = "string"
+                )
+                val response = ApiClient.apiService.generatePineLabPayment(
+                    token = sessionManager.getToken().toString(),
+                    request = request
+                )
+                if (response.isSuccessful) {
+                    val body = response.body()
+
+                    Log.d("PINE_LAB", "OrderId = ${body?.OrderId}")
+                    Log.d("PINE_LAB", transactionId)
+                    if (body?.OrderId == transactionId) {
+                        generatePineLabPaymentQrCode(transactionId.toString(),totalAmount)
+                    } else {
+                        Log.e("PINE_LAB", "Transaction ID mismatch")
+                        dismissLoader()
+                    }
+
+                } else {
+                    Log.e("PINE_LAB", response.errorBody()?.string() ?: "API error")
+                    dismissLoader()
+                }
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                dismissLoader()
+            }
+        }
+    }
+    private fun generatePineLabPaymentQrCode(transactionId: String,totalAmount: Double) {
 
         if (!::plutusManager.isInitialized) {
             showSnackbar(binding.root, "Payment service not ready")
@@ -248,11 +287,11 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
             CARD -> 4001
             else -> 5120
         }
-        transactionId=generateNumericTransactionReferenceID()
+
         val request = JSONObject().apply {
             val formattedAmount = totalAmount * 100
             put("Header", JSONObject().apply {
-                    put("ApplicationId", "d585cf57dc5f4dab9e99fc1d37fa1333")
+                put("ApplicationId", "d585cf57dc5f4dab9e99fc1d37fa1333")
                 put("UserId", "cashier1")
                 put("MethodId", PlutusConstants.METHOD_DO_TRANSACTION)
                 put("VersionNo", "1.0")
@@ -264,11 +303,10 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                 put("PaymentAmount", formattedAmount.toString())
             })
         }
+        Log.d("PlutusRequest", transactionId.toString())
         Log.d("PlutusRequest", request.toString())
         plutusManager.sendRequest(request.toString())
     }
-
-
     @SuppressLint("SetTextI18n", "DefaultLocale")
     private fun loadDarshanItems() {
         lifecycleScope.launch {
@@ -345,7 +383,6 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                 }
                 return
             }
-
             val itemsList = cartTickets.flatMap { item ->
                 (1..item.daQty).map {
                     TicketPaymentRequest.Item(
@@ -356,7 +393,6 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                     )
                 }
             }
-
             val firstTicket = cartTickets.first()
             val imageBase64String = Base64.encodeToString(
                 firstTicket.daImg,
@@ -372,10 +408,8 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                 }
                 return
             }
-
             val name = binding.editTextName.text.toString().trim()
             val phone = binding.editTextPhoneNumber.text.toString().trim()
-
             val request = TicketPaymentRequest(
                 CompanyId = companyId!!,
                 UserId = userId,

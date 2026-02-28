@@ -47,8 +47,6 @@ class TransctionActivity : AppCompatActivity() {
         setupPaginationButtons()
 
     }
-
-
     private fun setupPaginationButtons() {
         binding.btnPrevious.setOnClickListener {
             if (pageIndex > 1) {
@@ -70,18 +68,15 @@ class TransctionActivity : AppCompatActivity() {
             }
         }
     }
-
     private fun updatePageInfo() {
         binding.tvPageInfo.text = "Page $pageIndex of $totalPages"
         binding.btnPrevious.isEnabled = pageIndex > 1
         binding.btnNext.isEnabled = pageIndex < totalPages
     }
-
     private fun setupRecyclerView() {
         adapter = TransactionAdapter()
         binding.rvTransactions.layoutManager = LinearLayoutManager(this)
         binding.rvTransactions.adapter = adapter
-
         binding.rvTransactions.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(rv: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(rv, dx, dy)
@@ -103,7 +98,6 @@ class TransctionActivity : AppCompatActivity() {
         pageIndex++
         fetchTransactions(binding.edtFromDate.text.toString(), binding.edtToDate.text.toString())
     }
-
     private fun setupSpinners() {
         val listener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(
@@ -158,59 +152,54 @@ class TransctionActivity : AppCompatActivity() {
             cal.get(Calendar.DAY_OF_MONTH)
         ).show()
     }
-
     private fun fetchTransactions(fromDate: String, toDate: String) {
+
+        Log.d("TXN_DEBUG", "fetchTransactions called")
+
         isLoading = true
-        val TAG = "TransactionAPI"
 
-        val status = binding.spinnerStatus.selectedItem.toString().takeIf { it != "All" }
-        val mode = binding.spinnerMode.selectedItem.toString().takeIf { it != "All" }
-
-        Log.d(TAG, "➡️ REQUEST")
-        Log.d(TAG, "StartDate = $fromDate")
-        Log.d(TAG, "EndDate   = $toDate")
-        Log.d(TAG, "PageIndex = $pageIndex")
-        Log.d(TAG, "PageSize  = $pageSize")
-        Log.d(TAG, "Status   = $status")
-        Log.d(TAG, "Mode     = $mode")
+        val status = binding.spinnerStatus.selectedItem?.toString()
+            ?.takeIf { it != "All" } ?: ""
 
         lifecycleScope.launch {
             try {
+                Log.d("TXN_DEBUG", "Coroutine started")
+
                 val token = sessionManager.getToken()
+                Log.d("TXN_DEBUG", "Token = $token")
 
                 val response = ApiClient.apiService.getTransactionReport(
                     startDate = fromDate,
                     endDate = toDate,
-                    status = status.toString(),
+                    status = status,
                     pageIndex = pageIndex,
                     pageSize = pageSize,
-                            token = token . toString ()
+                    bearerToken = token.toString()
                 )
+
+                Log.d("TXN_DEBUG", "API called")
 
                 if (response.isSuccessful) {
                     val body = response.body()
-                    val items = body?.Items ?: emptyList()
+                    Log.d("TXN_DEBUG", "Body = $body")
+                    Log.d("TXN_DEBUG", "Items size = ${body?.Items?.size}")
+                    Log.d("TXN_DEBUG", "TotalPages = ${body?.TotalPages}")
 
+                    val items = body?.Items ?: emptyList()
                     if (pageIndex == 1) {
                         adapter.submitList(items)
                     } else {
                         adapter.addMore(items)
                     }
-                    val totalItems = body?.TotalPages ?: 0
-                    totalPages = (totalItems + pageSize - 1) / pageSize
+
+                    totalPages = body?.TotalPages ?: 1
                     updatePageInfo()
-
-                    if (items.size < pageSize) {
-                        isLastPage = true
-                    }
-
+                    isLastPage = pageIndex >= totalPages
                 } else {
-                    Log.e(TAG, "❌ FAILED -> ${response.code()}")
-                    Log.e(TAG, "❌ ErrorBody -> ${response.errorBody()?.string()}")
+                    Log.e("TXN_DEBUG", "API failed: ${response.code()}")
                 }
-
             } catch (e: Exception) {
-                Log.e(TAG, "🔥 EXCEPTION", e)
+                Log.e("TXN_DEBUG", "Exception", e)
             } finally {
                 isLoading = false
             }

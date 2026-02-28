@@ -189,7 +189,6 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
                     }
                 }
             }
-
             @SuppressLint("SetTextI18n")
             override fun onFinish() {
                 stopCheckingPaymentStatus()
@@ -215,7 +214,6 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
                             token = sessionManager.getToken().toString()
                         )
                     }
-
                     when (response.status) {
                         "SUCCESS" -> {
                             postTicketPaymentHistory( "S","Payment Success")
@@ -236,7 +234,6 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
                             break
                         }
                     }
-
                     delay(2000)
                 }
             } catch (e: HttpException) {
@@ -261,9 +258,7 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
             }
         }
     }
-
     private fun checkSibPaymentStatus() {
-
         if (isCheckingPaymentStatus) return
         isCheckingPaymentStatus = true
 
@@ -320,7 +315,6 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
 
                     delay(2000)
                 }
-
             } catch (e: HttpException) {
 
                 if (e.code() == 401) {
@@ -345,8 +339,6 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
             }
         }
     }
-
-
     private suspend fun postTicketPaymentHistory(
         status: String,
         statusDesc: String,
@@ -364,17 +356,13 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
                     )
                 }
             }
-
             val firstTicket = cartTickets.first()
             val imageBase64String = Base64.encodeToString(
                 firstTicket.daImg ?: ByteArray(0),
                 Base64.NO_WRAP
             )
-
             val token = sessionManager.getToken().toString()
             val companyId = JwtUtils.getCompanyId(token)
-
-
             val request = TicketPaymentRequest(
                 CompanyId = companyId!!,
                 UserId = sessionManager.getUserId(),
@@ -390,9 +378,7 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
                 tPaymentDes = statusDesc,
                 Items = itemsList
             )
-
             Log.d("PAYMENT_DEBUG", "Posting ${itemsList.size} items")
-
             ApiResponseHandler.handleApiCall(
                 activity = requireActivity(),
                 apiCall = {
@@ -404,7 +390,6 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
                     }
                 },
                 onSuccess = { response ->
-
                     val apiStatus = response.status?.trim()?.uppercase()
                     val paramStatus = status.trim().uppercase()
 
@@ -471,7 +456,6 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
 
             return
         }
-
         if (retryCount < 3) {
             lifecycleScope.launch {
                 postTicketPaymentHistory(status, statusDesc, retryCount + 1)
@@ -488,7 +472,6 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
         totalAmount: Double,
         receiptPrefix: String?
     ) {
-
         val intent = Intent(requireContext(), PaymentActivity::class.java).apply {
             putExtra("status", status)
             putExtra("amount", totalAmount.toString())
@@ -501,8 +484,6 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
         }
         startActivity(intent)
         dismiss()
-
-
         startActivity(intent)
     }
     private fun generateUPIQRCode(url: String): Bitmap? {
@@ -517,7 +498,6 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
             null
         }
     }
-
     override fun onStart() {
         super.onStart()
         dialog?.window?.setLayout(
@@ -527,13 +507,11 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
         dialog?.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
         dialog?.window?.setGravity(Gravity.CENTER)
     }
-
     override fun onDismiss(dialog: DialogInterface) {
         super.onDismiss(dialog)
         pollingTimer?.cancel()
         stopCheckingPaymentStatus()
     }
-
     private fun stopCheckingPaymentStatus() {
         isCheckingPaymentStatus = false
         paymentStatusJob?.cancel()
