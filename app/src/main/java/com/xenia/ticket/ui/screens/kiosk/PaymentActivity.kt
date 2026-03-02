@@ -536,7 +536,8 @@ class PaymentActivity : AppCompatActivity() {
             }
             put(smallSpaceLine)
             put(footerImageLine)
-            put(largeSpaceLine)
+            put(smallSpaceLine)
+
         }
 
         val detail = JSONObject().apply {
@@ -1154,8 +1155,8 @@ class PaymentActivity : AppCompatActivity() {
             else -> "Entry Ticket"
         }
 
-        lines.add("$BOLD_ON${receiptTitle.center(45)}$BOLD_OFF")
-        lines.add("$BOLD_ON${receiptDTitle.center(45)}$BOLD_OFF")
+        lines.add(receiptTitle.center(45))
+        lines.add(receiptDTitle.center(45))
         lines.add("")
 
         lines.add("${labelReceiptNo.padEnd(12)}: $prefix${orderID ?: ""}")

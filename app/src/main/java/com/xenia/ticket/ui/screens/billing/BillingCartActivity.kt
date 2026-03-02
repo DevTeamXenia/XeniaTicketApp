@@ -242,7 +242,7 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
     private fun generatePineLabPayment(transactionId: String, totalAmount: Double) {
         lifecycleScope.launch {
             try {
-                val token = sessionManager.getToken()
+                sessionManager.getToken()
                 val request = PineLabGenerateRequest(
                     transcationId = transactionId,
                     Amount = totalAmount.toInt(),
@@ -268,11 +268,13 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                 } else {
                     Log.e("PINE_LAB", response.errorBody()?.string() ?: "API error")
                     dismissLoader()
+                    binding.btnPay.isEnabled = true
                 }
 
             } catch (e: Exception) {
                 e.printStackTrace()
                 dismissLoader()
+                binding.btnPay.isEnabled = true
             }
         }
     }
@@ -303,7 +305,7 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                 put("PaymentAmount", formattedAmount.toString())
             })
         }
-        Log.d("PlutusRequest", transactionId.toString())
+        Log.d("PlutusRequest", transactionId)
         Log.d("PlutusRequest", request.toString())
         plutusManager.sendRequest(request.toString())
     }
@@ -394,10 +396,9 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                 }
             }
             val firstTicket = cartTickets.first()
-            val imageBase64String = Base64.encodeToString(
-                firstTicket.daImg,
-                Base64.NO_WRAP
-            )
+            val imageBase64String = if (firstTicket.daImg.isNotEmpty())
+                Base64.encodeToString(firstTicket.daImg, Base64.NO_WRAP)
+            else ""
             val token = sessionManager.getToken().toString()
             val companyId = JwtUtils.getCompanyId(token)
 
@@ -414,7 +415,7 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                 CompanyId = companyId!!,
                 UserId = userId,
                 Name = name,
-                tTranscationId = transactionId.toString(),
+                tTranscationId = transactionId ?: "",
                 tCustRefNo = "",
                 tNpciTransId = "",
                 tIdProofNo = "",
@@ -447,7 +448,7 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                                 status = "S",
                                 orderId = response.receipt,
                                 ticket = response.ticket,
-                                totalAmount = totalAmount.toDouble(),
+                                totalAmount = totalAmount,
                                 companyRepository.getString(CompanyKey.PREFIX) ?: ""
                             )
                         }
