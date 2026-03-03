@@ -52,42 +52,43 @@
                     android:layout_height="75dp"
                     android:background="@drawable/homebackground">
 
-                    <LinearLayout
-                        android:id="@+id/left_home"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="10dp"
-                        android:layout_marginTop="20dp"
-                        android:gravity="center"
-                        android:orientation="horizontal"
-                        android:elevation="4dp">
+                    <ImageView
+                        android:id="@+id/img_menu"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:layout_centerVertical="true"
+                        android:layout_marginStart="12dp"
+                        android:contentDescription="@string/todo"
+                        android:src="@drawable/ic_menu"
+                        app:tint="@color/white" />
 
-                        <ImageView
-                            android:id="@+id/img_menu"
-                            android:layout_width="30dp"
-                            android:layout_height="30dp"
-                            android:layout_marginStart="12dp"
-                            android:contentDescription="@string/todo"
-                            android:src="@drawable/ic_menu"
-                            app:tint="@color/white" />
-
-
-
-                    </LinearLayout>
 
                     <TextView
                         android:id="@+id/texthead1"
-                        android:layout_width="match_parent"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentBottom="true"
                         android:layout_marginBottom="20dp"
-                        android:layout_toRightOf="@id/left_home"
+                        android:text="hello"
+                        android:layout_centerInParent="true"
                         android:layout_marginTop="@dimen/dp20"
                         android:fontFamily="@font/segoe_ui_bold"
                         android:textAlignment="center"
                         android:textColor="@color/white"
                         android:maxLines="2"
                         android:textSize="20sp" />
+
+
+                    <ImageView
+                        android:id="@+id/imgClear"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:layout_centerVertical="true"
+                        android:layout_alignParentEnd="true"
+                        android:layout_marginEnd="12dp"
+                        android:contentDescription="@string/todo"
+                        android:src="@drawable/ic_clear"
+                        app:tint="@color/white" />
 
                 </RelativeLayout>
 
@@ -590,26 +591,27 @@
         app:itemVerticalPadding="16dp"
         app:menu="@menu/nav_menu">
 
-        <RelativeLayout
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_gravity="bottom|end"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:orientation="vertical">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
 
             <TextView
                 android:id="@+id/txt_zpp_version"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:layout_alignParentBottom="true"
-                android:layout_marginEnd="20dp"
                 android:gravity="end"
-                android:textColor="@android:color/black"
-                android:textSize="16sp" />
+                android:padding="16dp"
+                android:textColor="@color/light_grey"
+                android:textSize="16sp"
+                android:text="v1.0.0" />
 
-        </RelativeLayout>
-
+        </LinearLayout>
 
     </com.google.android.material.navigation.NavigationView>
 </androidx.drawerlayout.widget.DrawerLayout>

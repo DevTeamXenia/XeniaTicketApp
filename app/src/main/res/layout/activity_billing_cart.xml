@@ -54,6 +54,17 @@
                 android:textSize="16sp" />
 
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:fontFamily="@font/poppins_regular"
+                android:text="*"
+                android:layout_toRightOf="@+id/txtName"
+                android:textColor="@color/red"
+                android:textSize="16sp" />
+
+
             <EditText
                 android:id="@+id/editTextName"
                 android:layout_width="match_parent"
@@ -67,7 +78,8 @@
                 android:imeOptions="actionNext"
                 android:inputType="text"
                 android:maxLength="25"
-                android:textAlignment="center"
+                android:textAlignment="textStart"
+                android:paddingStart="12dp"
                 android:textColor="@color/black"
                 android:textSize="18sp"
                 tools:ignore="RtlSymmetry" />
@@ -83,6 +95,17 @@
                 android:textColor="@color/black"
                 android:textSize="16sp" />
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:fontFamily="@font/poppins_regular"
+                android:text="*"
+                android:layout_below="@+id/editTextName"
+                android:layout_toRightOf="@+id/txtPhoneNumber"
+                android:textColor="@color/red"
+                android:textSize="16sp" />
+
 
             <EditText
                 android:id="@+id/editTextPhoneNumber"
@@ -96,8 +119,9 @@
                 android:hint="@string/phone_number"
                 android:imeOptions="actionDone"
                 android:inputType="number"
+                android:paddingStart="12dp"
                 android:maxLength="10"
-                android:textAlignment="center"
+                android:textAlignment="textStart"
                 android:textColor="@color/black"
                 android:textSize="18sp"
                 tools:ignore="RtlSymmetry" />

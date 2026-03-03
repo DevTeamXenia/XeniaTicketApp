@@ -20,7 +20,8 @@ import com.xenia.ticket.data.network.model.SibStatusRequest
 import com.xenia.ticket.data.network.model.SummaryReportResponse
 import com.xenia.ticket.data.network.model.TicketPaymentRequest
 import com.xenia.ticket.data.network.model.TicketResponse
-import com.xenia.ticket.data.network.model.TransactionReportResponse
+import com.xenia.ticket.data.network.model.TransactionDetailItem
+import com.xenia.ticket.data.network.model.TransactionItem
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -84,15 +85,20 @@ interface ApiService {
         @Query("endDateTime") endDateTime: String
     ): ItemSummaryReportResponse
 
-    @GET("Report/TransactionReport")
-    suspend fun getTransactionReport(
-        @Header("Authorization") bearerToken: String,
+    @GET("Report/TransactionSummaryReport")
+    suspend fun getTransactionDetailReport(
+        @Header("Authorization") authorization: String,
         @Query("startDate") startDate: String,
         @Query("endDate") endDate: String,
-        @Query("status") status: String,
-        @Query("pageIndex") pageIndex: Int,
-        @Query("pageSize") pageSize: Int
-    ): Response<TransactionReportResponse>
+        @Query("userId") userId: Int,
+    ): Response<List<TransactionDetailItem>>
+
+    @GET("Report/TransactionDetailReport")
+    suspend fun getTransactionDetails(
+        @Header("Authorization") token: String,
+        @Query("orderId") orderId: Int,
+    ): List<TransactionItem>
+
     @POST("payments/fed/generateQr")
     suspend fun generateFedQr(
         @Header("Authorization") token: String,

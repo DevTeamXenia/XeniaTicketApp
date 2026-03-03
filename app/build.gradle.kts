@@ -14,8 +14,8 @@ android {
         applicationId = "com.xenia.ticket"
         minSdk = 24
         targetSdk = 36
-        versionCode = 131
-        versionName = "1.3.1"
+        versionCode = 134
+        versionName = "1.3.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

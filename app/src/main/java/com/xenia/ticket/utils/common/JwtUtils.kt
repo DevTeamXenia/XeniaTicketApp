@@ -32,6 +32,12 @@ object JwtUtils {
         null
     }
 
+    fun getUserName(token: String): String? = try {
+        decodeJwt(token).getString("unique_name")
+    } catch (e: Exception) {
+        null
+    }
+
     fun getCompanyId(token: String): Int? = try {
         decodeJwt(token).getString("companyId").toInt()
     } catch (e: Exception) {

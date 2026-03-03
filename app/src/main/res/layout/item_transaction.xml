@@ -49,10 +49,10 @@
                 android:textSize="15sp" />
 
             <ImageView
-                android:id="@+id/imgDelete"
+                android:id="@+id/imgDetail"
                 android:layout_width="32dp"
                 android:layout_height="32dp"
-                android:src="@drawable/ic_close"
+                android:src="@drawable/ic_details"
                 android:contentDescription="@string/todo" />
         </LinearLayout>
 

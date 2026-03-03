@@ -1,15 +1,19 @@
 package com.xenia.ticket.data.network.model
 
 data class TransactionItem(
-    val OrderId: Int,
-    val TransactionId: String?,
-    val ReceiptNo: String?,
-    val TicketNo: String,
-    val TransactionDate: String,
-    val CustomerName: String?,
-    val PhoneNumber: String?,
+    val TicketId: Int,
+    val TicketName: String,
+    val TicketNameMa: String,
+    val TicketNameHi: String,
+    val TicketNameTa: String,
+    val TicketNameKa: String,
+    val TicketNameTe: String,
+    val TicketNameSi: String,
+    val TicketNamePa: String,
+    val TicketNameMr: String,
+    val Quantity: Int,
+    val Rate: Double,
     val Amount: Double,
-    val SourceType: String,
-    val Status: String,
-    val CancelReason: String
+    val GenerateDate: String,
+    val Status: String
 )

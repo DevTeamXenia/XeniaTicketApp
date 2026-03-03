@@ -2,6 +2,7 @@ package com.xenia.ticket.ui.screens.kiosk
 
 import UserType
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.os.Bundle
 import android.provider.Settings
@@ -39,8 +40,6 @@ class LoginActivity : AppCompatActivity() {
     private val sessionManager: SessionManager by inject()
     private val loginRepository: LoginRepository by inject()
     private val companyRepository: CompanyRepository by inject()
-
-    private var selectedLanguage: String? = ""
     private var isPasswordVisible = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,21 +51,14 @@ class LoginActivity : AppCompatActivity() {
         setAppLanguageAlwaysEnglish()
 
         if (sessionManager.isLoggedIn()) {
-
-            val userType = UserType.fromValue(
-                sessionManager.getUserType()
-            )
-
-            navigateAfterLogin(userType)
+            navigateAfterLogin(UserType.fromValue(sessionManager.getUserType()))
             return
         }
 
         val sharedPref = getSharedPreferences("LoginPrefs", MODE_PRIVATE)
         val remembered = sharedPref.getBoolean("rememberMe", false)
         if (remembered) {
-            binding.chkRememberMe?.let { checkBox ->
-                checkBox.isChecked = true
-            }
+            binding.chkRememberMe.isChecked = true
             binding.edtUserId.setText(sharedPref.getString("userId", ""))
             binding.edtPassword.setText(sharedPref.getString("password", ""))
 
@@ -94,7 +86,7 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun setupPasswordToggle() {
-        val toggleIcon = binding.imgTogglePassword ?: return
+        val toggleIcon = binding.imgTogglePassword
         val passwordField = binding.edtPassword
 
         toggleIcon.setOnClickListener {
@@ -197,7 +189,7 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
     private fun performLogin(
         userId: String,
         password: String,
-        sharedPref: android.content.SharedPreferences
+        sharedPref: SharedPreferences
     ) {
 
         if (!isInternetAvailable(applicationContext)) {
@@ -214,12 +206,25 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
                 val response = loginRepository.login(userId, password)
                 val token = response.Token
 
+                val userType = UserType.fromValue(
+                    JwtUtils.getUserType(token)
+                )
+
+                if (userType != UserType.COUNTER_USER) {
+                    dismissLoader()
+                    showSnackbar(
+                        binding.root,
+                        "Only Counter Users are allowed to login"
+                    )
+                    return@launch
+                }
+
                 sessionManager.clearSession()
                 sessionManager.saveToken("Bearer $token")
                 sessionManager.savePassword(password)
 
                 sharedPref.edit {
-                    if (binding.chkRememberMe?.isChecked == true) {
+                    if (binding.chkRememberMe.isChecked) {
                         putBoolean("rememberMe", true)
                         putString("userId", userId)
                         putString("password", password)
@@ -228,12 +233,7 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
                     }
                 }
 
-                val userType = UserType.fromValue(
-                    JwtUtils.getUserType(token)
-                )
-
                 val company = companyRepository.getCompany()
-
                 Log.d("LOGIN", "Company value = $company")
 
                 startActivity(Intent(this@LoginActivity, SyncActivity::class.java))
@@ -247,6 +247,7 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
                     else -> errorBody ?: e.message() ?: "Something went wrong!"
                 }
                 showSnackbar(binding.root, msg)
+
             } catch (e: Exception) {
                 showSnackbar(
                     binding.root,
@@ -257,6 +258,7 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
             }
         }
     }
+
     private fun hideKeyboard() {
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         val view = currentFocus ?: View(this)

@@ -35,15 +35,6 @@ data class Ticket(
     val daProofId: String,
     val daProof: String,
     val daImg: ByteArray
-//
-//    // Optional cart fields for in-app cart functionality
-//    var cartQty: Int = 0,
-//    var cartTotalAmount: Double = 0.0,
-//    var cartUserName: String = "",
-//    var cartUserPhone: String = "",
-//    var cartUserIdNo: String = "",
-//    var cartUserProof: String = "",
-//    var cartUserImg: ByteArray? = null
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

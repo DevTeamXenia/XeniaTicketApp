@@ -119,6 +119,7 @@
     <string name="item_summary_report">Detailed Report</string>
     <string name="item_name">Item Name</string>
     <string name="pancard_number">PanCard Number</string>
+    <string name="transcations">Transcations</string>
 
 
     <string-array name="nakshatras">

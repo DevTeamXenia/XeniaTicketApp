@@ -157,9 +157,21 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
             JwtUtils.getUserId(jwtToken) ?: throw IllegalStateException("UserId missing in JWT")
 
         binding.btnPay.setOnClickListener {
-            val name = binding.editTextName.text.toString()
+
+            val name = binding.editTextName.text.toString().trim()
             val phone = binding.editTextPhoneNumber.text.toString().trim()
-            if (phone.isNotEmpty() && phone.length != 10) {
+
+            if (name.isEmpty()) {
+                showMessage("Enter name")
+                return@setOnClickListener
+            }
+
+            if (phone.isEmpty()) {
+                showMessage("Enter phone number")
+                return@setOnClickListener
+            }
+
+            if (phone.length != 10) {
                 showMessage("Enter valid phone number")
                 return@setOnClickListener
             }
@@ -173,6 +185,7 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                     newImg = imageData ?: ByteArray(0)
                 )
             }
+
             if (!isInternetAvailable(this)) {
                 dismissLoader()
                 showSnackbar(
@@ -187,16 +200,17 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                 }
                 return@setOnClickListener
             }
+
             binding.btnPay.isEnabled = false
 
             lifecycleScope.launch {
                 val ctx = this@BillingCartActivity
                 if (selectedPaymentMode == CASH) {
-                    showLoader(ctx,  "Generating ticket...")
+                    showLoader(ctx, "Generating ticket...")
                     postTicketPaymentHistory("S", "Successful")
                     return@launch
                 } else if (companyRepository.getBoolean(CompanyKey.ISPAYMENTGATEWAY)) {
-                    showLoader(ctx,  "Initiate Payment...")
+                    showLoader(ctx, "Initiate Payment...")
                     generatePayment()
                 }
             }
@@ -259,7 +273,7 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                     Log.d("PINE_LAB", "OrderId = ${body?.OrderId}")
                     Log.d("PINE_LAB", transactionId)
                     if (body?.OrderId == transactionId) {
-                        generatePineLabPaymentQrCode(transactionId.toString(),totalAmount)
+                        generatePineLabPaymentQrCode(transactionId,totalAmount)
                     } else {
                         Log.e("PINE_LAB", "Transaction ID mismatch")
                         dismissLoader()
@@ -293,7 +307,7 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
         val request = JSONObject().apply {
             val formattedAmount = totalAmount * 100
             put("Header", JSONObject().apply {
-                put("ApplicationId", "d585cf57dc5f4dab9e99fc1d37fa1333")
+                put("ApplicationId", sessionManager.getPineLabsAppId())
                 put("UserId", "cashier1")
                 put("MethodId", PlutusConstants.METHOD_DO_TRANSACTION)
                 put("VersionNo", "1.0")
@@ -319,7 +333,7 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                 finish()
             } else {
                 val firstItem = allDarshanTickets.first()
-                val bitmap = BitmapFactory.decodeByteArray(firstItem.daImg, 0, firstItem.daImg.size)
+                BitmapFactory.decodeByteArray(firstItem.daImg, 0, firstItem.daImg.size)
                 ticketCartAdapter.updateTickets(allDarshanTickets)
                 formattedTotalAmount = String.format(Locale.ENGLISH, "%.2f", totalAmount)
                 binding.btnPay.text = getString(R.string.pay) + "  Rs. " + formattedTotalAmount
@@ -477,7 +491,7 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                 }
             }
 
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             withContext(Dispatchers.Main) {
                 binding.btnPay.isEnabled = true
                 showSnackbar(binding.root, "Something went wrong")

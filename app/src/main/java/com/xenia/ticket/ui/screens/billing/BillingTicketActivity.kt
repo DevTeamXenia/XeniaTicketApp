@@ -45,6 +45,7 @@ import com.xenia.ticket.utils.common.CommonMethod.getScreenSize
 import com.xenia.ticket.utils.common.CommonMethod.setLocale
 import com.xenia.ticket.utils.common.CommonMethod.showSnackbar
 import com.xenia.ticket.utils.common.CompanyKey
+import com.xenia.ticket.utils.common.JwtUtils
 import com.xenia.ticket.utils.common.PlutusServiceManager
 import com.xenia.ticket.utils.common.SessionManager
 import kotlinx.coroutines.Dispatchers
@@ -117,7 +118,12 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
         menu.findItem(R.id.nav_logout).title = getString(R.string.logout)
         val headerView = binding.navView.getHeaderView(0)
         val txtTop = headerView.findViewById<TextView>(R.id.txtTop)
-        txtTop.text = getString(R.string.dashboard)
+        txtTop.text = JwtUtils.getUsername(sessionManager.getToken()!!)
+        val txtVersion = binding.navView.findViewById<TextView>(R.id.txt_zpp_version)
+        val versionName = packageManager.getPackageInfo(packageName, 0).versionName
+        txtVersion.text = "v$versionName"
+
+
         binding.btnProceed.setOnClickListener {
             val intent = Intent(applicationContext, BillingCartActivity::class.java)
 
@@ -131,6 +137,14 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
             }
         }
 
+        binding.imgClear.setOnClickListener {
+            lifecycleScope.launch {
+                ticketRepository.clearAllData()
+                getTickets(selectedCategoryId)
+                ticketCartAdapter.updateTickets(emptyList())
+                updateCartUI()
+            }
+        }
 
     }
 
@@ -222,7 +236,7 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
                 }
                 R.id.nav_transaction -> {
 
-                    startActivity(Intent(applicationContext, TransctionActivity::class.java))
+                    startActivity(Intent(applicationContext, TransactionReportActivity::class.java))
                     binding.drawerLayout.closeDrawer(GravityCompat.START)
                     true
                 }

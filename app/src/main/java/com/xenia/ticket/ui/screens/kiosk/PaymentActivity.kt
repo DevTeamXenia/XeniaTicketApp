@@ -450,6 +450,53 @@ class PaymentActivity : AppCompatActivity() {
         }
     }
 
+    private fun centeredBoldTextToBitmapHex(
+        text: String,
+        bitmapWidth: Int = 384,
+        textSize: Float = 30f
+    ): String {
+
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.BLACK
+            this.textSize = textSize
+            typeface = Typeface.MONOSPACE
+            isFakeBoldText = true
+        }
+
+        val fm = paint.fontMetrics
+        val height = (fm.bottom - fm.top + 20).toInt()
+
+        val bitmap = Bitmap.createBitmap(bitmapWidth, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        canvas.drawColor(Color.WHITE)
+
+        val textWidth = paint.measureText(text)
+        val x = (bitmapWidth - textWidth) / 2f   // 🔥 CENTERING
+        val y = -fm.top + 10
+
+        canvas.drawText(text, x, y, paint)
+
+        return bitmapToHex(bitmap)
+    }
+
+    private fun bitmapToHex(bitmap: Bitmap): String {
+        val width = bitmap.width
+        val height = bitmap.height
+        val bytes = ByteArray(width * height)
+
+        var index = 0
+        for (y in 0 until height) {
+            for (x in 0 until width) {
+                val pixel = bitmap.getPixel(x, y)
+                val gray =
+                    (Color.red(pixel) + Color.green(pixel) + Color.blue(pixel)) / 3
+                bytes[index++] = if (gray < 128) 0x00 else 0x01
+            }
+        }
+
+        return bytes.joinToString("") { "%02X".format(it) }
+    }
+
     private suspend fun createPrintJson(): String {
         val allVazhipaduItems = ticketRepository.getAllTicketsInCart()
 
@@ -481,7 +528,7 @@ class PaymentActivity : AppCompatActivity() {
             }
 
         val header = JSONObject().apply {
-            put("ApplicationId", "d585cf57dc5f4dab9e99fc1d37fa1333")
+            put("ApplicationId", sessionManager.getPineLabsAppId())
             put("UserId", "admin")
             put("MethodId", PlutusConstants.METHOD_PRINT)
             put("VersionNo", "1.0")
@@ -513,26 +560,42 @@ class PaymentActivity : AppCompatActivity() {
             put("ImagePath", "")
             put("ImageData", "")
         }
-        val largeSpaceLine = JSONObject().apply {
-            put("PrintDataType", 0)
-            put("PrinterWidth", 24)
-            put("IsCenterAligned", false)
-            put("DataToPrint", "\n")
-            put("ImagePath", "")
-            put("ImageData", "")
-        }
 
         val dataArray = JSONArray().apply {
             put(headerImageLine)
             receiptLines.forEach { line ->
-                put(JSONObject().apply {
-                    put("PrintDataType", 0)
-                    put("PrinterWidth", 200)
-                    put("IsCenterAligned", false)
-                    put("DataToPrint", line)
-                    put("ImagePath", "")
-                    put("ImageData", "")
-                })
+
+                val cleanLine = line.replace("*", "").trim()
+
+                when {
+                    cleanLine.equals("REPRINTED COPY", ignoreCase = true) ||
+                            cleanLine.equals("Entry Ticket", ignoreCase = true) -> {
+
+                        val bitmapText = line.trim()
+
+                        val boldBitmapHex = centeredBoldTextToBitmapHex(bitmapText)
+
+                        put(JSONObject().apply {
+                            put("PrintDataType", 2)
+                            put("PrinterWidth", 24)
+                            put("IsCenterAligned", true)
+                            put("DataToPrint", "")
+                            put("ImagePath", "")
+                            put("ImageData", boldBitmapHex)
+                        })
+                    }
+
+                    else -> {
+                        put(JSONObject().apply {
+                            put("PrintDataType", 0)
+                            put("PrinterWidth", 200)
+                            put("IsCenterAligned", false)
+                            put("DataToPrint", line)
+                            put("ImagePath", "")
+                            put("ImageData", "")
+                        })
+                    }
+                }
             }
             put(smallSpaceLine)
             put(footerImageLine)
@@ -1098,10 +1161,7 @@ class PaymentActivity : AppCompatActivity() {
         val PRICE_WIDTH = 6
         val QTY_WIDTH = 4
         val AMT_WIDTH = 8
-        val BOLD_ON = "\u001B\u0045\u0001"
-
-        val BOLD_OFF = "\u001B\u0045\u0000"
-        val totalWidth = ITEM_WIDTH + PRICE_WIDTH + QTY_WIDTH + AMT_WIDTH + 3  // ~37, for dashes
+        val totalWidth = ITEM_WIDTH + PRICE_WIDTH + QTY_WIDTH + AMT_WIDTH + 3
         val defaultLang = companyRepository.getDefaultLanguage().toString()
 
         fun String.padRight(len: Int): String =
@@ -1110,10 +1170,6 @@ class PaymentActivity : AppCompatActivity() {
         fun String.padLeft(len: Int): String =
             if (length >= len) take(len) else padStart(len, ' ')
 
-        fun center(text: String): String {
-            val pad = (LINE_WIDTH - text.length) / 2
-            return " ".repeat(pad.coerceAtLeast(0)) + text
-        }
 
         /* ---------- Labels ---------- */
         val labelReceiptNo = getLocalizedString("Receipt No", selectedLanguage)
@@ -1157,6 +1213,9 @@ class PaymentActivity : AppCompatActivity() {
 
         lines.add(receiptTitle.center(45))
         lines.add(receiptDTitle.center(45))
+        lines.add("")
+
+        lines.add("**REPRINTED COPY**".center(45))
         lines.add("")
 
         lines.add("${labelReceiptNo.padEnd(12)}: $prefix${orderID ?: ""}")

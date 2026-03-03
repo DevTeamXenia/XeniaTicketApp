@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit
 
 object ApiClient {
    private const val BASE_URL = "https://eticketapi.xeniapos.com/api/"
-   // private const val BASE_URL = "https://192.168.1.39:8085/api/"
+   // private const val BASE_URL = "https://192.168.1.38:8085/api/"
 
 
     val okHttpClient = OkHttpClient.Builder()
@@ -22,7 +22,7 @@ object ApiClient {
     private val retrofit: Retrofit by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL)
-           .client(okHttpClient)
+             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
