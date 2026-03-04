@@ -301,123 +301,155 @@ class PaymentActivity : AppCompatActivity() {
     private fun initReceiptPrint(isB1008: Boolean) {
         lifecycleScope.launch {
 
-            val allVazhipaduItems = ticketRepository.getAllTicketsInCart()
+            try {
+                val PRINTER_WIDTH = 576   // Change to 384 if 58mm printer
 
-            val currentDate = SimpleDateFormat(
-                "dd-MMM-yyyy hh:mm a",
-                Locale.ENGLISH
-            ).format(Date())
+                val allVazhipaduItems = ticketRepository.getAllTicketsInCart()
 
+                val currentDate = SimpleDateFormat(
+                    "dd-MMM-yyyy hh:mm a",
+                    Locale.ENGLISH
+                ).format(Date())
 
-            val headerBitmap = withContext(Dispatchers.IO) {
-                loadBitmapFromCache(cacheDir, "company_header.png")
-            }
+                val headerBitmap = withContext(Dispatchers.IO) {
+                    loadBitmapFromCache(cacheDir, "company_header.png")
+                }
 
-            val footerBitmap = withContext(Dispatchers.IO) {
-                loadBitmapFromCache(cacheDir, "company_footer.png")
-            }
+                val footerBitmap = withContext(Dispatchers.IO) {
+                    loadBitmapFromCache(cacheDir, "company_footer.png")
+                }
 
-            val receiptBitmap: Bitmap =
-                if (companyRepository.getDefaultLanguage() == selectedLanguage) {
-                    generateReceiptBitmapDefault(
-                        currentDate,
-                        transID,
-                        orderID.toString(),
-                        allVazhipaduItems,
-                        selectedLanguage!!
-                    )
+                val receiptBitmap: Bitmap =
+                    if (companyRepository.getDefaultLanguage() == selectedLanguage) {
+                        generateReceiptBitmapDefault(
+                            currentDate,
+                            transID,
+                            orderID.toString(),
+                            allVazhipaduItems,
+                            selectedLanguage!!
+                        )
+                    } else {
+                        generateReceiptBitmap(
+                            currentDate,
+                            transID,
+                            orderID.toString(),
+                            allVazhipaduItems,
+                            selectedLanguage!!
+                        )
+                    }
+
+                val safeReceiptBitmap = scaleToPrinterWidth(receiptBitmap, PRINTER_WIDTH)
+
+                if (isB1008) {
+
+                    try {
+
+                        headerBitmap?.let {
+                            val scaled = scaleToPrinterWidth(it, PRINTER_WIDTH)
+                            printerService?.printBitmap(
+                                scaled,
+                                0,
+                                POSConst.ALIGNMENT_CENTER
+                            )
+                            delay(200)
+                            scaled.recycle()
+                        }
+
+                        printerService?.printBitmap(
+                            safeReceiptBitmap,
+                            0,
+                            POSConst.ALIGNMENT_CENTER
+                        )
+                        delay(300)
+
+                        footerBitmap?.let {
+                            val scaled = scaleToPrinterWidth(it, PRINTER_WIDTH)
+                            printerService?.printBitmap(
+                                scaled,
+                                0,
+                                POSConst.ALIGNMENT_CENTER
+                            )
+                            delay(200)
+                            scaled.recycle()
+                        }
+
+                        printerService?.printText("\n\n", null)
+                        printerService?.printEndAutoOut()
+
+                    } catch (e: RemoteException) {
+                        Log.e("PrinterService", "Printing error: ${e.message}")
+                    }
+
                 } else {
-                    generateReceiptBitmap(
-                        currentDate,
-                        transID,
-                        orderID.toString(),
-                        allVazhipaduItems,
-                        selectedLanguage!!
-                    )
-                }
 
-
-            if (isB1008) {
-                try {
-                    headerBitmap?.scale(550, 200)?.let { scaled ->
-                        printerService?.printBitmap(
-                            scaled,
-                            0,
-                            POSConst.ALIGNMENT_CENTER
-                        )
-                        scaled.recycle()
+                    if (curConnect == null) {
+                        Log.e("ReceiptPrint", "Printer not connected")
+                        return@launch
                     }
 
-                    printerService?.printBitmap(
-                        receiptBitmap,
-                        0,
-                        POSConst.ALIGNMENT_CENTER
-                    )
+                    val printer = POSPrinter(curConnect)
 
-                    printerService?.printText("\n\n", null)
-
-                    footerBitmap?.scale(500, 100)?.let { scaled ->
-                        printerService?.printBitmap(
-                            scaled,
-                            0,
-                            POSConst.ALIGNMENT_CENTER
-                        )
-                        scaled.recycle()
-                    }
-
-                    printerService?.printEndAutoOut()
-
-                } catch (e: RemoteException) {
-                    Log.e("PrinterService", "Printing error: ${e.message}")
-                }
-
-            } else {
-
-                val printer = POSPrinter(curConnect)
-
-                headerBitmap?.scale(550, 200)?.let { scaled ->
-                    printer.printBitmap(
-                        scaled,
-                        POSConst.ALIGNMENT_CENTER,
-                        500
-                    ).feedLine(2)
-                    scaled.recycle()
-                }
-
-                printer.printBitmap(
-                    receiptBitmap,
-                    POSConst.ALIGNMENT_CENTER,
-                    600
-                ).feedLine(2)
-
-                delay(100)
-
-                try {
-                    footerBitmap?.scale(550, 100)?.let { scaled ->
+                    headerBitmap?.let {
+                        val scaled = scaleToPrinterWidth(it, PRINTER_WIDTH)
                         printer.printBitmap(
                             scaled,
                             POSConst.ALIGNMENT_CENTER,
-                            500
+                            PRINTER_WIDTH
                         )
-                        printer.feedLine(3)
-                        delay(300)
-                        printer.cutHalfAndFeed(1)
+                        delay(200)
                         scaled.recycle()
-                    } ?: printer.cutHalfAndFeed(1)
+                    }
 
-                } catch (e: Exception) {
-                    Log.e("ReceiptPrint", "Footer printing error: ${e.message}")
+                    printer.printBitmap(
+                        safeReceiptBitmap,
+                        POSConst.ALIGNMENT_CENTER,
+                        PRINTER_WIDTH
+                    )
+                    delay(300)
+
+                    footerBitmap?.let {
+                        val scaled = scaleToPrinterWidth(it, PRINTER_WIDTH)
+                        printer.printBitmap(
+                            scaled,
+                            POSConst.ALIGNMENT_CENTER,
+                            PRINTER_WIDTH
+                        )
+                        delay(200)
+                        scaled.recycle()
+                    }
+
+                    printer.feedLine(3)
+                    delay(200)
                     printer.cutHalfAndFeed(1)
+                    delay(400)
                 }
+
+                // 🔹 Recycle only after printing completely finishes
+                safeReceiptBitmap.recycle()
+                receiptBitmap.recycle()
+                headerBitmap?.recycle()
+                footerBitmap?.recycle()
+
+                delay(1500)
+                redirect()
+
+            } catch (e: Exception) {
+                Log.e("ReceiptPrint", "Fatal printing error: ${e.message}")
             }
-
-            receiptBitmap.recycle()
-            headerBitmap?.recycle()
-            footerBitmap?.recycle()
-
-            delay(2000)
-            redirect()
         }
+    }
+
+    private fun scaleToPrinterWidth(bitmap: Bitmap, printerWidth: Int): Bitmap {
+
+        val safeWidth = if (printerWidth % 8 == 0)
+            printerWidth
+        else
+            printerWidth - (printerWidth % 8)
+
+        val ratio = safeWidth.toFloat() / bitmap.width
+        val newHeight = (bitmap.height * ratio).toInt()
+
+        return bitmap.scale(safeWidth, newHeight)
     }
 
     fun loadBitmapFromCache(

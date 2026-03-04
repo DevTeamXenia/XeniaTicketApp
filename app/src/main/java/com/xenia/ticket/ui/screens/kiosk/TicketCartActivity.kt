@@ -112,17 +112,18 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
             val name = binding.editTextName.text.toString()
             val phone = binding.editTextPhoneNumber.text.toString().trim()
 
+            if (name.isEmpty()) {
+                binding.editTextName.error = "Name is required"
+                binding.editTextName.requestFocus()
+                return@setOnClickListener
+            }
 
             if (phone.isEmpty()) {
                 binding.editTextPhoneNumber.error = "Phone number is required"
                 binding.editTextPhoneNumber.requestFocus()
                 return@setOnClickListener
             }
-            if (name.isEmpty()) {
-                binding.editTextName.error = "Name is required"
-                binding.editTextName.requestFocus()
-                return@setOnClickListener
-            }
+
             if (phone.length < 10) {
                 binding.editTextPhoneNumber.error =
                     "Enter valid phone number with at least 10 digits"
