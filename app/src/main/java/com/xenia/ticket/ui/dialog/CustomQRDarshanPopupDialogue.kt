@@ -1,6 +1,5 @@
 package com.xenia.ticket.ui.dialog
 
-
 import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.DialogInterface
@@ -9,6 +8,8 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.os.Handler
+import android.os.Looper
 import android.util.Base64
 import android.util.Log
 import android.view.Gravity
@@ -19,6 +20,7 @@ import android.view.Window
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toDrawable
@@ -29,7 +31,6 @@ import com.xenia.ticket.data.network.model.TicketPaymentRequest
 import com.xenia.ticket.data.repository.CompanyRepository
 import com.xenia.ticket.data.repository.PaymentRepository
 import com.xenia.ticket.data.repository.TicketRepository
-import com.xenia.ticket.ui.screens.kiosk.LanguageActivity
 import com.xenia.ticket.ui.screens.kiosk.PaymentActivity
 import com.xenia.ticket.utils.common.ApiResponseHandler
 import com.xenia.ticket.utils.common.CommonMethod.showSnackbar
@@ -46,6 +47,7 @@ import kotlinx.coroutines.*
 import org.koin.android.ext.android.inject
 import retrofit2.HttpException
 import java.util.Locale
+import androidx.core.view.isVisible
 
 class CustomQRDarshanPopupDialogue : DialogFragment() {
 
@@ -67,9 +69,11 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
     private val ticketRepository: TicketRepository by inject()
     private val companyRepository: CompanyRepository by inject()
     private var isCheckingPaymentStatus = false
-
     private lateinit var btnCheckStatus: Button
     private var lastKnownStatus: String = "PENDING"
+    private val autoCheckHandler = Handler(Looper.getMainLooper())
+    private var autoCheckRunnable: Runnable? = null
+    private var countdownValue = 10
 
 
     fun setData(
@@ -77,9 +81,9 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
         url: String,
         transactionReferenceID: String,
         name: String,
-        phoneNumber : String,
+        phoneNumber: String,
 
-    ) {
+        ) {
         this.amount = amount
         this.url = url
         this.transactionReferenceID = transactionReferenceID
@@ -100,6 +104,7 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
 
         return dialog
     }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -131,6 +136,7 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
                             )
                         )
                     }
+
                     "FederalBank" -> {
                         imgLogo.setImageDrawable(
                             ContextCompat.getDrawable(
@@ -139,6 +145,7 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
                             )
                         )
                     }
+
                     else -> {
                         imgLogo.setImageDrawable(
                             ContextCompat.getDrawable(
@@ -159,11 +166,12 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
             val amountValue: Float = amount.toFloat()
             val formattedAmount = String.format(Locale.ENGLISH, "%.2f", amountValue)
             amountTextView.text = getString(R.string.amount) + " Rs. $formattedAmount /-"
-            textTranscation.text = getString(R.string.transcation_id) + transactionReferenceID
+            textTranscation.text = "Transaction ID : $transactionReferenceID"
             val qrCodeBitmap = generateUPIQRCode(url)
             qrCodeImageView.setImageBitmap(qrCodeBitmap)
 
-           startTimer()
+            startTimer()
+
             view.findViewById<ImageView>(R.id.btnClose).setOnClickListener {
                 dismiss()
             }
@@ -172,26 +180,27 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
 
             btnCheckStatus.setOnClickListener {
                 btnCheckStatus.isEnabled = false
-                showLoader(requireContext(), "Checking payment status...")
                 checkFedPaymentStatus(isManualCheck = true)
             }
         }
     }
-    private var companyGateway: String? = null
+
+    override fun onDestroyView() {
+        stopAutoCheckCountdown()
+        super.onDestroyView()
+    }
 
     private fun startTimer() {
+
         val totalTime = 300_000L
         var elapsedTime = 0L
         val pollInterval = 3_000L
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            companyGateway = companyRepository.getString(CompanyKey.PAYMENT_GATEWAY)
-        }
 
         pollingTimer = object : CountDownTimer(totalTime, 1000) {
 
             @SuppressLint("SetTextI18n", "DefaultLocale")
             override fun onTick(millisUntilFinished: Long) {
+
                 elapsedTime += 1000
 
                 val minutes = millisUntilFinished / 60000
@@ -201,27 +210,57 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
                 timerTextView.text = "QR Expire in $timeFormatted"
 
                 if (elapsedTime % pollInterval == 0L) {
-                    when (companyGateway) {
-                        "FederalBank" -> checkFedPaymentStatus()
-                    }
+                    checkFedPaymentStatus(isManualCheck = false)
                 }
             }
 
             @SuppressLint("SetTextI18n")
             override fun onFinish() {
-                stopCheckingPaymentStatus()
-                if (lastKnownStatus == "PENDING") {
-                    timerTextView.text = "Your payment is still pending!"
-                    btnCheckStatus.visibility = View.VISIBLE
-                } else {
-                    val intent = Intent(requireContext(), LanguageActivity::class.java)
-                    intent.flags =
-                        Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    startActivity(intent)
-                    dismiss()
+                when (lastKnownStatus) {
+                    "PENDING", "RETRY" -> {
+                        timerTextView.text = "Your payment is still pending!"
+                        btnCheckStatus.visibility = View.VISIBLE
+                        startAutoCheckCountdown()
+                    }
+                    else -> {
+                        dismiss()
+                    }
                 }
             }
         }.start()
+    }
+
+    private fun startAutoCheckCountdown() {
+        countdownValue = 10
+
+        autoCheckRunnable = object : Runnable {
+            @SuppressLint("SetTextI18n")
+            override fun run() {
+                if (!btnCheckStatus.isVisible) {
+                    return
+                }
+                btnCheckStatus.text = "Check Status ($countdownValue)"
+                if (countdownValue == 0) {
+                    countdownValue = 10
+                    checkFedPaymentStatus(isManualCheck = true)
+
+                } else {
+                    countdownValue--
+                }
+
+                autoCheckHandler.postDelayed(this, 1000)
+            }
+        }
+        autoCheckHandler.post(autoCheckRunnable!!)
+    }
+
+
+    @SuppressLint("SetTextI18n")
+    private fun stopAutoCheckCountdown() {
+        autoCheckRunnable?.let {
+            autoCheckHandler.removeCallbacks(it)
+        }
+        btnCheckStatus.text = "Check Status"
     }
 
     @SuppressLint("SetTextI18n")
@@ -230,28 +269,46 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
 
         isCheckingPaymentStatus = true
 
+        if (isManualCheck) {
+            showLoader(requireContext(), "Checking payment status...")
+        }
+
         paymentStatusJob = viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val response = withContext(Dispatchers.IO) {
-                    paymentRepository.getFedPaymentStatus(orderId = transactionReferenceID, token = sessionManager.getToken().toString())
+                    paymentRepository.getFedPaymentStatus(
+                        orderId = transactionReferenceID,
+                        token = sessionManager.getToken().toString()
+                    )
                 }
                 lastKnownStatus = response.status
                 when (response.status) {
                     "SUCCESS" -> {
                         btnCheckStatus.visibility = View.GONE
+                        stopAutoCheckCountdown()
                         pollingTimer?.cancel()
                         postTicketPaymentHistory("S", "Payment Success")
                     }
+
                     "FAILED" -> {
                         btnCheckStatus.visibility = View.GONE
+                        stopAutoCheckCountdown()
                         pollingTimer?.cancel()
                         postTicketPaymentHistory("F", "Transaction Failed")
                     }
+
+                    "RETRY" -> {
+                        if (!isManualCheck) {
+                            delay(3000)
+                        }
+                    }
+
                     "PENDING" -> {
                         if (!isManualCheck) {
                             delay(3000)
                         }
                     }
+
                     else -> {
                         timerTextView.text = "Your payment is still pending !"
                     }
@@ -269,7 +326,12 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
             }
         }
     }
-    private suspend fun postTicketPaymentHistory(status: String, statusDesc: String, retryCount: Int = 0) {
+
+    private suspend fun postTicketPaymentHistory(
+        status: String,
+        statusDesc: String,
+        retryCount: Int = 0
+    ) {
         try {
             val cartTickets = ticketRepository.getAllTicketsInCart()
             val itemsList = cartTickets.flatMap { item ->
@@ -376,7 +438,7 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
 
     private fun handleRetry(e: Exception, status: String, statusDesc: String, retryCount: Int) {
         if (e is HttpException && e.code() == 401) {
-            showSnackbar(requireView(),  "Unauthorized: Please login again")
+            showSnackbar(requireView(), "Unauthorized: Please login again")
             return
         }
         if (retryCount < 3) {
@@ -387,6 +449,7 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
             showSnackbar(requireView(), "Failed: ${e.message}")
         }
     }
+
     private fun handleTicketTransactionStatus(
         status: String,
         orderId: String,
@@ -420,6 +483,7 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
             null
         }
     }
+
     override fun onStart() {
         super.onStart()
         dialog?.window?.setLayout(
@@ -429,11 +493,13 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
         dialog?.window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
         dialog?.window?.setGravity(Gravity.CENTER)
     }
+
     override fun onDismiss(dialog: DialogInterface) {
         super.onDismiss(dialog)
         pollingTimer?.cancel()
         stopCheckingPaymentStatus()
     }
+
     private fun stopCheckingPaymentStatus() {
         isCheckingPaymentStatus = false
         paymentStatusJob?.cancel()

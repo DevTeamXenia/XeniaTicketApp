@@ -300,11 +300,6 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
             val gateway = companyRepository.getString(CompanyKey.PAYMENT_GATEWAY)
 
             when (gateway?.trim()) {
-                "CanaraBank" -> {
-                    dismissLoader()
-//                    generateCanaraPaymentQrCode(formattedTotalAmount)
-                }
-
                 "FederalBank" -> {
                     when {
                         totalAmount == 0.0 -> {
@@ -330,7 +325,6 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                         }
                     }
                 }
-
                 else -> {
                     dismissLoader()
                     generateSibQrCode(totalAmount)
@@ -375,6 +369,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
 
                     )
                     dismissLoader()
+                    binding.btnPay.isEnabled = true
                     customQRDarshanPopupDialogue.show(
                         supportFragmentManager,
                         "CustomPopup"

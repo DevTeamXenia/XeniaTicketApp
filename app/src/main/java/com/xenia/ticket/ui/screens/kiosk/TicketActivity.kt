@@ -42,8 +42,9 @@ import java.util.Locale
 import kotlin.getValue
 
 class TicketActivity : AppCompatActivity(), OnTicketClickListener,
-    CustomInactivityDialog.InactivityCallback,CustomInternetAvailabilityDialog.InternetAvailabilityListener,
-    InactivityHandlerActivity,  CategoryAdapter.OnCategoryClickListener{
+    CustomInactivityDialog.InactivityCallback,
+    CustomInternetAvailabilityDialog.InternetAvailabilityListener,
+    InactivityHandlerActivity, CategoryAdapter.OnCategoryClickListener {
 
     private lateinit var binding: ActivityTicketBinding
     private val ticketRepository: TicketRepository by inject()
@@ -60,11 +61,12 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
     private var formattedTotalAmount: String = ""
     private lateinit var inactivityHandler: InactivityHandler
     private lateinit var inactivityDialog: CustomInactivityDialog
+    private var ticketDialog: CustomTicketPopupDialogue? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityTicketBinding.inflate(layoutInflater)
-        setLocale(this, sessionManager.getSelectedLanguage().toString())
+        setLocale(this, sessionManager.getSelectedLanguage())
         selectedLanguage = sessionManager.getSelectedLanguage()
         inactivityDialog = CustomInactivityDialog(this)
         inactivityHandler =
@@ -80,6 +82,7 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
         fetchDetails()
 
     }
+
     private fun setupUI() {
         binding.txtHome.text = getString(R.string.home)
         binding.txtselectTicket.text = getString(R.string.choose_your_tickets)
@@ -95,17 +98,19 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
 
         }
     }
+
     private fun fetchDetails() {
         lifecycleScope.launch {
             val categoryEnabled = companyRepository.getString(CompanyKey.CATEGORY_ENABLE)
-            if (categoryEnabled=="True") {
+            if (categoryEnabled == "True") {
                 getCategory()
             } else {
                 getTickets(selectedCategoryId)
-                binding.linOfferCat.visibility= View.GONE
+                binding.linOfferCat.visibility = View.GONE
             }
         }
     }
+
     @SuppressLint("NotifyDataSetChanged")
     private fun setupRecyclerViews() {
         categoryAdapter = CategoryAdapter(this, selectedLanguage!!, this)
@@ -209,10 +214,11 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
             } else {
                 throw e
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             showSnackbar(binding.root, "Error loading tickets")
         }
     }
+
     private fun getTickets(categoryId: Int? = null) {
 
         val token = sessionManager.getToken()
@@ -254,30 +260,36 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
                 } else {
                     showSnackbar(binding.root, "Server error: ${e.code()}")
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 showSnackbar(binding.root, "Error loading tickets")
             }
         }
     }
+
+
     override fun onTicketClick(ticketItem: TicketDto) {
-        val dialog = CustomTicketPopupDialogue()
-        dialog.setData(
-            ticketId = ticketItem.ticketId,
-            ticketName = ticketItem.ticketName,
-            ticketNameMa = ticketItem.ticketNameMa ?: "",
-            ticketNameTa = ticketItem.ticketNameTa ?: "",
-            ticketNameKa = ticketItem.ticketNameKa ?: "",
-            ticketNameTe = ticketItem.ticketNameTe ?: "",
-            ticketNameHi = ticketItem.ticketNameHi ?: "",
-            ticketNameSi = ticketItem.ticketNameSi ?: "",
-            ticketNamePa = ticketItem.ticketNamePa ?: "",
-            ticketNameMr = ticketItem.ticketNameMr ?: "",
-            ticketCtegoryId = ticketItem.ticketCategoryId,
-            ticketCompanyId = ticketItem.ticketCompanyId,
-            ticketRate = ticketItem.ticketAmount
-        )
-        dialog.setListener(this)
-        dialog.show(supportFragmentManager, "CustomPopup")
+        if (ticketDialog?.isVisible == true) return
+
+        ticketDialog = CustomTicketPopupDialogue().apply {
+            setData(
+                ticketId = ticketItem.ticketId,
+                ticketName = ticketItem.ticketName,
+                ticketNameMa = ticketItem.ticketNameMa ?: "",
+                ticketNameTa = ticketItem.ticketNameTa ?: "",
+                ticketNameKa = ticketItem.ticketNameKa ?: "",
+                ticketNameTe = ticketItem.ticketNameTe ?: "",
+                ticketNameHi = ticketItem.ticketNameHi ?: "",
+                ticketNameSi = ticketItem.ticketNameSi ?: "",
+                ticketNamePa = ticketItem.ticketNamePa ?: "",
+                ticketNameMr = ticketItem.ticketNameMr ?: "",
+                ticketCtegoryId = ticketItem.ticketCategoryId,
+                ticketCompanyId = ticketItem.ticketCompanyId,
+                ticketRate = ticketItem.ticketAmount
+            )
+            setListener(this@TicketActivity)
+        }
+
+        ticketDialog?.show(supportFragmentManager, "CustomPopup")
     }
 
 
@@ -295,6 +307,7 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
             updateCartUI()
         }
     }
+
     override fun onResume() {
         super.onResume()
         getTickets(selectedCategoryId)
@@ -311,6 +324,7 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
             updateCartUI()
         }
     }
+
     @SuppressLint("SetTextI18n", "DefaultLocale")
     private suspend fun updateCartUI() {
         val (totalAmount, hasData) = ticketRepository.getCartStatus()
@@ -369,6 +383,7 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
     override fun resetInactivityTimer() {
         inactivityHandler.resetTimer()
     }
+
     fun ActiveTicket.toDto() = TicketDto(
         ticketId = ticketId,
         ticketName = ticketName,
@@ -387,6 +402,7 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
         ticketCreatedBy = ticketCreatedBy,
         ticketActive = ticketActive
     )
+
     override fun onCategoryClick(category: Category) {
         selectedCategoryId = category.categoryId
         getTickets(selectedCategoryId)

@@ -53,7 +53,7 @@ class CustomTicketPopupDialogue : DialogFragment() {
     private lateinit var editTextTickets: EditText
     private lateinit var inactivityHandler: InactivityHandler
     private lateinit var btnClear: ImageView
-    private lateinit var icClose: ImageView
+    private lateinit var icClose: RelativeLayout
     private lateinit var btnBack: RelativeLayout
 
     private lateinit var btnDone: MaterialButton

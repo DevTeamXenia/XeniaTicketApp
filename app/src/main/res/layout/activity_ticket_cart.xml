@@ -12,26 +12,33 @@
         android:layout_width="match_parent"
         android:layout_height="100dp"
         android:background="@color/primaryColor"
-        android:orientation="horizontal"
         android:gravity="center_vertical"
+        android:orientation="horizontal"
         android:paddingStart="16dp"
         android:paddingEnd="16dp">
 
-        <ImageView
+        <RelativeLayout
             android:id="@+id/ivBack"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_centerVertical="true"
-            android:src="@drawable/back"
-            android:tint="@color/white"
-            />
+            android:layout_width="60dp"
+            android:layout_height="50dp"
+            android:layout_centerVertical="true">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_centerInParent="true"
+                android:src="@drawable/back"
+                app:tint="@color/white" />
+
+        </RelativeLayout>
+
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="center"
             android:layout_centerInParent="true"
             android:fontFamily="@font/poppins_regular"
+            android:gravity="center"
             android:text="@string/my_cart"
             android:textColor="@color/white"
             android:textSize="30sp" />
@@ -40,8 +47,8 @@
             android:id="@+id/ivClose"
             android:layout_width="110dp"
             android:layout_height="50dp"
-            android:layout_marginStart="30dp"
             android:layout_alignParentEnd="true"
+            android:layout_marginStart="30dp"
             android:layout_marginTop="22dp"
             app:cardBackgroundColor="@android:color/white"
             app:cardCornerRadius="8dp"
@@ -80,17 +87,17 @@
         android:id="@+id/linPerson"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:layout_below="@+id/linTop"
         android:layout_marginTop="10dp"
-        android:layout_below="@+id/linTop">
+        android:orientation="horizontal">
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_marginStart="10dp"
-            android:layout_weight="1"
-            android:layout_marginTop="10dp">
+            android:layout_marginTop="10dp"
+            android:layout_weight="1">
 
             <TextView
                 android:id="@+id/txtName"
@@ -101,13 +108,14 @@
                 android:text="@string/name"
                 android:textColor="@color/black"
                 android:textSize="20sp" />
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_toEndOf="@id/txtName"
                 android:fontFamily="@font/poppins_regular"
                 android:text="@string/mandatory"
                 android:textColor="@color/red"
-                android:layout_toEndOf="@id/txtName"
                 android:textSize="18sp" />
 
             <EditText
@@ -131,15 +139,15 @@
 
         </RelativeLayout>
 
-        
+
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_marginStart="5dp"
+            android:layout_marginTop="10dp"
             android:layout_marginEnd="10dp"
-            android:layout_weight="1"
-            android:layout_marginTop="10dp">
+            android:layout_weight="1">
 
             <TextView
                 android:id="@+id/txtPhoneNumber"
@@ -154,11 +162,12 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_toRightOf="@id/txtPhoneNumber"
                 android:fontFamily="@font/poppins_regular"
                 android:text="*"
                 android:textColor="@color/red"
-                android:layout_toRightOf="@id/txtPhoneNumber"
                 android:textSize="18sp" />
+
             <EditText
                 android:id="@+id/editTextPhoneNumber"
                 android:layout_width="match_parent"
@@ -178,9 +187,6 @@
                 tools:ignore="RtlSymmetry" />
 
 
-
-
-
         </RelativeLayout>
 
     </LinearLayout>
@@ -189,10 +195,10 @@
         android:id="@+id/relTicketCart"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/linPerson"
         android:layout_above="@+id/linBottom"
-        android:layout_marginBottom="10dp"
-        android:layout_marginTop="20dp" />
+        android:layout_below="@+id/linPerson"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="10dp" />
 
     <LinearLayout
         android:id="@+id/linBottom"

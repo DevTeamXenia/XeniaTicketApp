@@ -12,6 +12,7 @@
         android:background="@drawable/popup_head_bg">
 
 
+
         <ImageView
             android:id="@+id/btnClose"
             android:layout_width="40dp"

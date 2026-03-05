@@ -10,7 +10,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.xenia.ticket.data.repository.ReportRepository
 import com.xenia.ticket.databinding.ActivityTransctionBinding
 import com.xenia.ticket.ui.adapter.TransactionAdapter
-import com.xenia.ticket.ui.dialog.CustomTicketPopupDialogue
 import com.xenia.ticket.utils.common.JwtUtils
 import com.xenia.ticket.utils.common.SessionManager
 import kotlinx.coroutines.launch

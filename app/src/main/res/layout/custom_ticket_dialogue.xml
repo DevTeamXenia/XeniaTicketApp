@@ -27,14 +27,22 @@
             android:textColor="@color/secondaryColor"
             android:textSize="14sp" />
 
-        <ImageView
+        <RelativeLayout
             android:id="@+id/imgClose"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_alignParentEnd="true"
-            android:layout_marginTop="15dp"
-            android:src="@drawable/ic_close"
-            android:textStyle="bold" />
+            android:layout_width="60dp"
+            android:layout_height="50dp"
+            android:layout_alignParentEnd="true">
+            <ImageView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_centerInParent="true"
+                android:layout_marginTop="15dp"
+                android:src="@drawable/ic_close"
+                android:textStyle="bold" />
+
+        </RelativeLayout>
+
+
 
         <TextView
             android:id="@+id/txtTicketRate"
