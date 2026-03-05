@@ -2,11 +2,8 @@ package com.xenia.ticket.ui.screens.kiosk
 
 import android.annotation.SuppressLint
 import android.app.Dialog
-import android.content.Context
 import android.content.Intent
-import android.graphics.BitmapFactory
 import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.util.Base64
 import android.view.MotionEvent
@@ -14,7 +11,6 @@ import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -56,6 +52,7 @@ import org.koin.android.ext.android.inject
 import retrofit2.HttpException
 import java.util.Locale
 import kotlin.getValue
+import androidx.core.graphics.drawable.toDrawable
 
 
 class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartClickListener,
@@ -105,7 +102,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
         binding.relTicketCart.layoutManager = LinearLayoutManager(this)
 
         ticketCartAdapter =
-            TicketCartAdapter(this, sessionManager.getSelectedLanguage(), "Dharshan", this)
+            TicketCartAdapter(this, sessionManager.getSelectedLanguage(), "Ticket", this)
 
         binding.relTicketCart.adapter = ticketCartAdapter
 
@@ -206,7 +203,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT
                 )
-                setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+                setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
             }
             val btnYes = dialog.findViewById<MaterialButton>(R.id.buttonyes)
             val btnNo = dialog.findViewById<MaterialButton>(R.id.buttonCancel)
@@ -243,10 +240,6 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
 
                 finish()
             } else {
-                val firstItem = allDarshanTickets.first()
-
-                val bitmap =
-                    BitmapFactory.decodeByteArray(firstItem.daImg, 0, firstItem.daImg.size)
                 ticketCartAdapter.updateTickets(allDarshanTickets)
                 formattedTotalAmount = String.format(Locale.ENGLISH, "%.2f", totalAmount)
                 binding.btnPay.text = getString(R.string.pay) + "  Rs. " + formattedTotalAmount
@@ -271,27 +264,24 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
         }
     }
 
-    override fun onEditClick(ticketItem: Ticket) {
+    override fun onEditClick(ticket: Ticket) {
         val dialog = CustomTicketPopupDialogue()
-
         dialog.setData(
-            ticketId = ticketItem.ticketId,
-            ticketName = ticketItem.ticketName,
-            ticketNameMa = ticketItem.ticketNameMa ?: "",
-            ticketNameTa = ticketItem.ticketNameTa ?: "",
-            ticketNameKa = ticketItem.ticketNameKa ?: "",
-            ticketNameTe = ticketItem.ticketNameTe ?: "",
-            ticketNameHi = ticketItem.ticketNameHi ?: "",
-            ticketNameSi = ticketItem.ticketNameSi ?: "",
-            ticketNamePa = ticketItem.ticketNamePa ?: "",
-            ticketNameMr = ticketItem.ticketNameMr ?: "",
-            ticketCtegoryId = ticketItem.ticketCategoryId,
-            ticketCompanyId = ticketItem.ticketCompanyId,
-            ticketRate = ticketItem.ticketAmount
+            ticketId = ticket.ticketId,
+            ticketName = ticket.ticketName,
+            ticketNameMa = ticket.ticketNameMa ?: "",
+            ticketNameTa = ticket.ticketNameTa ?: "",
+            ticketNameKa = ticket.ticketNameKa ?: "",
+            ticketNameTe = ticket.ticketNameTe ?: "",
+            ticketNameHi = ticket.ticketNameHi ?: "",
+            ticketNameSi = ticket.ticketNameSi ?: "",
+            ticketNamePa = ticket.ticketNamePa ?: "",
+            ticketNameMr = ticket.ticketNameMr ?: "",
+            ticketCtegoryId = ticket.ticketCategoryId,
+            ticketCompanyId = ticket.ticketCompanyId,
+            ticketRate = ticket.ticketAmount
         )
-
         dialog.setListener(this)
-
         dialog.show(supportFragmentManager, "CustomPopup")
     }
 
@@ -405,7 +395,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                 } else {
                     showSnackbar(binding.root, "Unable to load settings!")
                 }
-            } catch (e: HttpException) {
+            } catch (_: HttpException) {
                 showSnackbar(
                     binding.root,
                     "unable to generate QR code! Please try again..."
@@ -467,7 +457,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                 } else {
                     showSnackbar(binding.root, "Unable to load settings!")
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 dismissLoader()
                 showSnackbar(binding.root, "Something went wrong!")
             }
@@ -501,15 +491,12 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
 
             val firstTicket = cartTickets.first()
             val imageBase64String = Base64.encodeToString(
-                firstTicket.daImg ?: ByteArray(0),
+                firstTicket.daImg,
                 Base64.NO_WRAP
             )
-
-
             val token = sessionManager.getToken().toString()
             val companyId = JwtUtils.getCompanyId(token)
-
-            if (token.isNullOrBlank()) {
+            if (token.isBlank()) {
                 withContext(Dispatchers.Main) {
                     binding.btnPay.isEnabled = true
                     showSnackbar(binding.root, "Authorization token missing")
@@ -557,7 +544,6 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                             binding.btnPay.isEnabled = true
                             dismissLoader()
                             handleTicketTransactionStatus(
-                                status = "S",
                                 orderId = response.receipt,
                                 ticket = response.ticket,
                                 totalAmount = totalAmount,
@@ -590,7 +576,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                     handleRetry(e, status, statusDesc, retryCount)
                 }
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             withContext(Dispatchers.Main) {
                 dismissLoader()
                 binding.btnPay.isEnabled = true
@@ -624,7 +610,6 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
     }
 
     private fun handleTicketTransactionStatus(
-        status: String,
         orderId: String,
         ticket: String?,
         totalAmount: Double,
@@ -633,7 +618,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
 
         val intent = Intent(this, PaymentActivity::class.java).apply {
 
-            putExtra("status", status)
+            putExtra("status", "S")
             putExtra("amount", totalAmount.toString())
             putExtra("orderID", orderId)
             putExtra("transID", "")
@@ -649,11 +634,11 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
     }
 
 
-    override fun onTicketClick(darshanItem: TicketDto) {
+    override fun onTicketClick(ticketItem: TicketDto) {
         TODO("Not yet implemented")
     }
 
-    override fun onTicketClear(darshanItem: TicketDto) {
+    override fun onTicketClear(ticketItem: TicketDto) {
         TODO("Not yet implemented")
     }
 
