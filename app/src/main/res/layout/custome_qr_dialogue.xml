@@ -42,6 +42,17 @@
             android:textSize="28sp" />
 
         <TextView
+            android:id="@+id/textTranscation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="3dp"
+            android:text="@string/scan_this_code_to_pay"
+            android:textColor="@color/black"
+            android:textSize="18sp"
+            android:layout_marginBottom="20dp"/>
+
+        <TextView
             android:id="@+id/textView3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -69,6 +80,16 @@
             android:textColor="@color/black"
             android:textSize="20sp"
             />
+
+        <Button
+            android:id="@+id/btnCheckStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Check Status"
+            android:visibility="gone"
+            android:layout_gravity="center"/>
+
 
         <ImageView
             android:id="@+id/imgLogo"

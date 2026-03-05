@@ -210,11 +210,11 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
                     JwtUtils.getUserType(token)
                 )
 
-                if (userType != UserType.COUNTER_USER) {
+                if (userType != UserType.COUNTER_USER && userType != UserType.CUSTOMER ) {
                     dismissLoader()
                     showSnackbar(
                         binding.root,
-                        "Only Counter Users are allowed to login"
+                        "Users role is not allowed to login"
                     )
                     return@launch
                 }

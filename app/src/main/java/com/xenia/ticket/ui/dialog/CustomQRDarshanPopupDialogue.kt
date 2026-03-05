@@ -16,6 +16,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
+import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
@@ -38,6 +39,8 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
 import com.google.zxing.WriterException
 import com.journeyapps.barcodescanner.BarcodeEncoder
+import com.xenia.ticket.utils.common.CommonMethod.dismissLoader
+import com.xenia.ticket.utils.common.CommonMethod.showLoader
 import com.xenia.ticket.utils.common.JwtUtils
 import kotlinx.coroutines.*
 import org.koin.android.ext.android.inject
@@ -47,6 +50,7 @@ import java.util.Locale
 class CustomQRDarshanPopupDialogue : DialogFragment() {
 
     private lateinit var timerTextView: TextView
+    private lateinit var textTranscation: TextView
     private lateinit var amountTextView: TextView
     private lateinit var qrCodeImageView: ImageView
 
@@ -63,6 +67,9 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
     private val ticketRepository: TicketRepository by inject()
     private val companyRepository: CompanyRepository by inject()
     private var isCheckingPaymentStatus = false
+
+    private lateinit var btnCheckStatus: Button
+    private var lastKnownStatus: String = "PENDING"
 
 
     fun setData(
@@ -106,6 +113,7 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         amountTextView = view.findViewById(R.id.txt_amount)
+        textTranscation = view.findViewById(R.id.textTranscation)
         qrCodeImageView = view.findViewById(R.id.qrCodeImageView)
         timerTextView = view.findViewById(R.id.txt_timer)
         imgLogo = view.findViewById(R.id.imgLogo)
@@ -151,12 +159,21 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
             val amountValue: Float = amount.toFloat()
             val formattedAmount = String.format(Locale.ENGLISH, "%.2f", amountValue)
             amountTextView.text = getString(R.string.amount) + " Rs. $formattedAmount /-"
+            textTranscation.text = getString(R.string.transcation_id) + transactionReferenceID
             val qrCodeBitmap = generateUPIQRCode(url)
             qrCodeImageView.setImageBitmap(qrCodeBitmap)
 
            startTimer()
             view.findViewById<ImageView>(R.id.btnClose).setOnClickListener {
                 dismiss()
+            }
+
+            btnCheckStatus = view.findViewById(R.id.btnCheckStatus)
+
+            btnCheckStatus.setOnClickListener {
+                btnCheckStatus.isEnabled = false
+                showLoader(requireContext(), "Checking payment status...")
+                checkFedPaymentStatus(isManualCheck = true)
             }
         }
     }
@@ -172,178 +189,87 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
         }
 
         pollingTimer = object : CountDownTimer(totalTime, 1000) {
+
             @SuppressLint("SetTextI18n", "DefaultLocale")
             override fun onTick(millisUntilFinished: Long) {
                 elapsedTime += 1000
+
                 val minutes = millisUntilFinished / 60000
                 val seconds = (millisUntilFinished % 60000) / 1000
                 val timeFormatted = String.format("%02d:%02d", minutes, seconds)
-                timerTextView.text = getString(R.string.qr_expire) + " " + timeFormatted
+
+                timerTextView.text = "QR Expire in $timeFormatted"
 
                 if (elapsedTime % pollInterval == 0L) {
                     when (companyGateway) {
                         "FederalBank" -> checkFedPaymentStatus()
-                        "CanaraBank" -> {
-
-                        }else -> checkSibPaymentStatus()
                     }
                 }
             }
+
             @SuppressLint("SetTextI18n")
             override fun onFinish() {
                 stopCheckingPaymentStatus()
-                val intent = Intent(requireContext(), LanguageActivity::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                startActivity(intent)
-                dismiss()
+                if (lastKnownStatus == "PENDING") {
+                    timerTextView.text = "Your payment is still pending!"
+                    btnCheckStatus.visibility = View.VISIBLE
+                } else {
+                    val intent = Intent(requireContext(), LanguageActivity::class.java)
+                    intent.flags =
+                        Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    startActivity(intent)
+                    dismiss()
+                }
             }
         }.start()
     }
-    private fun checkFedPaymentStatus() {
+
+    @SuppressLint("SetTextI18n")
+    private fun checkFedPaymentStatus(isManualCheck: Boolean = false) {
         if (isCheckingPaymentStatus) return
 
         isCheckingPaymentStatus = true
 
-        paymentStatusJob = CoroutineScope(Dispatchers.Main).launch {
+        paymentStatusJob = viewLifecycleOwner.lifecycleScope.launch {
             try {
-                while (isCheckingPaymentStatus) {
-
-                    val response = withContext(Dispatchers.IO) {
-                        paymentRepository.getFedPaymentStatus(
-                            orderId = transactionReferenceID,
-                            token = sessionManager.getToken().toString()
-                        )
-                    }
-                    when (response.status) {
-                        "SUCCESS" -> {
-                            postTicketPaymentHistory( "S","Payment Success")
-                            break
-                        }
-
-                        "FAILED" -> {
-                            postTicketPaymentHistory("F", "Transaction failed")
-                            break
-                        }
-
-                        "PENDING" -> {
-
-                        }
-
-                        else -> {
-                            stopCheckingPaymentStatus()
-                            break
-                        }
-                    }
-                    delay(2000)
+                val response = withContext(Dispatchers.IO) {
+                    paymentRepository.getFedPaymentStatus(orderId = transactionReferenceID, token = sessionManager.getToken().toString())
                 }
-            } catch (e: HttpException) {
-
-                if (e.code() == 401) {
-                    AlertDialog.Builder(requireContext())
-                        .setTitle("Logout !!")
-                        .setMessage(
-                            "You have been logged out because your account was used on another device."
-                        )
-                        .setCancelable(false)
-                        .setPositiveButton("Logout") { _, _ ->
-                            ApiResponseHandler.logoutUser(requireActivity())
+                lastKnownStatus = response.status
+                when (response.status) {
+                    "SUCCESS" -> {
+                        btnCheckStatus.visibility = View.GONE
+                        pollingTimer?.cancel()
+                        postTicketPaymentHistory("S", "Payment Success")
+                    }
+                    "FAILED" -> {
+                        btnCheckStatus.visibility = View.GONE
+                        pollingTimer?.cancel()
+                        postTicketPaymentHistory("F", "Transaction Failed")
+                    }
+                    "PENDING" -> {
+                        if (!isManualCheck) {
+                            delay(3000)
                         }
-                        .show()
+                    }
+                    else -> {
+                        timerTextView.text = "Your payment is still pending !"
+                    }
                 }
 
             } catch (e: Exception) {
+                timerTextView.text = "Your payment is still pending !"
                 e.printStackTrace()
             } finally {
+                if (isManualCheck) {
+                    btnCheckStatus.isEnabled = true
+                    dismissLoader()
+                }
                 isCheckingPaymentStatus = false
             }
         }
     }
-    private fun checkSibPaymentStatus() {
-        if (isCheckingPaymentStatus) return
-        isCheckingPaymentStatus = true
-
-        paymentStatusJob = lifecycleScope.launch {
-
-            try {
-
-                while (isCheckingPaymentStatus) {
-
-                    Log.d("SIB_STATUS", "Checking OrderId: $transactionReferenceID")
-
-                    val response = withContext(Dispatchers.IO) {
-                        paymentRepository.getSibPaymentStatus(
-                            orderId = transactionReferenceID,
-                            token = sessionManager.getToken().toString()
-                        )
-                    }
-
-                    val status = response.Status?.uppercase()
-                    val statusDesc = response.statusDesc?.trim()
-
-                    Log.d("SIB_STATUS", "Status: $status")
-                    Log.d("SIB_STATUS", "StatusDesc: $statusDesc")
-
-                    when (status) {
-
-                        "S" -> {
-                            Log.d("SIB_STATUS", "Payment SUCCESS")
-                            postTicketPaymentHistory("S", "Payment Success")
-                            break
-                        }
-
-                        "F" -> {
-                            if (!statusDesc.equals("Invalid PspRefNo", ignoreCase = true)) {
-                                Log.d("SIB_STATUS", "Payment FAILED: $statusDesc")
-                                postTicketPaymentHistory(
-                                    "F",
-                                    statusDesc ?: "Transaction Failed"
-                                )
-                                break
-                            } else {
-                                Log.d("SIB_STATUS", "Invalid PspRefNo - Ignoring")
-                            }
-                        }
-
-                        "P" -> {
-                            Log.d("SIB_STATUS", "Payment PENDING")
-                        }
-
-                        else -> {
-                            Log.d("SIB_STATUS", "Unknown Status: $status")
-                        }
-                    }
-
-                    delay(2000)
-                }
-            } catch (e: HttpException) {
-
-                if (e.code() == 401) {
-                    AlertDialog.Builder(requireContext())
-                        .setTitle("Logout !!")
-                        .setMessage(
-                            "You have been logged out because your account was used on another device."
-                        )
-                        .setCancelable(false)
-                        .setPositiveButton("Logout") { _, _ ->
-                            ApiResponseHandler.logoutUser(requireActivity())
-                        }
-                        .show()
-                }
-
-            } catch (e: Exception) {
-
-                Log.e("SIB_STATUS", "Error: ${e.message}", e)
-
-            } finally {
-                isCheckingPaymentStatus = false
-            }
-        }
-    }
-    private suspend fun postTicketPaymentHistory(
-        status: String,
-        statusDesc: String,
-        retryCount: Int = 0
-    ) {
+    private suspend fun postTicketPaymentHistory(status: String, statusDesc: String, retryCount: Int = 0) {
         try {
             val cartTickets = ticketRepository.getAllTicketsInCart()
             val itemsList = cartTickets.flatMap { item ->
@@ -358,7 +284,7 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
             }
             val firstTicket = cartTickets.first()
             val imageBase64String = Base64.encodeToString(
-                firstTicket.daImg ?: ByteArray(0),
+                firstTicket.daImg,
                 Base64.NO_WRAP
             )
             val token = sessionManager.getToken().toString()
@@ -402,7 +328,7 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
                                 status = "S",
                                 orderId = response.receipt ?: transactionReferenceID,
                                 ticket = response.ticket,
-                                totalAmount = totalAmount.toDouble(),
+                                totalAmount = totalAmount,
                                 receiptPrefix = companyRepository.getString(CompanyKey.PREFIX) ?: ""
                             )
                         }
@@ -415,7 +341,7 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
                                 status = "F",
                                 orderId = response.receipt ?: transactionReferenceID,
                                 ticket = response.ticket,
-                                totalAmount = totalAmount.toDouble(),
+                                totalAmount = totalAmount,
                                 receiptPrefix = companyRepository.getString(CompanyKey.PREFIX) ?: ""
                             )
                         }
@@ -425,6 +351,7 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
         } catch (e: HttpException) {
             withContext(Dispatchers.Main) {
                 if (e.code() == 401) {
+                    dismiss()
                     AlertDialog.Builder(requireContext())
                         .setTitle("Logout !!")
                         .setMessage(
@@ -441,26 +368,21 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
             }
         } catch (_: Exception) {
             withContext(Dispatchers.Main) {
+                dismiss()
                 showSnackbar(requireView(), "Something went wrong")
             }
         }
     }
-    private fun handleRetry(
-        e: Exception,
-        status: String,
-        statusDesc: String,
-        retryCount: Int
-    ) {
+
+    private fun handleRetry(e: Exception, status: String, statusDesc: String, retryCount: Int) {
         if (e is HttpException && e.code() == 401) {
             showSnackbar(requireView(),  "Unauthorized: Please login again")
-
             return
         }
         if (retryCount < 3) {
             lifecycleScope.launch {
                 postTicketPaymentHistory(status, statusDesc, retryCount + 1)
             }
-
         } else {
             showSnackbar(requireView(), "Failed: ${e.message}")
         }
@@ -484,8 +406,8 @@ class CustomQRDarshanPopupDialogue : DialogFragment() {
         }
         startActivity(intent)
         dismiss()
-        startActivity(intent)
     }
+
     private fun generateUPIQRCode(url: String): Bitmap? {
         return try {
             val bitMatrix = MultiFormatWriter().encode(

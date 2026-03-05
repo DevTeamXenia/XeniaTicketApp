@@ -1,9 +1,7 @@
 package com.xenia.ticket.ui.screens.kiosk
 
-import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
 import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.graphics.Bitmap
@@ -19,7 +17,6 @@ import android.os.IBinder
 import android.os.Looper
 import android.os.Message
 import android.os.Messenger
-import android.os.RemoteException
 import android.util.Log
 import android.view.View
 import android.widget.Toast
@@ -33,7 +30,6 @@ import com.xenia.ticket.data.room.entity.Ticket
 import com.xenia.ticket.databinding.ActivityPaymentBinding
 import com.xenia.ticket.ui.screens.billing.BillingTicketActivity
 import com.xenia.ticket.utils.common.CommonMethod.setLocale
-import com.xenia.ticket.utils.common.CompanyKey
 import com.xenia.ticket.utils.common.SessionManager
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.WriterException
@@ -43,15 +39,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import net.nyx.printerservice.print.IPrinterService
 import net.posprinter.IDeviceConnection
 import net.posprinter.IPOSListener
 import net.posprinter.POSConnect
 import net.posprinter.POSConst
 import net.posprinter.POSPrinter
 import org.koin.android.ext.android.inject
-import java.net.HttpURLConnection
-import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -63,7 +56,7 @@ import org.json.JSONObject
 import androidx.lifecycle.ProcessLifecycleOwner
 import java.io.ByteArrayOutputStream
 import java.io.File
-import java.io.FileOutputStream
+import androidx.core.graphics.get
 
 
 class PaymentActivity : AppCompatActivity() {
@@ -86,7 +79,6 @@ class PaymentActivity : AppCompatActivity() {
     private var selectedLanguage: String? = null
     private var isBound = false
     private var serverMessenger: Messenger? = null
-    private var printerService: IPrinterService? = null
 
     @SuppressLint("SetTextI18n", "DefaultLocale")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -110,19 +102,12 @@ class PaymentActivity : AppCompatActivity() {
         else
             sessionManager.getSelectedLanguage()
 
-        bindPineLabsService()
-
         setLocale(this@PaymentActivity, selectedLanguage)
+
         if (status.equals("S")) {
+
             binding.lottieSuccess.visibility = View.VISIBLE
             binding.lottieSuccess.playAnimation()
-
-            binding.lottieSuccess.addAnimatorListener(object : AnimatorListenerAdapter() {
-//                override fun onAnimationEnd(animation: Animator) {
-//                    binding.lottieSuccess.visibility = View.GONE
-//                }
-            })
-            Log.d("QRCodeDebug", ticket.toString()) // Log dimensions
 
             binding.linSuccess.visibility = View.VISIBLE
             binding.linFailed.visibility = View.GONE
@@ -138,19 +123,18 @@ class PaymentActivity : AppCompatActivity() {
                 binding.txtName.visibility = View.VISIBLE
                 binding.txtName.text = getString(R.string.pay_name) + " " + name
             }
+            if(sessionManager.getSelectedPrinter() == "KIOSK"){
+                configPrinter()
+            }else{
+                bindPineLabsService()
+            }
 
-            configPrinter()
         } else {
             binding.linSuccess.visibility = View.GONE
             binding.linFailed.visibility = View.VISIBLE
             binding.lottiefail.visibility = View.VISIBLE
             binding.lottiefail.playAnimation()
 
-            binding.lottiefail.addAnimatorListener(object : AnimatorListenerAdapter() {
-//                override fun onAnimationEnd(animation: Animator) {
-//                    binding.lottieSuccess.visibility = View.GONE
-//                }
-            })
             redirect()
         }
 
@@ -181,10 +165,6 @@ class PaymentActivity : AppCompatActivity() {
     private fun configPrinter() {
         val selectedPrinter = sessionManager.getSelectedPrinter()
         when (selectedPrinter) {
-            "B200MAX" -> {
-                bindAndPrintSale()
-            }
-
             "FALCON", "KIOSK" -> {
                 try {
                     POSConnect.init(applicationContext)
@@ -209,7 +189,6 @@ class PaymentActivity : AppCompatActivity() {
                 }
 
             }
-
             "PineLabs" -> {
                 binding.progressBar.visibility = View.VISIBLE
                 binding.txtPrinting.visibility = View.VISIBLE
@@ -217,7 +196,6 @@ class PaymentActivity : AppCompatActivity() {
                     printReceiptPlutus()
                 }
             }
-
             else -> {
                 val printIntent = Intent(this, PrinterSettingActivity::class.java).apply {
                     putExtra("from", from)
@@ -234,49 +212,14 @@ class PaymentActivity : AppCompatActivity() {
         }
     }
 
-    private fun bindAndPrintSale() {
-//        if (isBound) {
-//            initReceiptPrint(true)
-//            return
-//        }
-//
-//        val intent = Intent().apply {
-//            `package` = "com.incar.printerservice"
-//            action = "com.incar.printerservice.IPrinterService"
-//        }
-//
-//        serviceConnection = object : ServiceConnection {
-//            override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-//                printerService = IPrinterService.Stub.asInterface(service)
-//                isBound = true
-//                Log.d(TAG, "Printer service connected")
-//                initReceiptPrint(true)
-//            }
-//
-//            override fun onServiceDisconnected(name: ComponentName?) {
-//                printerService = null
-//                isBound = false
-//                Log.e(TAG, "Printer service disconnected")
-//                handler.postDelayed({
-//                    initReceiptPrint(true)
-//                }, 5000)
-//            }
-//        }
-//
-//        applicationContext.bindService(intent, serviceConnection!!, BIND_AUTO_CREATE)
-    }
-
     private val connectListener = IPOSListener { code, _ ->
-
         val selectedPrinter = sessionManager.getSelectedPrinter()
-
         when (code) {
             POSConnect.CONNECT_SUCCESS -> {
                 if (selectedPrinter == "FALCON" || selectedPrinter == "KIOSK" || selectedPrinter == null) {
-                    initReceiptPrint(false)
+                    initReceiptPrint()
                 }
             }
-
             POSConnect.CONNECT_FAIL,
             POSConnect.CONNECT_INTERRUPT,
             POSConnect.SEND_FAIL,
@@ -298,416 +241,93 @@ class PaymentActivity : AppCompatActivity() {
     }
 
     @SuppressLint("DefaultLocale")
-    private fun initReceiptPrint(isB1008: Boolean) {
+    private fun initReceiptPrint() {
         lifecycleScope.launch {
 
-            try {
-                val PRINTER_WIDTH = 576   // Change to 384 if 58mm printer
+            val ticketItems = ticketRepository.getAllTicketsInCart()
+            val currentDate =
+                SimpleDateFormat("dd-MMM-yyyy hh:mm a", Locale.ENGLISH)
+                    .format(Date())
 
-                val allVazhipaduItems = ticketRepository.getAllTicketsInCart()
+            val headerBitmap = withContext(Dispatchers.IO) {
+                loadBitmapFromCache(cacheDir, "company_header.png")
+            }
 
-                val currentDate = SimpleDateFormat(
-                    "dd-MMM-yyyy hh:mm a",
-                    Locale.ENGLISH
-                ).format(Date())
+            val footerBitmap = withContext(Dispatchers.IO) {
+                loadBitmapFromCache(cacheDir, "company_footer.png")
+            }
 
-                val headerBitmap = withContext(Dispatchers.IO) {
-                    loadBitmapFromCache(cacheDir, "company_header.png")
-                }
-
-                val footerBitmap = withContext(Dispatchers.IO) {
-                    loadBitmapFromCache(cacheDir, "company_footer.png")
-                }
-
-                val receiptBitmap: Bitmap =
-                    if (companyRepository.getDefaultLanguage() == selectedLanguage) {
-                        generateReceiptBitmapDefault(
-                            currentDate,
-                            transID,
-                            orderID.toString(),
-                            allVazhipaduItems,
-                            selectedLanguage!!
-                        )
-                    } else {
-                        generateReceiptBitmap(
-                            currentDate,
-                            transID,
-                            orderID.toString(),
-                            allVazhipaduItems,
-                            selectedLanguage!!
-                        )
-                    }
-
-                val safeReceiptBitmap = scaleToPrinterWidth(receiptBitmap, PRINTER_WIDTH)
-
-                if (isB1008) {
-
-                    try {
-
-                        headerBitmap?.let {
-                            val scaled = scaleToPrinterWidth(it, PRINTER_WIDTH)
-                            printerService?.printBitmap(
-                                scaled,
-                                0,
-                                POSConst.ALIGNMENT_CENTER
-                            )
-                            delay(200)
-                            scaled.recycle()
-                        }
-
-                        printerService?.printBitmap(
-                            safeReceiptBitmap,
-                            0,
-                            POSConst.ALIGNMENT_CENTER
-                        )
-                        delay(300)
-
-                        footerBitmap?.let {
-                            val scaled = scaleToPrinterWidth(it, PRINTER_WIDTH)
-                            printerService?.printBitmap(
-                                scaled,
-                                0,
-                                POSConst.ALIGNMENT_CENTER
-                            )
-                            delay(200)
-                            scaled.recycle()
-                        }
-
-                        printerService?.printText("\n\n", null)
-                        printerService?.printEndAutoOut()
-
-                    } catch (e: RemoteException) {
-                        Log.e("PrinterService", "Printing error: ${e.message}")
-                    }
-
-                } else {
-
-                    if (curConnect == null) {
-                        Log.e("ReceiptPrint", "Printer not connected")
-                        return@launch
-                    }
-
-                    val printer = POSPrinter(curConnect)
-
-                    headerBitmap?.let {
-                        val scaled = scaleToPrinterWidth(it, PRINTER_WIDTH)
-                        printer.printBitmap(
-                            scaled,
-                            POSConst.ALIGNMENT_CENTER,
-                            PRINTER_WIDTH
-                        )
-                        delay(200)
-                        scaled.recycle()
-                    }
-
-                    printer.printBitmap(
-                        safeReceiptBitmap,
-                        POSConst.ALIGNMENT_CENTER,
-                        PRINTER_WIDTH
+            val receiptBitmap: Bitmap =
+                if (companyRepository.getDefaultLanguage() == selectedLanguage) {
+                    generateReceiptBitmapDefault(
+                        currentDate,
+                        transID,
+                        orderID.toString(),
+                        ticketItems,
+                        selectedLanguage!!
                     )
-                    delay(300)
-
-                    footerBitmap?.let {
-                        val scaled = scaleToPrinterWidth(it, PRINTER_WIDTH)
-                        printer.printBitmap(
-                            scaled,
-                            POSConst.ALIGNMENT_CENTER,
-                            PRINTER_WIDTH
-                        )
-                        delay(200)
-                        scaled.recycle()
-                    }
-
-                    printer.feedLine(3)
-                    delay(200)
-                    printer.cutHalfAndFeed(1)
-                    delay(400)
-                }
-
-                // 🔹 Recycle only after printing completely finishes
-                safeReceiptBitmap.recycle()
-                receiptBitmap.recycle()
-                headerBitmap?.recycle()
-                footerBitmap?.recycle()
-
-                delay(1500)
-                redirect()
-
-            } catch (e: Exception) {
-                Log.e("ReceiptPrint", "Fatal printing error: ${e.message}")
-            }
-        }
-    }
-
-    private fun scaleToPrinterWidth(bitmap: Bitmap, printerWidth: Int): Bitmap {
-
-        val safeWidth = if (printerWidth % 8 == 0)
-            printerWidth
-        else
-            printerWidth - (printerWidth % 8)
-
-        val ratio = safeWidth.toFloat() / bitmap.width
-        val newHeight = (bitmap.height * ratio).toInt()
-
-        return bitmap.scale(safeWidth, newHeight)
-    }
-
-    fun loadBitmapFromCache(
-        cacheDir: File,
-        fileName: String
-    ): Bitmap? {
-        val file = File(cacheDir, fileName)
-        if (!file.exists()) return null
-        return BitmapFactory.decodeFile(file.absolutePath)
-    }
-
-    private suspend fun printReceiptPlutus() {
-        lifecycleScope.launch {
-
-            try {
-                val message = Message.obtain(null, PlutusConstants.MESSAGE_CODE)
-                val bundle = Bundle()
-
-                val json = createPrintJson()
-
-                bundle.putString(PlutusConstants.REQUEST_TAG, json)
-                message.data = bundle
-                message.replyTo = Messenger(IncomingHandler())
-
-                serverMessenger?.send(message)
-
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
-
-    private fun centeredBoldTextToBitmapHex(
-        text: String,
-        bitmapWidth: Int = 384,
-        textSize: Float = 30f
-    ): String {
-
-        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.BLACK
-            this.textSize = textSize
-            typeface = Typeface.MONOSPACE
-            isFakeBoldText = true
-        }
-
-        val fm = paint.fontMetrics
-        val height = (fm.bottom - fm.top + 20).toInt()
-
-        val bitmap = Bitmap.createBitmap(bitmapWidth, height, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(bitmap)
-        canvas.drawColor(Color.WHITE)
-
-        val textWidth = paint.measureText(text)
-        val x = (bitmapWidth - textWidth) / 2f   // 🔥 CENTERING
-        val y = -fm.top + 10
-
-        canvas.drawText(text, x, y, paint)
-
-        return bitmapToHex(bitmap)
-    }
-
-    private fun bitmapToHex(bitmap: Bitmap): String {
-        val width = bitmap.width
-        val height = bitmap.height
-        val bytes = ByteArray(width * height)
-
-        var index = 0
-        for (y in 0 until height) {
-            for (x in 0 until width) {
-                val pixel = bitmap.getPixel(x, y)
-                val gray =
-                    (Color.red(pixel) + Color.green(pixel) + Color.blue(pixel)) / 3
-                bytes[index++] = if (gray < 128) 0x00 else 0x01
-            }
-        }
-
-        return bytes.joinToString("") { "%02X".format(it) }
-    }
-
-    private suspend fun createPrintJson(): String {
-        val allVazhipaduItems = ticketRepository.getAllTicketsInCart()
-
-        val currentDate = SimpleDateFormat(
-            "dd-MMM-yyyy hh:mm a",
-            Locale.ENGLISH
-        ).format(Date())
-
-        val headerBitmap = bitmapFileToHex("company_header.png", cacheDir) ?: ""
-        val footerBitmap = bitmapFileToHex("company_footer.png", cacheDir) ?: ""
-
-        val receiptLines =
-            if (companyRepository.getDefaultLanguage() == selectedLanguage) {
-                generateReceiptTextDefault(
-                    currentDate,
-                    transID,
-                    orderID.toString(),
-                    allVazhipaduItems,
-                    selectedLanguage!!
-                )
-            } else {
-                generateReceiptText(
-                    currentDate,
-                    transID,
-                    orderID.toString(),
-                    allVazhipaduItems,
-                    selectedLanguage!!
-                )
-            }
-
-        val header = JSONObject().apply {
-            put("ApplicationId", sessionManager.getPineLabsAppId())
-            put("UserId", "admin")
-            put("MethodId", PlutusConstants.METHOD_PRINT)
-            put("VersionNo", "1.0")
-        }
-
-        val headerImageLine = JSONObject().apply {
-            put("PrintDataType", 2)
-            put("PrinterWidth", 24)
-            put("IsCenterAligned", true)
-            put("DataToPrint", "")
-            put("ImagePath", "")
-            put("ImageData", headerBitmap)
-        }
-
-        val footerImageLine = JSONObject().apply {
-            put("PrintDataType", 2)
-            put("PrinterWidth", 24)
-            put("IsCenterAligned", true)
-            put("DataToPrint", "")
-            put("ImagePath", "")
-            put("ImageData", footerBitmap)
-
-        }
-        val smallSpaceLine = JSONObject().apply {
-            put("PrintDataType", 0)
-            put("PrinterWidth", 24)
-            put("IsCenterAligned", true)
-            put("DataToPrint", " ")
-            put("ImagePath", "")
-            put("ImageData", "")
-        }
-
-        val dataArray = JSONArray().apply {
-            put(headerImageLine)
-            receiptLines.forEach { line ->
-
-                val cleanLine = line.replace("*", "").trim()
-
-                when {
-                    cleanLine.equals("REPRINTED COPY", ignoreCase = true) ||
-                            cleanLine.equals("Entry Ticket", ignoreCase = true) -> {
-
-                        val bitmapText = line.trim()
-
-                        val boldBitmapHex = centeredBoldTextToBitmapHex(bitmapText)
-
-                        put(JSONObject().apply {
-                            put("PrintDataType", 2)
-                            put("PrinterWidth", 24)
-                            put("IsCenterAligned", true)
-                            put("DataToPrint", "")
-                            put("ImagePath", "")
-                            put("ImageData", boldBitmapHex)
-                        })
-                    }
-
-                    else -> {
-                        put(JSONObject().apply {
-                            put("PrintDataType", 0)
-                            put("PrinterWidth", 200)
-                            put("IsCenterAligned", false)
-                            put("DataToPrint", line)
-                            put("ImagePath", "")
-                            put("ImageData", "")
-                        })
-                    }
-                }
-            }
-            put(smallSpaceLine)
-            put(footerImageLine)
-            put(smallSpaceLine)
-
-        }
-
-        val detail = JSONObject().apply {
-            put("PrintRefNo", "PRN001")
-            put("SavePrintData", true)
-            put("Data", dataArray)
-        }
-
-        return JSONObject().apply {
-            put("Header", header)
-            put("Detail", detail)
-
-        }.toString()
-    }
-
-    inner class IncomingHandler : Handler(Looper.getMainLooper()) {
-        override fun handleMessage(msg: Message) {
-
-            val response = msg.data.getString(PlutusConstants.RESPONSE_TAG)
-            Log.d("PLUTUS_RESPONSE", response ?: "NULL")
-
-            if (response.isNullOrEmpty()) {
-
-                return
-            }
-            try {
-                val json = JSONObject(response)
-                val status = json.optString("Status")
-                val message = json.optString("Message")
-
-                if (status.equals("SUCCESS", true)) {
-                    binding.progressBar.visibility = View.GONE
-                    binding.txtPrinting.visibility = View.GONE
-                    redirect()
                 } else {
-                    binding.progressBar.visibility = View.GONE
-                    binding.txtPrinting.visibility = View.GONE
-                    redirect()
+                    generateReceiptBitmap(
+                        currentDate,
+                        transID,
+                        orderID.toString(),
+                        ticketItems,
+                        selectedLanguage!!
+                    )
                 }
-            } catch (_: Exception) {
 
+            val printer = POSPrinter(curConnect)
+
+            try {
+
+                // ✅ PRINT HEADER
+                headerBitmap?.scale(550, 200)?.let { scaled ->
+                    printer.printBitmap(
+                        scaled,
+                        POSConst.ALIGNMENT_CENTER,
+                        500
+                    )
+                    printer.feedLine(2)
+                    delay(300)
+                    scaled.recycle()
+                }
+
+                // ✅ PRINT RECEIPT SAFELY IN CHUNKS
+                printLargeBitmap(printer, receiptBitmap)
+                printer.feedLine(2)
+                delay(300)
+
+                // ✅ PRINT FOOTER
+                footerBitmap?.scale(550, 100)?.let { scaled ->
+                    printer.printBitmap(
+                        scaled,
+                        POSConst.ALIGNMENT_CENTER,
+                        500
+                    )
+                    printer.feedLine(3)
+                    delay(400)
+                    printer.cutHalfAndFeed(1)
+                    scaled.recycle()
+                } ?: printer.cutHalfAndFeed(1)
+
+            } catch (e: Exception) {
+                Log.e("ReceiptPrint", "Printing error: ${e.message}")
+                printer.cutHalfAndFeed(1)
             }
+
+            // ✅ CLEANUP MEMORY
+            receiptBitmap.recycle()
+            headerBitmap?.recycle()
+            footerBitmap?.recycle()
+
+            delay(2000)
+
+            redirect()
         }
     }
-
-    private suspend fun safeLoadBitmap(url: String): Bitmap? = try {
-        loadBitmapFromUrl(url)
-    } catch (e: Exception) {
-        Log.e("ReceiptPrint", "Error loading bitmap from $url: ${e.message}")
-        null
-    }
-
-    private suspend fun loadBitmapFromUrl(url: String): Bitmap? = withContext(Dispatchers.IO) {
-        try {
-            val connection = URL(url).openConnection() as HttpURLConnection
-            connection.doInput = true
-            connection.connect()
-            val bitmap = BitmapFactory.decodeStream(connection.inputStream)
-            connection.inputStream.close()
-            bitmap
-        } catch (e: Exception) {
-            Log.e("ImageLoad", "Error loading image from URL: ${e.message}")
-            null
-        }
-    }
-
 
     @SuppressLint("DefaultLocale")
-    private suspend fun generateReceiptBitmap(
-        currentDate: String,
-        transID: String?,
-        orderID: String?,
-        ticket: List<Ticket>,
-        selectedLanguage: String
-    ): Bitmap {
+    private suspend fun generateReceiptBitmap(currentDate: String, transID: String?, orderID: String?, ticket: List<Ticket>, selectedLanguage: String): Bitmap {
         val width = 576
         val paint = Paint().apply { isAntiAlias = true }
         val defaultLang = companyRepository.getDefaultLanguage().toString()
@@ -972,15 +592,8 @@ class PaymentActivity : AppCompatActivity() {
 
         return finalBitmap
     }
-
     @SuppressLint("DefaultLocale")
-    private fun generateReceiptBitmapDefault(
-        currentDate: String,
-        transID: String?,
-        orderID: String?,
-        ticket: List<Ticket>,
-        selectedLanguage: String
-    ): Bitmap {
+    private fun generateReceiptBitmapDefault(currentDate: String, transID: String?, orderID: String?, ticket: List<Ticket>, selectedLanguage: String): Bitmap {
         val width = 576
         val paint = Paint().apply { isAntiAlias = true }
 
@@ -1156,6 +769,37 @@ class PaymentActivity : AppCompatActivity() {
         return finalBitmap
     }
 
+    private suspend fun printLargeBitmap(printer: POSPrinter, bitmap: Bitmap) {
+        val maxChunkHeight = 700
+        var startY = 0
+
+        while (startY < bitmap.height) {
+
+            val chunkHeight = minOf(maxChunkHeight, bitmap.height - startY)
+
+            val chunkBitmap = Bitmap.createBitmap(
+                bitmap,
+                0,
+                startY,
+                bitmap.width,
+                chunkHeight
+            )
+
+            printer.printBitmap(
+                chunkBitmap,
+                POSConst.ALIGNMENT_CENTER,
+                600
+            )
+
+            printer.feedLine(1)
+
+            chunkBitmap.recycle()
+
+            startY += chunkHeight
+
+            delay(150)
+        }
+    }
     private fun generateQRCode(): Bitmap? {
         val data = ticket.orEmpty()
         val qrCodeWriter = QRCodeWriter()
@@ -1179,21 +823,14 @@ class PaymentActivity : AppCompatActivity() {
         }
     }
 
-    private suspend fun generateReceiptText(
-        currentDate: String,
-        transID: String?,
-        orderID: String?,
-        ticket: List<Ticket>,
-        selectedLanguage: String
-    ): List<String> {
+    private suspend fun generateReceiptText(currentDate: String, transID: String?, orderID: String?, ticket: List<Ticket>, selectedLanguage: String): List<String> {
 
         val lines = mutableListOf<String>()
-        val LINE_WIDTH = 45
-        val ITEM_WIDTH = 16
-        val PRICE_WIDTH = 6
-        val QTY_WIDTH = 4
-        val AMT_WIDTH = 8
-        val totalWidth = ITEM_WIDTH + PRICE_WIDTH + QTY_WIDTH + AMT_WIDTH + 3
+        val itemWidth = 16
+        val priceWidth = 6
+        val qtyWidth = 4
+        val amtWidth = 8
+        val totalWidth = itemWidth + priceWidth + qtyWidth + amtWidth + 3
         val defaultLang = companyRepository.getDefaultLanguage().toString()
 
         fun String.padRight(len: Int): String =
@@ -1203,7 +840,6 @@ class PaymentActivity : AppCompatActivity() {
             if (length >= len) take(len) else padStart(len, ' ')
 
 
-        /* ---------- Labels ---------- */
         val labelReceiptNo = getLocalizedString("Receipt No", selectedLanguage)
         val labelDate = getLocalizedString("Date", selectedLanguage)
         val labelUPI = getLocalizedString("UPI Reference No", selectedLanguage)
@@ -1255,10 +891,10 @@ class PaymentActivity : AppCompatActivity() {
         lines.add("")
 
         lines.add(
-            labelDItem.padRight(ITEM_WIDTH) +
-                    labelDPrice.padLeft(PRICE_WIDTH) + " " +
-                    labelDQty.padLeft(QTY_WIDTH) + " " +
-                    labelDAmount.padLeft(AMT_WIDTH)
+            labelDItem.padRight(itemWidth) +
+                    labelDPrice.padLeft(priceWidth) + " " +
+                    labelDQty.padLeft(qtyWidth) + " " +
+                    labelDAmount.padLeft(amtWidth)
         )
         lines.add("-".repeat(totalWidth))
 
@@ -1301,16 +937,16 @@ class PaymentActivity : AppCompatActivity() {
             lines.add("")
 
             lines.add(
-                "".padRight(ITEM_WIDTH) +
-                        priceStr.padLeft(PRICE_WIDTH) + " " +
-                        qtyStr.padLeft(QTY_WIDTH) + " " +
-                        amtStr.padLeft(AMT_WIDTH)
+                "".padRight(itemWidth) +
+                        priceStr.padLeft(priceWidth) + " " +
+                        qtyStr.padLeft(qtyWidth) + " " +
+                        amtStr.padLeft(amtWidth)
             )
         }
         lines.add("-".repeat(totalWidth))
         lines.add(
-            labelTotalAmount.padRight(totalWidth - AMT_WIDTH) +
-                    String.format(Locale.ENGLISH, "%.2f", totalAmount).padRight(AMT_WIDTH)
+            labelTotalAmount.padRight(totalWidth - amtWidth) +
+                    String.format(Locale.ENGLISH, "%.2f", totalAmount).padRight(amtWidth)
         )
         lines.add("($labelDTotalAmount)")
 
@@ -1324,17 +960,9 @@ class PaymentActivity : AppCompatActivity() {
         lines.add("($labelDPhone)")
         return lines
     }
-
-    private fun generateReceiptTextDefault(
-        currentDate: String,
-        transID: String?,
-        orderID: String?,
-        ticket: List<Ticket>,
-        selectedLanguage: String
-    ): List<String> {
+    private fun generateReceiptTextDefault(currentDate: String, transID: String?, orderID: String?, ticket: List<Ticket>, selectedLanguage: String): List<String> {
         val lines = mutableListOf<String>()
 
-        // Localized labels
         val labelReceiptNo = getLocalizedString("Receipt No", selectedLanguage)
         val labelDate = getLocalizedString("Date", selectedLanguage)
         val labelItem = getLocalizedString("Ticket", selectedLanguage)
@@ -1346,7 +974,6 @@ class PaymentActivity : AppCompatActivity() {
         val labelName = getLocalizedString("Name", selectedLanguage)
         val labelPhoneNumber = getLocalizedString("Phone No", selectedLanguage)
 
-        // Receipt title
         val receiptTitle = when (selectedLanguage) {
             "ml" -> "പ്രവേശന ടിക്കറ്റ്"
             "kn" -> "ಪ್ರವೇಶ ಟಿಕೆಟ್"
@@ -1359,7 +986,6 @@ class PaymentActivity : AppCompatActivity() {
             else -> "Entry Ticket"
         }
 
-        // Header
         lines.add(receiptTitle.center(45))
         lines.add("")
 
@@ -1403,16 +1029,14 @@ class PaymentActivity : AppCompatActivity() {
             lines.add(" ")
             itemName.chunked(totalWidth + 10).forEach { lines.add(it.padEnd(itemColWidth)) }
             lines.add("")
-            lines.add(
-                "".padEnd(itemColWidth) +
+            lines.add("".padEnd(itemColWidth) +
                         priceStr.padStart(priceColWidth) + " " +
                         qtyStr.padStart(qtyColWidth) + " " +
                         amountStr.padStart(amountColWidth)
             )
         }
         lines.add("-".repeat(totalWidth))
-        lines.add(
-            "${labelTotalAmount.padEnd(itemColWidth + priceColWidth + qtyColWidth + 1)}: ${
+        lines.add("${labelTotalAmount.padEnd(itemColWidth + priceColWidth + qtyColWidth + 1)}: ${
                 String.format(
                     Locale.ENGLISH,
                     "%.2f",
@@ -1440,63 +1064,6 @@ class PaymentActivity : AppCompatActivity() {
         return " ".repeat(padding) + this + " ".repeat(width - this.length - padding)
     }
 
-
-    suspend fun bitmapFileToHex(
-        fileName: String,
-        cacheDir: File,
-        printerWidth: Int = 360,
-        quality: Int = 90
-    ): String? {
-        return withContext(Dispatchers.IO) {
-            try {
-                val file = File(cacheDir, fileName)
-                if (!file.exists()) return@withContext null
-
-                val originalBitmap = BitmapFactory.decodeFile(file.absolutePath)
-                    ?: return@withContext null
-
-                // Resize to printer width
-                val ratio = printerWidth.toFloat() / originalBitmap.width
-                val newHeight = (originalBitmap.height * ratio).toInt()
-                val resizedBitmap =
-                    Bitmap.createScaledBitmap(originalBitmap, printerWidth, newHeight, true)
-
-                // Convert to HEX
-                val outputStream = ByteArrayOutputStream()
-                resizedBitmap.compress(Bitmap.CompressFormat.PNG, quality, outputStream)
-
-                outputStream.toByteArray().joinToString("") { "%02X".format(it) }
-
-            } catch (e: Exception) {
-                e.printStackTrace()
-                null
-            }
-        }
-    }
-
-    suspend fun cacheImageIfNeeded(
-        context: Context,
-        imageUrl: String,
-        cacheFileName: String
-    ) = withContext(Dispatchers.IO) {
-
-        val file = File(context.cacheDir, cacheFileName)
-        if (file.exists()) return@withContext
-
-        try {
-            val url = URL(imageUrl)
-            val connection = url.openConnection()
-            connection.connect()
-
-            connection.getInputStream().use { input ->
-                FileOutputStream(file).use { output ->
-                    input.copyTo(output)
-                }
-            }
-        } catch (e: Exception) {
-            Log.e("ImageCache", "Cache failed: ${e.message}")
-        }
-    }
 
     private fun getLocalizedString(key: String, languageCode: String): String {
         return when (languageCode.lowercase()) {
@@ -1643,15 +1210,243 @@ class PaymentActivity : AppCompatActivity() {
         }
     }
 
-    private fun drawMultilineText(
-        canvas: Canvas,
+    private fun printReceiptPlutus() {
+        lifecycleScope.launch {
+            try {
+                val message = Message.obtain(null, PlutusConstants.MESSAGE_CODE)
+                val bundle = Bundle()
+                val json = createPrintJson()
+                bundle.putString(PlutusConstants.REQUEST_TAG, json)
+                message.data = bundle
+                message.replyTo = Messenger(IncomingHandler())
+                serverMessenger?.send(message)
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+    private suspend fun createPrintJson(): String {
+        val ticketItems = ticketRepository.getAllTicketsInCart()
+        val currentDate = SimpleDateFormat("dd-MMM-yyyy hh:mm a", Locale.ENGLISH).format(Date())
+
+        val headerBitmap = bitmapFileToHex("company_header.png", cacheDir) ?: ""
+        val footerBitmap = bitmapFileToHex("company_footer.png", cacheDir) ?: ""
+
+        val receiptLines =
+            if (companyRepository.getDefaultLanguage() == selectedLanguage) {
+                generateReceiptTextDefault(
+                    currentDate,
+                    transID,
+                    orderID.toString(),
+                    ticketItems,
+                    selectedLanguage!!
+                )
+            } else {
+                generateReceiptText(
+                    currentDate,
+                    transID,
+                    orderID.toString(),
+                    ticketItems,
+                    selectedLanguage!!
+                )
+            }
+
+        val header = JSONObject().apply {
+            put("ApplicationId", sessionManager.getPineLabsAppId())
+            put("UserId", "admin")
+            put("MethodId", PlutusConstants.METHOD_PRINT)
+            put("VersionNo", "1.0")
+        }
+
+        val headerImageLine = JSONObject().apply {
+            put("PrintDataType", 2)
+            put("PrinterWidth", 24)
+            put("IsCenterAligned", true)
+            put("DataToPrint", "")
+            put("ImagePath", "")
+            put("ImageData", headerBitmap)
+        }
+
+        val footerImageLine = JSONObject().apply {
+            put("PrintDataType", 2)
+            put("PrinterWidth", 24)
+            put("IsCenterAligned", true)
+            put("DataToPrint", "")
+            put("ImagePath", "")
+            put("ImageData", footerBitmap)
+
+        }
+        val smallSpaceLine = JSONObject().apply {
+            put("PrintDataType", 0)
+            put("PrinterWidth", 24)
+            put("IsCenterAligned", true)
+            put("DataToPrint", " ")
+            put("ImagePath", "")
+            put("ImageData", "")
+        }
+
+        val dataArray = JSONArray().apply {
+            put(headerImageLine)
+            receiptLines.forEach { line ->
+
+                val cleanLine = line.replace("*", "").trim()
+
+                when {
+                    cleanLine.equals("REPRINTED COPY", ignoreCase = true) ||
+                            cleanLine.equals("Entry Ticket", ignoreCase = true) -> {
+
+                        val bitmapText = line.trim()
+
+                        val boldBitmapHex = centeredBoldTextToBitmapHex(bitmapText)
+
+                        put(JSONObject().apply {
+                            put("PrintDataType", 2)
+                            put("PrinterWidth", 24)
+                            put("IsCenterAligned", true)
+                            put("DataToPrint", "")
+                            put("ImagePath", "")
+                            put("ImageData", boldBitmapHex)
+                        })
+                    }
+
+                    else -> {
+                        put(JSONObject().apply {
+                            put("PrintDataType", 0)
+                            put("PrinterWidth", 200)
+                            put("IsCenterAligned", false)
+                            put("DataToPrint", line)
+                            put("ImagePath", "")
+                            put("ImageData", "")
+                        })
+                    }
+                }
+            }
+            put(smallSpaceLine)
+            put(footerImageLine)
+            put(smallSpaceLine)
+
+        }
+
+        val detail = JSONObject().apply {
+            put("PrintRefNo", "PRN001")
+            put("SavePrintData", true)
+            put("Data", dataArray)
+        }
+
+        return JSONObject().apply {
+            put("Header", header)
+            put("Detail", detail)
+
+        }.toString()
+    }
+
+    @SuppressLint("HandlerLeak")
+    inner class IncomingHandler : Handler(Looper.getMainLooper()) {
+        override fun handleMessage(msg: Message) {
+            val response = msg.data.getString(PlutusConstants.RESPONSE_TAG)
+            if (response.isNullOrEmpty()) {
+                return
+            }
+            try {
+                val json = JSONObject(response)
+                val status = json.optString("Status")
+                if (status.equals("SUCCESS", true)) {
+                    binding.progressBar.visibility = View.GONE
+                    binding.txtPrinting.visibility = View.GONE
+                    redirect()
+                } else {
+                    binding.progressBar.visibility = View.GONE
+                    binding.txtPrinting.visibility = View.GONE
+                    redirect()
+                }
+            } catch (_: Exception) {
+
+            }
+        }
+    }
+
+    private fun centeredBoldTextToBitmapHex(
         text: String,
-        x: Float,
-        startY: Float,
-        maxWidth: Float,
-        paint: Paint,
-        lineSpacing: Float = 8f
-    ): Float {
+        bitmapWidth: Int = 384,
+        textSize: Float = 30f
+    ): String {
+
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.BLACK
+            this.textSize = textSize
+            typeface = Typeface.MONOSPACE
+            isFakeBoldText = true
+        }
+
+        val fm = paint.fontMetrics
+        val height = (fm.bottom - fm.top + 20).toInt()
+
+        val bitmap = createBitmap(bitmapWidth, height)
+        val canvas = Canvas(bitmap)
+        canvas.drawColor(Color.WHITE)
+
+        val textWidth = paint.measureText(text)
+        val x = (bitmapWidth - textWidth) / 2f
+        val y = -fm.top + 10
+
+        canvas.drawText(text, x, y, paint)
+
+        return bitmapToHex(bitmap)
+    }
+
+    private fun bitmapToHex(bitmap: Bitmap): String {
+        val width = bitmap.width
+        val height = bitmap.height
+        val bytes = ByteArray(width * height)
+
+        var index = 0
+        for (y in 0 until height) {
+            for (x in 0 until width) {
+                val pixel = bitmap[x, y]
+                val gray =
+                    (Color.red(pixel) + Color.green(pixel) + Color.blue(pixel)) / 3
+                bytes[index++] = if (gray < 128) 0x00 else 0x01
+            }
+        }
+
+        return bytes.joinToString("") { "%02X".format(it) }
+    }
+
+    fun loadBitmapFromCache(cacheDir: File, fileName: String): Bitmap? {
+        val file = File(cacheDir, fileName)
+        if (!file.exists()) return null
+        return BitmapFactory.decodeFile(file.absolutePath)
+    }
+
+    suspend fun bitmapFileToHex(fileName: String, cacheDir: File, printerWidth: Int = 360, quality: Int = 90): String? {
+        return withContext(Dispatchers.IO) {
+            try {
+                val file = File(cacheDir, fileName)
+                if (!file.exists()) return@withContext null
+
+                val originalBitmap = BitmapFactory.decodeFile(file.absolutePath)
+                    ?: return@withContext null
+
+                val ratio = printerWidth.toFloat() / originalBitmap.width
+                val newHeight = (originalBitmap.height * ratio).toInt()
+                val resizedBitmap =
+                    originalBitmap.scale(printerWidth, newHeight)
+
+                val outputStream = ByteArrayOutputStream()
+                resizedBitmap.compress(Bitmap.CompressFormat.PNG, quality, outputStream)
+
+                outputStream.toByteArray().joinToString("") { "%02X".format(it) }
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                null
+            }
+        }
+    }
+
+
+    private fun drawMultilineText(canvas: Canvas, text: String, x: Float, startY: Float, maxWidth: Float, paint: Paint, lineSpacing: Float = 8f): Float {
         val words = text.split(" ")
         var line = ""
         var y = startY
@@ -1695,4 +1490,5 @@ class PaymentActivity : AppCompatActivity() {
             finish()
         }, 1000)
     }
+
 }

@@ -2,6 +2,7 @@ package com.xenia.ticket.ui.screens.kiosk
 
 import android.annotation.SuppressLint
 import android.app.Dialog
+import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.graphics.Color
@@ -10,8 +11,10 @@ import android.os.Bundle
 import android.util.Base64
 import android.view.MotionEvent
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -115,19 +118,30 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
             if (name.isEmpty()) {
                 binding.editTextName.error = "Name is required"
                 binding.editTextName.requestFocus()
+                binding.editTextName.post {
+                    val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+                    imm.showSoftInput(binding.editTextName, InputMethodManager.SHOW_IMPLICIT)
+                }
                 return@setOnClickListener
             }
 
             if (phone.isEmpty()) {
                 binding.editTextPhoneNumber.error = "Phone number is required"
                 binding.editTextPhoneNumber.requestFocus()
+                binding.editTextPhoneNumber.post {
+                    val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+                    imm.showSoftInput(binding.editTextPhoneNumber, InputMethodManager.SHOW_IMPLICIT)
+                }
                 return@setOnClickListener
             }
-
             if (phone.length < 10) {
                 binding.editTextPhoneNumber.error =
                     "Enter valid phone number with at least 10 digits"
                 binding.editTextPhoneNumber.requestFocus()
+                binding.editTextPhoneNumber.post {
+                    val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+                    imm.showSoftInput(binding.editTextPhoneNumber, InputMethodManager.SHOW_IMPLICIT)
+                }
                 return@setOnClickListener
             }
             lifecycleScope.launch {
@@ -169,6 +183,11 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
 
     private fun initUI() {
         binding.txtName.text = getString(R.string.name)
+        binding.editTextName.requestFocus()
+        binding.editTextName.post {
+            val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.showSoftInput(binding.editTextName, InputMethodManager.SHOW_IMPLICIT)
+        }
         binding.txtPhoneNumber.text = getString(R.string.phone_number)
         binding.btnPay.text = getString(R.string.pay)
         binding.editTextName.enableInactivityReset(inactivityHandler)
@@ -179,7 +198,6 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
 
         }
         binding.linHome.setOnClickListener {
-
             val dialog = Dialog(this)
             dialog.setContentView(R.layout.dialog_quit_cart)
             dialog.setCancelable(false)
