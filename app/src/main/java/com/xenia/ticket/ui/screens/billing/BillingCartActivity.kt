@@ -42,8 +42,8 @@ import com.xenia.ticket.utils.common.Constants.CARD
 import com.xenia.ticket.utils.common.Constants.CASH
 import com.xenia.ticket.utils.common.Constants.UPI
 import com.xenia.ticket.utils.common.JwtUtils
-import com.xenia.ticket.utils.common.PlutusConstants
-import com.xenia.ticket.utils.common.PlutusServiceManager
+import com.xenia.ticket.utils.pineLab.PlutusConstants
+import com.xenia.ticket.utils.pineLab.PlutusServiceManager
 import com.xenia.ticket.utils.common.SessionManager
 
 import kotlinx.coroutines.Dispatchers
@@ -269,13 +269,9 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                 )
                 if (response.isSuccessful) {
                     val body = response.body()
-
-                    Log.d("PINE_LAB", "OrderId = ${body?.OrderId}")
-                    Log.d("PINE_LAB", transactionId)
                     if (body?.OrderId == transactionId) {
                         generatePineLabPaymentQrCode(transactionId,totalAmount)
                     } else {
-                        Log.e("PINE_LAB", "Transaction ID mismatch")
                         dismissLoader()
                     }
 
@@ -307,9 +303,9 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
         val request = JSONObject().apply {
             val formattedAmount = totalAmount * 100
             put("Header", JSONObject().apply {
-                put("ApplicationId", sessionManager.getPineLabsAppId())
+                put("ApplicationId", "d585cf57dc5f4dab9e99fc1d37fa1333")
                 put("UserId", "cashier1")
-                put("MethodId", PlutusConstants.METHOD_DO_TRANSACTION)
+                put("MethodId", PlutusConstants.METHOD_PRINT)
                 put("VersionNo", "1.0")
             })
 
@@ -319,7 +315,6 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                 put("PaymentAmount", formattedAmount.toString())
             })
         }
-        Log.d("PlutusRequest", transactionId)
         Log.d("PlutusRequest", request.toString())
         plutusManager.sendRequest(request.toString())
     }
@@ -392,13 +387,16 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
         retryCount: Int = 0
     ) {
         try {
+
             val cartTickets = ticketRepository.getAllTicketsInCart()
+
             if (cartTickets.isEmpty()) {
                 withContext(Dispatchers.Main) {
                     binding.btnPay.isEnabled = true
                 }
                 return
             }
+
             val itemsList = cartTickets.flatMap { item ->
                 (1..item.daQty).map {
                     TicketPaymentRequest.Item(
@@ -409,10 +407,14 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                     )
                 }
             }
+
             val firstTicket = cartTickets.first()
-            val imageBase64String = if (firstTicket.daImg.isNotEmpty())
-                Base64.encodeToString(firstTicket.daImg, Base64.NO_WRAP)
-            else ""
+
+            val imageBase64String =
+                if (firstTicket.daImg.isNotEmpty())
+                    Base64.encodeToString(firstTicket.daImg, Base64.NO_WRAP)
+                else ""
+
             val token = sessionManager.getToken().toString()
             val companyId = JwtUtils.getCompanyId(token)
 
@@ -423,8 +425,10 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                 }
                 return
             }
+
             val name = binding.editTextName.text.toString().trim()
             val phone = binding.editTextPhoneNumber.text.toString().trim()
+
             val request = TicketPaymentRequest(
                 CompanyId = companyId!!,
                 UserId = userId,
@@ -440,61 +444,52 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                 tPaymentDes = statusDesc,
                 Items = itemsList
             )
-            ApiResponseHandler.handleApiCall(
-                activity = this@BillingCartActivity,
-                apiCall = {
-                    withContext(Dispatchers.IO) {
-                        paymentRepository.postTicket(
-                            bearerToken = "Bearer $token",
-                            request = request
-                        )
-                    }
-                },
-                onSuccess = { response ->
-                    if (response.status.equals("Success", ignoreCase = true)
-                        && !response.receipt.isNullOrBlank()
-                    ) {
 
-                        lifecycleScope.launch {
-                            val (totalAmount) = ticketRepository.getCartStatus()
+            // ✅ NEW WAY (IMPORTANT)
+            val response = ApiResponseHandler.handleApiCall(
+                activity = this@BillingCartActivity
+            ) {
+                paymentRepository.postTicket(
+                    bearerToken = "Bearer $token",
+                    request = request
+                )
+            }
 
-                            handleTicketTransactionStatus(
-                                status = "S",
-                                orderId = response.receipt,
-                                ticket = response.ticket,
-                                totalAmount = totalAmount,
-                                companyRepository.getString(CompanyKey.PREFIX) ?: ""
-                            )
-                        }
+            val (totalAmount) = ticketRepository.getCartStatus()
 
-                    } else {
-                        binding.btnPay.isEnabled = true
-                        showSnackbar(binding.root, "Failed to post order")
-                    }
+            if (response != null &&
+                response.status.equals("Success", ignoreCase = true) &&
+                !response.receipt.isNullOrBlank()
+            ) {
+
+                withContext(Dispatchers.Main) {
+                    handleTicketTransactionStatus(
+                        status = "S",
+                        orderId = response.receipt,
+                        ticket = response.ticket,
+                        totalAmount = totalAmount,
+                        companyRepository.getString(CompanyKey.PREFIX) ?: ""
+                    )
                 }
-            )
 
-        } catch (e: HttpException) {
-
-            withContext(Dispatchers.Main) {
-                if (e.code() == 401) {
-                    AlertDialog.Builder(this@BillingCartActivity)
-                        .setTitle("Logout !!")
-                        .setMessage("You have been logged out because your account was used on another device.")
-                        .setCancelable(false)
-                        .setPositiveButton("Logout") { _, _ ->
-                            ApiResponseHandler.logoutUser(this@BillingCartActivity)
-                        }
-                        .show()
-                } else {
-                    handleRetry(e, status, statusDesc, retryCount)
+            } else {
+                withContext(Dispatchers.Main) {
+                    binding.btnPay.isEnabled = true
+                    showSnackbar(binding.root, "Failed to post order")
                 }
             }
 
-        } catch (_: Exception) {
-            withContext(Dispatchers.Main) {
-                binding.btnPay.isEnabled = true
-                showSnackbar(binding.root, "Something went wrong")
+        } catch (e: Exception) {
+
+            Log.e("BILLING_FLOW", "ERROR", e)
+
+            if (retryCount < 3) {
+                postTicketPaymentHistory(status, statusDesc, retryCount + 1)
+            } else {
+                withContext(Dispatchers.Main) {
+                    binding.btnPay.isEnabled = true
+                    showSnackbar(binding.root, "Something went wrong")
+                }
             }
         }
     }

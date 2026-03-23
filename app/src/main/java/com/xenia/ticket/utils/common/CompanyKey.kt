@@ -16,5 +16,7 @@ enum class CompanyKey(val code: String) {
 
     PREFIX("PREFIX"),
 
-    PAYMENT_GATEWAY("PAYMENT_GATEWAY")
+    PAYMENT_GATEWAY("PAYMENT_GATEWAY"),
+
+    ISPRINTQR("ISPRINTQR")
 }

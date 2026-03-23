@@ -50,13 +50,13 @@ import java.util.Date
 import java.util.Locale
 import kotlin.getValue
 import androidx.core.graphics.set
-import com.xenia.ticket.utils.common.PlutusConstants
 import org.json.JSONArray
 import org.json.JSONObject
 import androidx.lifecycle.ProcessLifecycleOwner
 import java.io.ByteArrayOutputStream
 import java.io.File
 import androidx.core.graphics.get
+import com.xenia.ticket.utils.pineLab.PlutusConstants
 
 
 class PaymentActivity : AppCompatActivity() {
@@ -123,9 +123,9 @@ class PaymentActivity : AppCompatActivity() {
                 binding.txtName.visibility = View.VISIBLE
                 binding.txtName.text = getString(R.string.pay_name) + " " + name
             }
-            if(sessionManager.getSelectedPrinter() == "KIOSK"){
+            if (sessionManager.getSelectedPrinter() == "KIOSK") {
                 configPrinter()
-            }else{
+            } else {
                 bindPineLabsService()
             }
 
@@ -153,6 +153,7 @@ class PaymentActivity : AppCompatActivity() {
             serverMessenger = Messenger(service)
             isBound = true
             Log.d("PLUTUS", "Service connected")
+            printReceiptPlutus()
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
@@ -189,6 +190,7 @@ class PaymentActivity : AppCompatActivity() {
                 }
 
             }
+
             "PineLabs" -> {
                 binding.progressBar.visibility = View.VISIBLE
                 binding.txtPrinting.visibility = View.VISIBLE
@@ -196,6 +198,7 @@ class PaymentActivity : AppCompatActivity() {
                     printReceiptPlutus()
                 }
             }
+
             else -> {
                 val printIntent = Intent(this, PrinterSettingActivity::class.java).apply {
                     putExtra("from", from)
@@ -220,6 +223,7 @@ class PaymentActivity : AppCompatActivity() {
                     initReceiptPrint()
                 }
             }
+
             POSConnect.CONNECT_FAIL,
             POSConnect.CONNECT_INTERRUPT,
             POSConnect.SEND_FAIL,
@@ -279,8 +283,6 @@ class PaymentActivity : AppCompatActivity() {
             val printer = POSPrinter(curConnect)
 
             try {
-
-                // ✅ PRINT HEADER
                 headerBitmap?.scale(550, 200)?.let { scaled ->
                     printer.printBitmap(
                         scaled,
@@ -292,12 +294,10 @@ class PaymentActivity : AppCompatActivity() {
                     scaled.recycle()
                 }
 
-                // ✅ PRINT RECEIPT SAFELY IN CHUNKS
                 printLargeBitmap(printer, receiptBitmap)
                 printer.feedLine(2)
                 delay(300)
 
-                // ✅ PRINT FOOTER
                 footerBitmap?.scale(550, 100)?.let { scaled ->
                     printer.printBitmap(
                         scaled,
@@ -315,7 +315,6 @@ class PaymentActivity : AppCompatActivity() {
                 printer.cutHalfAndFeed(1)
             }
 
-            // ✅ CLEANUP MEMORY
             receiptBitmap.recycle()
             headerBitmap?.recycle()
             footerBitmap?.recycle()
@@ -327,7 +326,13 @@ class PaymentActivity : AppCompatActivity() {
     }
 
     @SuppressLint("DefaultLocale")
-    private suspend fun generateReceiptBitmap(currentDate: String, transID: String?, orderID: String?, ticket: List<Ticket>, selectedLanguage: String): Bitmap {
+    private suspend fun generateReceiptBitmap(
+        currentDate: String,
+        transID: String?,
+        orderID: String?,
+        ticket: List<Ticket>,
+        selectedLanguage: String
+    ): Bitmap {
         val width = 576
         val paint = Paint().apply { isAntiAlias = true }
         val defaultLang = companyRepository.getDefaultLanguage().toString()
@@ -541,48 +546,68 @@ class PaymentActivity : AppCompatActivity() {
 
         // User info box
         val padding = 20f
-        val textPadding = 20f
-        val rectTop = yOffset
-        val rectRight = width - padding
-        var tempYOffset = yOffset + textPadding
-        tempYOffset += 20f
-        val imageSize = 100f
-        val textHeight = 35f * 3
-        tempYOffset += maxOf(imageSize, textHeight) + 20f
-        val rectBottom = tempYOffset + textPadding
-        paint.style = Paint.Style.STROKE
-        paint.color = Color.BLACK
         val innerPadding = 30f
-        paint.strokeWidth = 1f
         val cornerRadius = 20f
-
-        tempCanvas.drawRoundRect(
-            padding, rectTop, rectRight, rectBottom,
-            cornerRadius, cornerRadius,
-            paint
-        )
 
         paint.textAlign = Paint.Align.LEFT
         paint.textSize = 20f
         paint.typeface = Typeface.DEFAULT
+
         val textX = padding + innerPadding
-        var textY = rectTop + innerPadding - paint.fontMetrics.ascent
+        var textY = yOffset + innerPadding - paint.fontMetrics.ascent
+
         tempCanvas.drawText("$labelName : $name", textX, textY, paint)
         textY += 25f
-        if (printDefaultLang) tempCanvas.drawText(labelDName, textX, textY, paint)
-        textY += 35f
+        if (printDefaultLang) {
+            tempCanvas.drawText(labelDName, textX, textY, paint)
+            textY += 25f
+        }
+
+        textY += 10f
+
         tempCanvas.drawText("$labelPhoneNumber: $phoneNo", textX, textY, paint)
         textY += 25f
-        if (printDefaultLang) tempCanvas.drawText(labelDPhonenumber, textX, textY, paint)
-        yOffset = textY + 60f
 
-        // QR Code
-        if (from.isNullOrEmpty() || from != "billing") {
-            generateQRCode()?.let { qrBitmap ->
-                val qrSize = 300
-                val qrX = (width - qrSize) / 2f
-                tempCanvas.drawBitmap(qrBitmap, qrX, yOffset, paint)
-                yOffset += qrSize
+        if (printDefaultLang) {
+            tempCanvas.drawText(labelDPhonenumber, textX, textY, paint)
+            textY += 25f
+        }
+
+        val rectTop = yOffset
+        val rectBottom = textY + innerPadding
+        val rectLeft = padding
+        val rectRight = width - padding
+
+
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = 2f
+        paint.isAntiAlias = true
+
+
+        val halfStroke = paint.strokeWidth / 2
+
+        tempCanvas.drawRoundRect(
+            rectLeft + halfStroke,
+            rectTop + halfStroke,
+            rectRight - halfStroke,
+            rectBottom - halfStroke,
+            cornerRadius,
+            cornerRadius,
+            paint
+        )
+
+
+        yOffset = rectBottom + 10f
+
+        if (companyRepository.getPaymentQr().equals("True")) {
+            if (from.isNullOrEmpty() || from != "billing") {
+                yOffset = rectBottom + 40f
+                generateQRCode()?.let { qrBitmap ->
+                    val qrSize = 300
+                    val qrX = (width - qrSize) / 2f
+                    tempCanvas.drawBitmap(qrBitmap, qrX, yOffset, paint)
+                    yOffset += qrSize
+                }
             }
         }
 
@@ -592,8 +617,15 @@ class PaymentActivity : AppCompatActivity() {
 
         return finalBitmap
     }
+
     @SuppressLint("DefaultLocale")
-    private fun generateReceiptBitmapDefault(currentDate: String, transID: String?, orderID: String?, ticket: List<Ticket>, selectedLanguage: String): Bitmap {
+    private suspend fun generateReceiptBitmapDefault(
+        currentDate: String,
+        transID: String?,
+        orderID: String?,
+        ticket: List<Ticket>,
+        selectedLanguage: String
+    ): Bitmap {
         val width = 576
         val paint = Paint().apply { isAntiAlias = true }
 
@@ -723,47 +755,65 @@ class PaymentActivity : AppCompatActivity() {
         }
 
         yOffset += 35f
-        val padding = 15f
-        val textPadding = 0f
-        val rectTop = yOffset
-        val rectRight = width - padding
-        var tempYOffset = yOffset + textPadding
-        tempYOffset += 10f
-        val imageSize = 100f
-        val textHeight = 35f * 3
-        tempYOffset += maxOf(imageSize, textHeight) + 20f
 
-        val rectBottom = tempYOffset + textPadding
-        paint.style = Paint.Style.STROKE
-        paint.color = Color.BLACK
-        val innerPadding = 30f
-        val cornerRadius = 20f
-        paint.strokeWidth = 1.5f
-        tempCanvas.drawRoundRect(
-            padding, rectTop, rectRight, rectBottom,
-            cornerRadius, cornerRadius,
-            paint
-        )
+        val padding = 15f                 
+        val innerPadding = 25f
+        val cornerRadius = 18f
+
         paint.textAlign = Paint.Align.LEFT
         paint.textSize = 20f
         paint.typeface = Typeface.DEFAULT
-        val textX = padding + innerPadding
+        paint.isAntiAlias = true
+
+        val nameText = "$labelName : $name"
+        val phoneText = "$labelPhoneNumber: $phoneNo"
+
+        val rectLeft = padding
+        val rectRight = width - padding
+
+        val rectTop = yOffset
+
+        val textX = rectLeft + innerPadding
         var textY = rectTop + innerPadding - paint.fontMetrics.ascent
-        tempCanvas.drawText("$labelName : $name", textX, textY, paint)
+
+
+        tempCanvas.drawText(nameText, textX, textY, paint)
         textY += 30f
-        tempCanvas.drawText("$labelPhoneNumber: $phoneNo", textX, textY, paint)
 
-        yOffset = textY + 60f
+        tempCanvas.drawText(phoneText, textX, textY, paint)
+        textY += 30f
 
-        if (from.isNullOrEmpty() || from != "billing") {
-            generateQRCode()?.let { qrBitmap ->
-                val qrSize = 300
-                val qrX = (width - qrSize) / 2f
-                tempCanvas.drawBitmap(qrBitmap, qrX, yOffset, paint)
-                yOffset += qrSize
+        val rectBottom = textY + innerPadding
+
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = 1.5f
+
+        val halfStroke = paint.strokeWidth / 2
+
+        tempCanvas.drawRoundRect(
+            rectLeft + halfStroke,
+            rectTop + halfStroke,
+            rectRight - halfStroke,
+            rectBottom - halfStroke,
+            cornerRadius,
+            cornerRadius,
+            paint
+        )
+
+        yOffset = rectBottom + 10f
+
+        if (companyRepository.getPaymentQr() == "True") {
+            if (from.isNullOrEmpty() || from != "billing") {
+                yOffset = rectBottom + 50f
+                generateQRCode()?.let { qrBitmap ->
+                    val qrSize = 300
+                    val qrX = (width - qrSize) / 2f
+                    tempCanvas.drawBitmap(qrBitmap, qrX, yOffset, paint)
+                    yOffset += qrSize
+                }
             }
         }
-        val finalBitmap = createBitmap(width, (yOffset + 10f).toInt())
+        val finalBitmap = createBitmap(width, (yOffset + 20f).toInt())
         Canvas(finalBitmap).drawBitmap(tempBitmap, 0f, 0f, null)
         tempBitmap.recycle()
         return finalBitmap
@@ -800,6 +850,7 @@ class PaymentActivity : AppCompatActivity() {
             delay(150)
         }
     }
+
     private fun generateQRCode(): Bitmap? {
         val data = ticket.orEmpty()
         val qrCodeWriter = QRCodeWriter()
@@ -823,7 +874,13 @@ class PaymentActivity : AppCompatActivity() {
         }
     }
 
-    private suspend fun generateReceiptText(currentDate: String, transID: String?, orderID: String?, ticket: List<Ticket>, selectedLanguage: String): List<String> {
+    private suspend fun generateReceiptText(
+        currentDate: String,
+        transID: String?,
+        orderID: String?,
+        ticket: List<Ticket>,
+        selectedLanguage: String
+    ): List<String> {
 
         val lines = mutableListOf<String>()
         val itemWidth = 16
@@ -960,7 +1017,14 @@ class PaymentActivity : AppCompatActivity() {
         lines.add("($labelDPhone)")
         return lines
     }
-    private fun generateReceiptTextDefault(currentDate: String, transID: String?, orderID: String?, ticket: List<Ticket>, selectedLanguage: String): List<String> {
+
+    private fun generateReceiptTextDefault(
+        currentDate: String,
+        transID: String?,
+        orderID: String?,
+        ticket: List<Ticket>,
+        selectedLanguage: String
+    ): List<String> {
         val lines = mutableListOf<String>()
 
         val labelReceiptNo = getLocalizedString("Receipt No", selectedLanguage)
@@ -1029,14 +1093,16 @@ class PaymentActivity : AppCompatActivity() {
             lines.add(" ")
             itemName.chunked(totalWidth + 10).forEach { lines.add(it.padEnd(itemColWidth)) }
             lines.add("")
-            lines.add("".padEnd(itemColWidth) +
+            lines.add(
+                "".padEnd(itemColWidth) +
                         priceStr.padStart(priceColWidth) + " " +
                         qtyStr.padStart(qtyColWidth) + " " +
                         amountStr.padStart(amountColWidth)
             )
         }
         lines.add("-".repeat(totalWidth))
-        lines.add("${labelTotalAmount.padEnd(itemColWidth + priceColWidth + qtyColWidth + 1)}: ${
+        lines.add(
+            "${labelTotalAmount.padEnd(itemColWidth + priceColWidth + qtyColWidth + 1)}: ${
                 String.format(
                     Locale.ENGLISH,
                     "%.2f",
@@ -1216,6 +1282,7 @@ class PaymentActivity : AppCompatActivity() {
                 val message = Message.obtain(null, PlutusConstants.MESSAGE_CODE)
                 val bundle = Bundle()
                 val json = createPrintJson()
+                Log.d("PlusRequest", json)
                 bundle.putString(PlutusConstants.REQUEST_TAG, json)
                 message.data = bundle
                 message.replyTo = Messenger(IncomingHandler())
@@ -1226,6 +1293,7 @@ class PaymentActivity : AppCompatActivity() {
             }
         }
     }
+
     private suspend fun createPrintJson(): String {
         val ticketItems = ticketRepository.getAllTicketsInCart()
         val currentDate = SimpleDateFormat("dd-MMM-yyyy hh:mm a", Locale.ENGLISH).format(Date())
@@ -1253,7 +1321,7 @@ class PaymentActivity : AppCompatActivity() {
             }
 
         val header = JSONObject().apply {
-            put("ApplicationId", sessionManager.getPineLabsAppId())
+            put("ApplicationId", "d585cf57dc5f4dab9e99fc1d37fa1333")
             put("UserId", "admin")
             put("MethodId", PlutusConstants.METHOD_PRINT)
             put("VersionNo", "1.0")
@@ -1263,7 +1331,7 @@ class PaymentActivity : AppCompatActivity() {
             put("PrintDataType", 2)
             put("PrinterWidth", 24)
             put("IsCenterAligned", true)
-            put("DataToPrint", "")
+            put("DataToPrint", " ")
             put("ImagePath", "")
             put("ImageData", headerBitmap)
         }
@@ -1272,7 +1340,7 @@ class PaymentActivity : AppCompatActivity() {
             put("PrintDataType", 2)
             put("PrinterWidth", 24)
             put("IsCenterAligned", true)
-            put("DataToPrint", "")
+            put("DataToPrint", " ")
             put("ImagePath", "")
             put("ImageData", footerBitmap)
 
@@ -1288,40 +1356,41 @@ class PaymentActivity : AppCompatActivity() {
 
         val dataArray = JSONArray().apply {
             put(headerImageLine)
-            receiptLines.forEach { line ->
+            /*    receiptLines.forEach { line ->
 
-                val cleanLine = line.replace("*", "").trim()
+                    val cleanLine = line.replace("*", "").trim()
 
-                when {
-                    cleanLine.equals("REPRINTED COPY", ignoreCase = true) ||
-                            cleanLine.equals("Entry Ticket", ignoreCase = true) -> {
+                    when {
+                        cleanLine.equals("REPRINTED COPY", ignoreCase = true) ||
+                                cleanLine.equals("Entry Ticket", ignoreCase = true) -> {
 
-                        val bitmapText = line.trim()
+                            val bitmapText = line.trim()
 
-                        val boldBitmapHex = centeredBoldTextToBitmapHex(bitmapText)
+                            val boldBitmapHex = centeredBoldTextToBitmapHex(bitmapText)
 
-                        put(JSONObject().apply {
-                            put("PrintDataType", 2)
-                            put("PrinterWidth", 24)
-                            put("IsCenterAligned", true)
-                            put("DataToPrint", "")
-                            put("ImagePath", "")
-                            put("ImageData", boldBitmapHex)
-                        })
+                            put(JSONObject().apply {
+                                put("PrintDataType", 2)
+                                put("PrinterWidth", 24)
+                                put("IsCenterAligned", true)
+                                put("DataToPrint",
+                                    line.ifBlank { " " })
+                                put("ImagePath", "")
+                                put("ImageData", boldBitmapHex)
+                            })
+                        }
+
+                        else -> {
+                            put(JSONObject().apply {
+                                put("PrintDataType", 0)
+                                put("PrinterWidth", 200)
+                                put("IsCenterAligned", false)
+                                put("DataToPrint", line)
+                                put("ImagePath", "")
+                                put("ImageData", "")
+                            })
+                        }
                     }
-
-                    else -> {
-                        put(JSONObject().apply {
-                            put("PrintDataType", 0)
-                            put("PrinterWidth", 200)
-                            put("IsCenterAligned", false)
-                            put("DataToPrint", line)
-                            put("ImagePath", "")
-                            put("ImageData", "")
-                        })
-                    }
-                }
-            }
+                }*/
             put(smallSpaceLine)
             put(footerImageLine)
             put(smallSpaceLine)
@@ -1348,6 +1417,7 @@ class PaymentActivity : AppCompatActivity() {
             if (response.isNullOrEmpty()) {
                 return
             }
+            Log.d("PlusResponse", response)
             try {
                 val json = JSONObject(response)
                 val status = json.optString("Status")
@@ -1396,21 +1466,20 @@ class PaymentActivity : AppCompatActivity() {
     }
 
     private fun bitmapToHex(bitmap: Bitmap): String {
-        val width = bitmap.width
-        val height = bitmap.height
-        val bytes = ByteArray(width * height)
 
-        var index = 0
-        for (y in 0 until height) {
-            for (x in 0 until width) {
-                val pixel = bitmap[x, y]
-                val gray =
-                    (Color.red(pixel) + Color.green(pixel) + Color.blue(pixel)) / 3
-                bytes[index++] = if (gray < 128) 0x00 else 0x01
-            }
+        val stream = ByteArrayOutputStream()
+
+        bitmap.compress(
+            Bitmap.CompressFormat.PNG,
+            100,
+            stream
+        )
+
+        val bytes = stream.toByteArray()
+
+        return bytes.joinToString("") {
+            "%02X".format(it)
         }
-
-        return bytes.joinToString("") { "%02X".format(it) }
     }
 
     fun loadBitmapFromCache(cacheDir: File, fileName: String): Bitmap? {
@@ -1419,7 +1488,12 @@ class PaymentActivity : AppCompatActivity() {
         return BitmapFactory.decodeFile(file.absolutePath)
     }
 
-    suspend fun bitmapFileToHex(fileName: String, cacheDir: File, printerWidth: Int = 360, quality: Int = 90): String? {
+    suspend fun bitmapFileToHex(
+        fileName: String,
+        cacheDir: File,
+        printerWidth: Int = 360,
+        quality: Int = 90
+    ): String? {
         return withContext(Dispatchers.IO) {
             try {
                 val file = File(cacheDir, fileName)
@@ -1446,7 +1520,15 @@ class PaymentActivity : AppCompatActivity() {
     }
 
 
-    private fun drawMultilineText(canvas: Canvas, text: String, x: Float, startY: Float, maxWidth: Float, paint: Paint, lineSpacing: Float = 8f): Float {
+    private fun drawMultilineText(
+        canvas: Canvas,
+        text: String,
+        x: Float,
+        startY: Float,
+        maxWidth: Float,
+        paint: Paint,
+        lineSpacing: Float = 8f
+    ): Float {
         val words = text.split(" ")
         var line = ""
         var y = startY

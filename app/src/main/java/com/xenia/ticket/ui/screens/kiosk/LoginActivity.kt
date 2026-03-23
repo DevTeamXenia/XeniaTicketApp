@@ -6,7 +6,6 @@ import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.os.Bundle
 import android.provider.Settings
-import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import androidx.activity.result.contract.ActivityResultContracts
@@ -14,7 +13,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import com.xenia.ticket.R
-import com.xenia.ticket.data.repository.CompanyRepository
 import com.xenia.ticket.data.repository.LoginRepository
 import com.xenia.ticket.databinding.ActivityLoginBinding
 import com.xenia.ticket.ui.screens.billing.BillingTicketActivity
@@ -39,7 +37,6 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLoginBinding
     private val sessionManager: SessionManager by inject()
     private val loginRepository: LoginRepository by inject()
-    private val companyRepository: CompanyRepository by inject()
     private var isPasswordVisible = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -65,12 +62,9 @@ class LoginActivity : AppCompatActivity() {
         }
 
         binding.btnLogin.setOnClickListener {
-            Log.d("LOGIN", "Login button clicked")
-
             val userId = binding.edtUserId.text.toString()
             val password = binding.edtPassword.text.toString()
             if (validateAndLogin(userId, password)) {
-                Log.d("LOGIN", "Response: $userId,$password,$sharedPref")
                 performLogin(userId, password, sharedPref)
             }
         }
@@ -84,6 +78,7 @@ class LoginActivity : AppCompatActivity() {
 
         resources.updateConfiguration(config, resources.displayMetrics)
     }
+
 
     private fun setupPasswordToggle() {
         val toggleIcon = binding.imgTogglePassword
@@ -186,11 +181,7 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
 
         return screenSizeMask == Configuration.SCREENLAYOUT_SIZE_XLARGE && isPortrait
     }
-    private fun performLogin(
-        userId: String,
-        password: String,
-        sharedPref: SharedPreferences
-    ) {
+    private fun performLogin(userId: String, password: String, sharedPref: SharedPreferences) {
 
         if (!isInternetAvailable(applicationContext)) {
             hideKeyboard()
@@ -212,10 +203,7 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
 
                 if (userType != UserType.COUNTER_USER && userType != UserType.CUSTOMER ) {
                     dismissLoader()
-                    showSnackbar(
-                        binding.root,
-                        "Users role is not allowed to login"
-                    )
+                    showSnackbar(binding.root, "Users role is not allowed to login")
                     return@launch
                 }
 
@@ -232,9 +220,6 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
                         clear()
                     }
                 }
-
-                val company = companyRepository.getCompany()
-                Log.d("LOGIN", "Company value = $company")
 
                 startActivity(Intent(this@LoginActivity, SyncActivity::class.java))
                 finish()

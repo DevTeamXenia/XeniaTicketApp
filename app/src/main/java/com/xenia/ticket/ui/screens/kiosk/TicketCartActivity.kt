@@ -326,7 +326,6 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                     }
                 }
                 else -> {
-                    dismissLoader()
                     generateSibQrCode(totalAmount)
                 }
             }
@@ -399,7 +398,9 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
         }
     }
     private fun generateSibQrCode(donationAmount: Double) {
+
         val transactionId = generateNumericTransactionReferenceID()
+
         val paymentRequest = SibQrRequest(
             transactionReferenceID = transactionId,
             amount = donationAmount.toString(),
@@ -415,35 +416,53 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                     payFor = "Common",
                     request = paymentRequest
                 )
+
                 val orderId = response.transactionReferenceId
                 val upiUrl = response.intentUrl
+
                 val name = binding.editTextName.text.toString().trim()
                 val phone = binding.editTextPhoneNumber.text.toString().trim()
-                if (!orderId.isNullOrEmpty() && !upiUrl.isNullOrEmpty()) {
-                    customQRDarshanPopupDialogue.setData(
-                        donationAmount.toInt().toString(),
-                        upiUrl,
-                        orderId,
-                        name,
-                        phone
 
-                    )
+                if (!orderId.isNullOrEmpty() && !upiUrl.isNullOrEmpty()) {
+
+                    // ✅ Prevent duplicate dialog
+                    val existingDialog =
+                        supportFragmentManager.findFragmentByTag("CustomPopup")
+
+                    if (existingDialog != null && existingDialog.isAdded) {
+                        return@launch
+                    }
+
+                    val dialog = CustomQRDarshanPopupDialogue().apply {
+                        setData(
+                            donationAmount.toInt().toString(),
+                            upiUrl,
+                            orderId,
+                            name,
+                            phone
+                        )
+                    }
+
                     dismissLoader()
-                    customQRDarshanPopupDialogue.show(
-                        supportFragmentManager,
-                        "CustomPopup"
-                    )
+
+                    // ✅ SAFETY CHECK (VERY IMPORTANT)
+                    if (!isFinishing && !supportFragmentManager.isStateSaved) {
+                        dialog.show(supportFragmentManager, "CustomPopup")
+                    }
+
                 } else {
                     dismissLoader()
                     showSnackbar(binding.root, "Unable to generate QR code!")
                 }
+
             } catch (e: HttpException) {
+
+                dismissLoader()
+
                 if (e.code() == 401) {
                     AlertDialog.Builder(this@TicketCartActivity)
                         .setTitle("Logout !!")
-                        .setMessage(
-                            "You have been logged out because your account was used on another device."
-                        )
+                        .setMessage("You have been logged out because your account was used on another device.")
                         .setCancelable(false)
                         .setPositiveButton("Logout") { _, _ ->
                             ApiResponseHandler.logoutUser(this@TicketCartActivity)
@@ -452,7 +471,9 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                 } else {
                     showSnackbar(binding.root, "Unable to load settings!")
                 }
-            } catch (_: Exception) {
+
+            } catch (e: Exception) {
+
                 dismissLoader()
                 showSnackbar(binding.root, "Something went wrong!")
             }
@@ -467,12 +488,14 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
         try {
 
             val cartTickets = ticketRepository.getAllTicketsInCart()
+
             if (cartTickets.isEmpty()) {
                 withContext(Dispatchers.Main) {
                     binding.btnPay.isEnabled = true
                 }
                 return
             }
+
             val itemsList = cartTickets.flatMap { item ->
                 (1..item.daQty).map {
                     TicketPaymentRequest.Item(
@@ -489,8 +512,10 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                 firstTicket.daImg,
                 Base64.NO_WRAP
             )
+
             val token = sessionManager.getToken().toString()
             val companyId = JwtUtils.getCompanyId(token)
+
             if (token.isBlank()) {
                 withContext(Dispatchers.Main) {
                     binding.btnPay.isEnabled = true
@@ -518,91 +543,53 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                 Items = itemsList
             )
 
-
-            ApiResponseHandler.handleApiCall(
-                activity = this@TicketCartActivity,
-                apiCall = {
-                    withContext(Dispatchers.IO) {
-                        paymentRepository.postTicket(
-                            bearerToken = "Bearer $token",
-                            request = request
-                        )
-                    }
-                },
-                onSuccess = { response ->
-                    if (response.status.equals("Success", ignoreCase = true)
-                        && !response.receipt.isNullOrBlank()
-                    ) {
-
-                        lifecycleScope.launch {
-                            val (totalAmount) = ticketRepository.getCartStatus()
-                            binding.btnPay.isEnabled = true
-                            dismissLoader()
-                            handleTicketTransactionStatus(
-                                orderId = response.receipt,
-                                ticket = response.ticket,
-                                totalAmount = totalAmount,
-                                companyRepository.getString(CompanyKey.PREFIX) ?: ""
-                            )
-                        }
-
-                    } else {
-                        binding.btnPay.isEnabled = true
-                        dismissLoader()
-                        showSnackbar(binding.root, "Failed to post order")
-                    }
-                }
-            )
-
-        } catch (e: HttpException) {
-            withContext(Dispatchers.Main) {
-                if (e.code() == 401) {
-                    dismissLoader()
-                    binding.btnPay.isEnabled = true
-                    AlertDialog.Builder(this@TicketCartActivity)
-                        .setTitle("Logout !!")
-                        .setMessage("You have been logged out because your account was used on another device.")
-                        .setCancelable(false)
-                        .setPositiveButton("Logout") { _, _ ->
-                            ApiResponseHandler.logoutUser(this@TicketCartActivity)
-                        }
-                        .show()
-                } else {
-                    handleRetry(e, status, statusDesc, retryCount)
-                }
+            // ✅ NEW suspend-based call (IMPORTANT)
+            val response = ApiResponseHandler.handleApiCall(
+                activity = this@TicketCartActivity
+            ) {
+                paymentRepository.postTicket(
+                    bearerToken = "Bearer $token",
+                    request = request
+                )
             }
-        } catch (_: Exception) {
+
+            val (totalAmount) = ticketRepository.getCartStatus()
+
             withContext(Dispatchers.Main) {
+
                 dismissLoader()
                 binding.btnPay.isEnabled = true
-                showSnackbar(binding.root, "Something went wrong")
+
+                if (response != null &&
+                    response.status.equals("Success", ignoreCase = true) &&
+                    !response.receipt.isNullOrBlank()
+                ) {
+                    handleTicketTransactionStatus(
+                        orderId = response.receipt,
+                        ticket = response.ticket,
+                        totalAmount = totalAmount,
+                        companyRepository.getString(CompanyKey.PREFIX) ?: ""
+                    )
+                } else {
+                    showSnackbar(binding.root, "Failed to post order")
+                }
             }
-        }
-    }
 
-    private fun handleRetry(
-        e: Exception,
-        status: String,
-        statusDesc: String,
-        retryCount: Int,
+        } catch (e: Exception) {
 
-        ) {
-        if (e is HttpException && e.code() == 401) {
-            binding.btnPay.isEnabled = true
-            showSnackbar(binding.root, "Unauthorized: Please login again")
-            return
-        }
-
-        if (retryCount < 3) {
-            lifecycleScope.launch {
+            // ApiResponseHandler already handled 401
+            if (retryCount < 3) {
                 postTicketPaymentHistory(status, statusDesc, retryCount + 1)
+            } else {
+                withContext(Dispatchers.Main) {
+                    dismissLoader()
+                    binding.btnPay.isEnabled = true
+                    showSnackbar(binding.root, "Something went wrong")
+                }
             }
-        } else {
-            binding.btnPay.isEnabled = true
-            dismissLoader()
-            showSnackbar(binding.root, "Failed: ${e.message}")
         }
     }
+
 
     private fun handleTicketTransactionStatus(
         orderId: String,

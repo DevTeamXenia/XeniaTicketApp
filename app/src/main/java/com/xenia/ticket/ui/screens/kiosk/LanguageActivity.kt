@@ -6,10 +6,7 @@ import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.view.View
-import android.view.WindowManager
-import android.widget.Button
 import android.widget.LinearLayout
-import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -29,7 +26,6 @@ import com.xenia.ticket.ui.dialog.CustomInactivityDialog
 import com.xenia.ticket.ui.dialog.CustomInternetAvailabilityDialog
 import com.xenia.ticket.ui.screens.billing.BillingTicketActivity
 import com.xenia.ticket.utils.common.ApiResponseHandler
-import com.xenia.ticket.utils.common.CommonMethod.dismissLoader
 import com.xenia.ticket.utils.common.CommonMethod.showSnackbar
 import com.xenia.ticket.utils.common.CompanyKey
 import com.xenia.ticket.utils.common.Constants.LANGUAGE_ENGLISH
@@ -41,7 +37,6 @@ import com.xenia.ticket.utils.common.Constants.LANGUAGE_PUNJABI
 import com.xenia.ticket.utils.common.Constants.LANGUAGE_SINHALA
 import com.xenia.ticket.utils.common.Constants.LANGUAGE_TAMIL
 import com.xenia.ticket.utils.common.Constants.LANGUAGE_TELUGU
-import com.xenia.ticket.utils.common.JwtUtils
 import com.xenia.ticket.utils.common.SessionManager
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
@@ -61,7 +56,6 @@ class LanguageActivity : AppCompatActivity(),
     private val ticketRepository: TicketRepository by inject()
     private val initialSyncManager: InitialSyncManager by inject()
     private var enabledLanguages: List<String> = emptyList()
-    private var isSubscriptionDialogShown = false
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -83,14 +77,6 @@ class LanguageActivity : AppCompatActivity(),
     override fun onResume() {
         lifecycleScope.launch {
             ticketRepository.clearAllData()
-            if (!isSubscriptionDialogShown) {
-//                lifecycleScope.launch {
-//                    sessionManager.getToken()?.let { token ->
-//                        showSubscriptionDialog(token)
-//                        isSubscriptionDialogShown = true
-//                    }
-//                }
-            }
             val gateway = companyRepository.getGateway()
             if (!gateway.isNullOrEmpty()) {
                 setBankLogo()
@@ -115,10 +101,8 @@ class LanguageActivity : AppCompatActivity(),
 
             val imageUrl = if (isLandscape) {
                 companyRepository.getString(CompanyKey.COMPANYLOGO_L)
-                    ?: companyRepository.getString(CompanyKey.COMPANYLOGO_P)
             } else {
                 companyRepository.getString(CompanyKey.COMPANYLOGO_P)
-                    ?: companyRepository.getString(CompanyKey.COMPANYLOGO_L)
             }
 
             if (imageUrl.isNullOrBlank()) return@launch
@@ -207,14 +191,12 @@ class LanguageActivity : AppCompatActivity(),
                 val token = sessionManager.getToken()
                 if (token.isNullOrEmpty()) {
                     showSnackbar(binding.root, "Invalid session. Please login again.")
-                    dismissLoader()
                     return@launch
                 }
 
                 val company = companyRepository.getCompany()
                 if (company == null) {
                     showSnackbar(binding.root, "Company data missing in database!")
-                    dismissLoader()
                     return@launch
                 }
                 val gateway = companyRepository.getString(CompanyKey.PAYMENT_GATEWAY)
@@ -260,7 +242,6 @@ class LanguageActivity : AppCompatActivity(),
                 Log.e("loadCompanyDetails", "Other exception caught", e)
                 showSnackbar(binding.root, "Unable to load settings!")
             } finally {
-                dismissLoader()
             }
         }
     }
@@ -276,102 +257,6 @@ class LanguageActivity : AppCompatActivity(),
                 startActivity(Intent(this@LanguageActivity, TicketActivity::class.java))
             }
         }
-    }
-    private fun showSubscriptionDialog(token: String) {
-
-        val companyName = JwtUtils.getCompanyName(token)
-        val daysRemaining = JwtUtils.getRemainingDays(token)
-
-        if (companyName.isNullOrEmpty() || daysRemaining == null) return
-        if (daysRemaining > 15) return
-
-        val dialogView = layoutInflater.inflate(R.layout.dialog_subscription, null)
-
-        val txtMessage = dialogView.findViewById<TextView>(R.id.txtMessage)
-        val txtCompany = dialogView.findViewById<TextView>(R.id.txtCompany)
-        val btnLogout = dialogView.findViewById<Button>(R.id.btnRenew)
-        val btnPaid = dialogView.findViewById<Button>(R.id.btnPaid)
-
-        txtCompany.text = "Company : $companyName"
-
-        val userType = JwtUtils.getUserType(token)
-
-        val dialog = AlertDialog.Builder(this)
-            .setView(dialogView)
-            .setCancelable(false)
-            .create()
-
-        dialog.setCanceledOnTouchOutside(false)
-
-        dialog.setOnShowListener {
-            dialog.window?.clearFlags(
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-            )
-        }
-
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
-
-        val userTypeEnum =
-            UserType.values().find { it.value.equals(userType, true) }
-                ?: UserType.UNKNOWN
-        fun dismissDialogImmediately() {
-
-            btnPaid.isEnabled = false
-            btnLogout.isEnabled = false
-
-            dialog.dismiss()
-        }
-
-        if (userTypeEnum == UserType.COUNTER_USER) {
-
-            btnLogout.visibility = View.VISIBLE
-            btnLogout.text = "LOGOUT"
-            btnLogout.setOnClickListener {
-                dialog.dismiss()
-                ApiResponseHandler.logoutUser(this)
-            }
-
-            btnPaid.visibility = View.VISIBLE
-            btnPaid.text = if (daysRemaining <= 0) "RENEW NOW" else "SKIP NOW"
-
-            btnPaid.setOnClickListener {
-                dismissDialogImmediately()
-            }
-
-        } else {
-
-            if (daysRemaining <= 0) {
-
-                btnLogout.visibility = View.VISIBLE
-                btnLogout.text = "LOGOUT"
-                btnLogout.setOnClickListener {
-                    dialog.dismiss()
-                    ApiResponseHandler.logoutUser(this)
-                }
-
-                btnPaid.visibility = View.GONE
-
-            } else {
-
-                btnLogout.visibility = View.GONE
-
-                btnPaid.visibility = View.VISIBLE
-                btnPaid.text = "SKIP NOW"
-
-                btnPaid.setOnClickListener {
-                    dismissDialogImmediately()
-                }
-            }
-        }
-
-        txtMessage.text =
-            if (daysRemaining <= 0) {
-                "Your subscription has expired. Please renew licence to continue."
-            } else {
-                "Your subscription will expire in $daysRemaining days. Please renew to avoid interruption."
-            }
-
-        dialog.show()
     }
 
 
@@ -423,18 +308,14 @@ class LanguageActivity : AppCompatActivity(),
     }
     private fun refreshAllApis() {
         lifecycleScope.launch {
-            binding.swipeRefreshLayout?.isRefreshing = true
-
+            binding.swipeRefreshLayout.isRefreshing = true
             val result = initialSyncManager.startInitialLoad()
-
-            binding.swipeRefreshLayout?.isRefreshing = false
-
+            binding.swipeRefreshLayout.isRefreshing = false
             val company = companyRepository.getCompany()
             company?.applicationId?.let { newAppId ->
                 sessionManager.clearPineLabsAppId()
-                sessionManager.savePineLabsAppId(newAppId.toString())
+                sessionManager.savePineLabsAppId(newAppId)
             }
-
             when (result) {
                 is SyncResult.Success -> {
                     showSnackbar(binding.root, "Data Refreshed")

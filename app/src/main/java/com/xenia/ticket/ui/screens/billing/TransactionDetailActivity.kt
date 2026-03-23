@@ -20,14 +20,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.xenia.ticket.R
 import com.xenia.ticket.data.network.model.TransactionItem
 import com.xenia.ticket.data.repository.CompanyRepository
 import com.xenia.ticket.data.repository.ReportRepository
-import com.xenia.ticket.data.room.entity.Ticket
 import com.xenia.ticket.databinding.ActivityTransactionDetailBinding
 import com.xenia.ticket.ui.adapter.TransactionDetailAdapter
-import com.xenia.ticket.utils.common.PlutusConstants
+import com.xenia.ticket.utils.pineLab.PlutusConstants
 import com.xenia.ticket.utils.common.SessionManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

@@ -130,92 +130,83 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
     }
 
     private fun getCategory() {
-        try {
-            val token = sessionManager.getToken()
 
-            if (token.isNullOrEmpty()) {
-                binding.ticketCat.visibility = View.GONE
-                return
-            }
+        val token = sessionManager.getToken()
 
-            ApiResponseHandler.handleApiCall(
-                activity = this@TicketActivity,
-                apiCall = {
-                    true
-                },
-                onSuccess = { isLoaded ->
-                    if (!isLoaded) {
-                        showSnackbar(binding.root, "Category sync failed, using local data")
-                        binding.ticketCat.visibility = View.GONE
-                        return@handleApiCall
-                    }
+        if (token.isNullOrEmpty()) {
+            binding.ticketCat.visibility = View.GONE
+            return
+        }
 
-                    lifecycleScope.launch {
-                        val categoryEntities = withContext(Dispatchers.IO) {
-                            categoryRepository.getAllCategory()
-                        }
+        lifecycleScope.launch {
 
-                        if (categoryEntities.isEmpty()) {
-                            binding.ticketCat.visibility = View.GONE
-                            return@launch
-                        }
+            try {
 
-                        val activeCategories = categoryEntities.filter { it.categoryActive }
-
-                        if (activeCategories.isEmpty()) {
-                            binding.ticketCat.visibility = View.GONE
-                            return@launch
-                        }
-
-                        binding.ticketCat.visibility =
-                            if (companyRepository.getBoolean(CompanyKey.CATEGORY_ENABLE))
-                                View.VISIBLE
-                            else View.GONE
-
-                        val selectedCategory = activeCategories.first()
-                        selectedCategoryId = selectedCategory.categoryId
-
-                        val categories = activeCategories.map { entity ->
-                            Category(
-                                categoryId = entity.categoryId,
-                                categoryName = entity.categoryName,
-                                categoryNameMa = entity.categoryNameMa,
-                                categoryNameTa = entity.categoryNameTa,
-                                categoryNameTe = entity.categoryNameTe,
-                                categoryNameKa = entity.categoryNameKa,
-                                categoryNameHi = entity.categoryNameHi,
-                                categoryNameMr = entity.categoryNameMr,
-                                categoryNamePa = entity.categoryNamePa,
-                                categoryNameSi = entity.categoryNameSi,
-                                CategoryCompanyId = entity.CategoryCompanyId,
-                                categoryCreatedDate = entity.categoryCreatedDate,
-                                categoryCreatedBy = entity.categoryCreatedBy,
-                                categoryModifiedDate = entity.categoryModifiedDate,
-                                categoryModifiedBy = entity.categoryModifiedBy,
-                                categoryActive = entity.categoryActive
-                            )
-                        }
-                        categoryAdapter.updateCategories(categories)
-                        getTickets(selectedCategoryId)
-                    }
+                // ✅ Call suspend handler properly
+                val isLoaded = ApiResponseHandler.handleApiCall(
+                    activity = this@TicketActivity
+                ) {
+                    true // dummy (only for 401 handling)
                 }
-            )
-        } catch (e: HttpException) {
-            if (e.code() == 401) {
-                AlertDialog.Builder(this@TicketActivity)
-                    .setTitle("Logout !!")
-                    .setMessage("You have been logged out because your account was used on another device.")
-                    .setCancelable(false)
-                    .setPositiveButton("Logout") { _, _ ->
-                        ApiResponseHandler.logoutUser(this@TicketActivity)
-                    }
-                    .show()
 
-            } else {
-                throw e
+                if (isLoaded == null || !isLoaded) {
+                    showSnackbar(binding.root, "Category sync failed, using local data")
+                    binding.ticketCat.visibility = View.GONE
+                    return@launch
+                }
+
+                val categoryEntities = withContext(Dispatchers.IO) {
+                    categoryRepository.getAllCategory()
+                }
+
+                if (categoryEntities.isEmpty()) {
+                    binding.ticketCat.visibility = View.GONE
+                    return@launch
+                }
+
+                val activeCategories = categoryEntities.filter { it.categoryActive }
+
+                if (activeCategories.isEmpty()) {
+                    binding.ticketCat.visibility = View.GONE
+                    return@launch
+                }
+
+                binding.ticketCat.visibility =
+                    if (companyRepository.getBoolean(CompanyKey.CATEGORY_ENABLE))
+                        View.VISIBLE
+                    else View.GONE
+
+                val selectedCategory = activeCategories.first()
+                selectedCategoryId = selectedCategory.categoryId
+
+                val categories = activeCategories.map { entity ->
+                    Category(
+                        categoryId = entity.categoryId,
+                        categoryName = entity.categoryName,
+                        categoryNameMa = entity.categoryNameMa,
+                        categoryNameTa = entity.categoryNameTa,
+                        categoryNameTe = entity.categoryNameTe,
+                        categoryNameKa = entity.categoryNameKa,
+                        categoryNameHi = entity.categoryNameHi,
+                        categoryNameMr = entity.categoryNameMr,
+                        categoryNamePa = entity.categoryNamePa,
+                        categoryNameSi = entity.categoryNameSi,
+                        CategoryCompanyId = entity.CategoryCompanyId,
+                        categoryCreatedDate = entity.categoryCreatedDate,
+                        categoryCreatedBy = entity.categoryCreatedBy,
+                        categoryModifiedDate = entity.categoryModifiedDate,
+                        categoryModifiedBy = entity.categoryModifiedBy,
+                        categoryActive = entity.categoryActive
+                    )
+                }
+
+                categoryAdapter.updateCategories(categories)
+
+                getTickets(selectedCategoryId)
+
+            } catch (e: Exception) {
+                showSnackbar(binding.root, "Error loading tickets")
             }
-        } catch (_: Exception) {
-            showSnackbar(binding.root, "Error loading tickets")
         }
     }
 

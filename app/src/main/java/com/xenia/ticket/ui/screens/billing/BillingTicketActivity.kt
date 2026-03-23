@@ -46,7 +46,7 @@ import com.xenia.ticket.utils.common.CommonMethod.setLocale
 import com.xenia.ticket.utils.common.CommonMethod.showSnackbar
 import com.xenia.ticket.utils.common.CompanyKey
 import com.xenia.ticket.utils.common.JwtUtils
-import com.xenia.ticket.utils.common.PlutusServiceManager
+import com.xenia.ticket.utils.pineLab.PlutusServiceManager
 import com.xenia.ticket.utils.common.SessionManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -170,6 +170,7 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
             }
         }
     }
+
     fun LabelSettings.getDisplayNameByLanguage(context: Context): String {
         val lang = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
             context.resources.configuration.locales[0].language
@@ -191,6 +192,7 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
 
         return display?.takeIf { it.isNotBlank() } ?: displayName
     }
+
     private fun setupListener() {
 
         binding.navView.setNavigationItemSelectedListener { item ->
@@ -202,6 +204,7 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
                     finish()
                     false
                 }
+
                 R.id.nav_refresh -> {
                     binding.drawerLayout.closeDrawer(GravityCompat.START)
                     refreshAllApis()
@@ -234,12 +237,14 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
                     binding.drawerLayout.closeDrawer(GravityCompat.START)
                     true
                 }
+
                 R.id.nav_transaction -> {
 
                     startActivity(Intent(applicationContext, TransactionReportActivity::class.java))
                     binding.drawerLayout.closeDrawer(GravityCompat.START)
                     true
                 }
+
                 R.id.nav_logout -> {
                     binding.drawerLayout.closeDrawer(GravityCompat.START)
 
@@ -280,168 +285,151 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
         lifecycleScope.launch {
             val isCategoryEnabled = companyRepository.getString(CompanyKey.CATEGORY_ENABLE)
             if (isCategoryEnabled == "True") {
-                if (getScreenSize(this@BillingTicketActivity).equals("Normal")){
-                    spanCount=3
+                if (getScreenSize(this@BillingTicketActivity).equals("Normal")) {
+                    spanCount = 3
                 }
                 getCategory()
             } else {
-                if (getScreenSize(this@BillingTicketActivity).equals("Normal")){
-                    spanCount=3
+                if (getScreenSize(this@BillingTicketActivity).equals("Normal")) {
+                    spanCount = 3
                 }
                 getTickets(selectedCategoryId)
-                binding.ticketCategory.visibility= View.GONE
+                binding.ticketCategory.visibility = View.GONE
             }
         }
     }
+
     private fun getCategory() {
-        try {
-            val token = sessionManager.getToken()
 
-            if (token.isNullOrEmpty()) {
-                binding.ticketCat.visibility = View.GONE
-                return
-            }
+        val token = sessionManager.getToken()
 
-            ApiResponseHandler.handleApiCall(
-                activity = this@BillingTicketActivity,
-                apiCall = {
+        if (token.isNullOrEmpty()) {
+            binding.ticketCat.visibility = View.GONE
+            return
+        }
+
+        lifecycleScope.launch {
+
+            try {
+
+                // ✅ Dummy call just to trigger 401 handling (if needed)
+                val result = ApiResponseHandler.handleApiCall(
+                    activity = this@BillingTicketActivity
+                ) {
                     true
-                },
-                onSuccess = {
-                    lifecycleScope.launch {
-                        val categoryEntities = withContext(Dispatchers.IO) {
-                            categoryRepository.getAllCategory()
-                        }
-
-                        if (categoryEntities.isEmpty()) {
-                            binding.ticketCat.visibility = View.GONE
-                            return@launch
-                        }
-
-                        val activeCategories = categoryEntities.filter { it.categoryActive }
-
-                        if (activeCategories.isEmpty()) {
-                            binding.ticketCat.visibility = View.GONE
-                            return@launch
-                        }
-
-                        binding.ticketCat.visibility =
-                            if (companyRepository.getBoolean(CompanyKey.CATEGORY_ENABLE))
-                                View.VISIBLE
-                            else View.GONE
-
-                        val selectedCategory = activeCategories.first()
-                        selectedCategoryId = selectedCategory.categoryId
-
-                        val categories = activeCategories.map { entity ->
-                            Category(
-                                categoryId = entity.categoryId,
-                                categoryName = entity.categoryName,
-                                categoryNameMa = entity.categoryNameMa,
-                                categoryNameTa = entity.categoryNameTa,
-                                categoryNameTe = entity.categoryNameTe,
-                                categoryNameKa = entity.categoryNameKa,
-                                categoryNameHi = entity.categoryNameHi,
-                                categoryNameMr = entity.categoryNameMr,
-                                categoryNamePa = entity.categoryNamePa,
-                                categoryNameSi = entity.categoryNameSi,
-                                CategoryCompanyId = entity.CategoryCompanyId,
-                                categoryCreatedDate = entity.categoryCreatedDate,
-                                categoryCreatedBy = entity.categoryCreatedBy,
-                                categoryModifiedDate = entity.categoryModifiedDate,
-                                categoryModifiedBy = entity.categoryModifiedBy,
-                                categoryActive = entity.categoryActive
-                            )
-                        }
-
-                        categoryAdapter.updateCategories(categories)
-                        getTickets(selectedCategoryId)
-                    }
                 }
-            )
 
-        } catch (e: HttpException) {
-            if (e.code() == 401) {
-                AlertDialog.Builder(this@BillingTicketActivity)
-                    .setTitle("Logout !!")
-                    .setMessage("You have been logged out because your account was used on another device.")
-                    .setCancelable(false)
-                    .setPositiveButton("Logout") { _, _ ->
-                        ApiResponseHandler.logoutUser(this@BillingTicketActivity)
-                    }
-                    .show()
-            } else {
-                throw e
+                if (result == null) return@launch
+
+                val categoryEntities = withContext(Dispatchers.IO) {
+                    categoryRepository.getAllCategory()
+                }
+
+                if (categoryEntities.isEmpty()) {
+                    binding.ticketCat.visibility = View.GONE
+                    return@launch
+                }
+
+                val activeCategories = categoryEntities.filter { it.categoryActive }
+
+                if (activeCategories.isEmpty()) {
+                    binding.ticketCat.visibility = View.GONE
+                    return@launch
+                }
+
+                binding.ticketCat.visibility =
+                    if (companyRepository.getBoolean(CompanyKey.CATEGORY_ENABLE))
+                        View.VISIBLE
+                    else View.GONE
+
+                val selectedCategory = activeCategories.first()
+                selectedCategoryId = selectedCategory.categoryId
+
+                val categories = activeCategories.map { entity ->
+                    Category(
+                        categoryId = entity.categoryId,
+                        categoryName = entity.categoryName,
+                        categoryNameMa = entity.categoryNameMa,
+                        categoryNameTa = entity.categoryNameTa,
+                        categoryNameTe = entity.categoryNameTe,
+                        categoryNameKa = entity.categoryNameKa,
+                        categoryNameHi = entity.categoryNameHi,
+                        categoryNameMr = entity.categoryNameMr,
+                        categoryNamePa = entity.categoryNamePa,
+                        categoryNameSi = entity.categoryNameSi,
+                        CategoryCompanyId = entity.CategoryCompanyId,
+                        categoryCreatedDate = entity.categoryCreatedDate,
+                        categoryCreatedBy = entity.categoryCreatedBy,
+                        categoryModifiedDate = entity.categoryModifiedDate,
+                        categoryModifiedBy = entity.categoryModifiedBy,
+                        categoryActive = entity.categoryActive
+                    )
+                }
+
+                categoryAdapter.updateCategories(categories)
+
+                getTickets(selectedCategoryId)
+
+            } catch (e: Exception) {
+                showSnackbar(binding.root, "Error loading categories")
             }
-        } catch (e: Exception) {
-            showSnackbar(binding.root, "Error loading categories")
         }
     }
 
     private fun getTickets(categoryId: Int? = null) {
-        try {
-            val token = sessionManager.getToken()
-            if (token.isNullOrEmpty()) return
 
-            ApiResponseHandler.handleApiCall(
-                activity = this@BillingTicketActivity,
-                apiCall = {
-                   true
-                },
-                onSuccess = { loadResult ->
-                    lifecycleScope.launch {
-                        try {
-                            if (!loadResult) {
-                                showSnackbar(binding.root, "Ticket sync failed, using local data")
-                            }
-                            val tickets = if (categoryId != null && categoryId != 0) {
-                                activeTicketRepository.getTicketsByCategory(categoryId)
-                            } else {
-                                activeTicketRepository.getAllTickets()
-                            }
-                            if (tickets.isEmpty()) {
-                                ticketAdapter.updateTickets(emptyList())
-                                ticketAdapter.updateDbItemsMap(emptyMap())
-                                showSnackbar(binding.root, "No tickets available")
-                                return@launch
-                            }
-                            val dbItems = withContext(Dispatchers.IO) {
-                                ticketRepository.getAllTicketsInCart().associateBy { it.ticketId }
-                            }
+        val token = sessionManager.getToken()
+        if (token.isNullOrEmpty()) return
 
-                            val ticketDtos = tickets.map { it.toDto() }
-                            ticketAdapter.updateTickets(ticketDtos)
-                            ticketAdapter.updateDbItemsMap(dbItems)
+        lifecycleScope.launch {
 
-                            binding.ticketRecycler.layoutManager = GridLayoutManager(
-                                this@BillingTicketActivity,
-                                spanCount
-                            )
-                            binding.ticketRecycler.adapter = ticketAdapter
+            try {
 
-                        } finally {
-
-                        }
-                    }
+                val result = ApiResponseHandler.handleApiCall(
+                    activity = this@BillingTicketActivity
+                ) {
+                    true
                 }
-            )
-        } catch (e: HttpException) {
-            if (e.code() == 401) {
-                AlertDialog.Builder(this@BillingTicketActivity)
-                    .setTitle("Logout !!")
-                    .setMessage("You have been logged out because your account was used on another device.")
-                    .setCancelable(false)
-                    .setPositiveButton("Logout") { _, _ ->
-                        ApiResponseHandler.logoutUser(this@BillingTicketActivity)
-                    }
-                    .show()
-            } else {
-                throw e
+
+                if (result == null) return@launch
+
+                if (!result) {
+                    showSnackbar(binding.root, "Ticket sync failed, using local data")
+                }
+
+                val tickets = if (categoryId != null && categoryId != 0) {
+                    activeTicketRepository.getTicketsByCategory(categoryId)
+                } else {
+                    activeTicketRepository.getAllTickets()
+                }
+
+                if (tickets.isEmpty()) {
+                    ticketAdapter.updateTickets(emptyList())
+                    ticketAdapter.updateDbItemsMap(emptyMap())
+                    showSnackbar(binding.root, "No tickets available")
+                    return@launch
+                }
+
+                val dbItems = withContext(Dispatchers.IO) {
+                    ticketRepository.getAllTicketsInCart().associateBy { it.ticketId }
+                }
+
+                val ticketDtos = tickets.map { it.toDto() }
+
+                ticketAdapter.updateTickets(ticketDtos)
+                ticketAdapter.updateDbItemsMap(dbItems)
+
+                binding.ticketRecycler.layoutManager =
+                    GridLayoutManager(this@BillingTicketActivity, spanCount)
+
+                binding.ticketRecycler.adapter = ticketAdapter
+
+            } catch (e: Exception) {
+                showSnackbar(binding.root, "Error loading tickets")
             }
-        } catch (e: Exception) {
-            showSnackbar(binding.root, "Error loading categories")
         }
     }
+
     override fun onCategoryClick(category: Category) {
         selectedCategoryId = category.categoryId
         getTickets(selectedCategoryId)
@@ -483,14 +471,16 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
             updateCartUI()
         }
     }
+
     override fun onRestart() {
         super.onRestart()
         setupRecyclerViews()
-     getTickets(selectedCategoryId)
+        getTickets(selectedCategoryId)
         lifecycleScope.launch {
             updateCartUI()
         }
     }
+
     fun ActiveTicket.toDto() = TicketDto(
         ticketId = ticketId,
         ticketName = ticketName,
@@ -668,7 +658,7 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
                 is SyncResult.Success -> {
                     showSnackbar(binding.root, "Data Refreshed")
                     val company = companyRepository.getCompany()
-                    company?.applicationId?.let { newAppId->
+                    company?.applicationId?.let { newAppId ->
                         sessionManager.clearPineLabsAppId()
                         sessionManager.savePineLabsAppId(newAppId.toString())
                     }
@@ -677,6 +667,7 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
                     getTickets()
                     updateCartUI()
                 }
+
                 is SyncResult.Error -> {
                     val errorMessage = result.message.ifEmpty { "Unknown sync error" }
                     val code = result.code // Int?
@@ -702,6 +693,7 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
             }
         }
     }
+
     private fun showRetryDialog(msg: String) {
         AlertDialog.Builder(this)
             .setTitle("Sync Failed")
@@ -715,6 +707,7 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
             }
             .show()
     }
+
     private fun showLoader(show: Boolean) {
         binding.loaderView?.visibility = if (show) View.VISIBLE else View.GONE
 

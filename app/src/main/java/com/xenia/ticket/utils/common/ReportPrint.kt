@@ -15,6 +15,8 @@ import com.urovo.sdk.print.PrinterProviderImpl
 import com.xenia.ticket.data.network.model.ItemSummaryReportResponse
 import com.xenia.ticket.data.network.model.OfferItem
 import com.xenia.ticket.data.repository.CompanyRepository
+import com.xenia.ticket.utils.pineLab.PineLabsPrinter
+import com.xenia.ticket.utils.pineLab.PlutusConstants
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine

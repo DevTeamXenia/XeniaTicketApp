@@ -1,72 +1,71 @@
 package com.xenia.ticket.utils.common
 
-
-
 import android.app.Activity
 import android.content.Intent
 import androidx.appcompat.app.AlertDialog
 import com.xenia.ticket.data.repository.CategoryRepository
 import com.xenia.ticket.data.repository.TicketRepository
 import com.xenia.ticket.ui.screens.kiosk.LoginActivity
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import retrofit2.HttpException
 import org.koin.android.ext.android.inject
 import android.widget.Toast
+
 object ApiResponseHandler {
 
-    fun <T> handleApiCall(
+    suspend fun <T> handleApiCall(
         activity: Activity,
-        apiCall: suspend () -> T,
-        onSuccess: (T) -> Unit
-    ) {
-        android.util.Log.d("ApiResponseHandler", "handleApiCall started")
-        CoroutineScope(Dispatchers.Main).launch {
-            try {
-                val result = apiCall()
-                android.util.Log.d("ApiResponseHandler", "apiCall succeeded, calling onSuccess")
-                onSuccess(result)
-            } catch (e: HttpException) {
-                android.util.Log.e("ApiResponseHandler", "HttpException caught: ${e.code()}", e)
-                if (e.code() == 401) {
-                    val errorBody = e.response()?.errorBody()?.string()
-                    val message = try {
-                        JSONObject(errorBody ?: "").optString("message")
-                    } catch (ex: Exception) {
-                        null
-                    }
+        apiCall: suspend () -> T
+    ): T? {
+        return try {
+            android.util.Log.d("ApiResponseHandler", "API CALL START")
+
+            val result = withContext(Dispatchers.IO) {
+                apiCall()
+            }
+
+            android.util.Log.d("ApiResponseHandler", "API CALL SUCCESS")
+            result
+
+        } catch (e: HttpException) {
+
+            android.util.Log.e("ApiResponseHandler", "HTTP ERROR: ${e.code()}", e)
+
+            if (e.code() == 401) {
+
+                val errorBody = e.response()?.errorBody()?.string()
+                val message = try {
+                    JSONObject(errorBody ?: "").optString("message")
+                } catch (_: Exception) {
+                    null
+                }
+
+                withContext(Dispatchers.Main) {
 
                     if (!message.isNullOrBlank()) {
-                            android.util.Log.d("ApiResponseHandler", "Showing dialog for other 401")
-                            AlertDialog.Builder(activity)
-                                .setTitle("Logout !!")
-                                .setMessage(message)
-                                .setCancelable(false)
-                                .setPositiveButton("Logout") { _, _ ->
-                                    logoutUser(activity)
-                                }
-                                .show()
-
-                        } else if (message == "You have been logged out because your account was used on another device.") {
-                        android.util.Log.d("ApiResponseHandler", "Showing Toast for multi-device logout")
-                        Toast.makeText(activity, message, Toast.LENGTH_LONG).show()
-                        clearLocalData(activity)
-                        logoutUser(activity)
+                        AlertDialog.Builder(activity)
+                            .setTitle("Logout !!")
+                            .setMessage(message)
+                            .setCancelable(false)
+                            .setPositiveButton("Logout") { _, _ ->
+                                logoutUser(activity)
+                            }
+                            .show()
                     } else {
-                        android.util.Log.d("ApiResponseHandler", "Silent logout for plain 401")
+                        Toast.makeText(activity, "Session expired", Toast.LENGTH_LONG).show()
                         clearLocalData(activity)
                         logoutUser(activity)
                     }
-                } else {
-                    android.util.Log.e("ApiResponseHandler", "Non-401 HttpException: ${e.code()} - ${e.message()}", e)
-                    throw e
                 }
-            } catch (e: Exception) {
-                android.util.Log.e("ApiResponseHandler", "Other exception in handleApiCall", e)
-                throw e
             }
+
+            null
+
+        } catch (e: Exception) {
+            android.util.Log.e("ApiResponseHandler", "GENERAL ERROR", e)
+            null
         }
     }
 
@@ -84,13 +83,11 @@ object ApiResponseHandler {
         activity.finish()
     }
 
-    private fun clearLocalData(activity: Activity) {
+    private suspend fun clearLocalData(activity: Activity) {
         val ticketRepository: TicketRepository by activity.inject()
         val categoryRepository: CategoryRepository by activity.inject()
 
-        CoroutineScope(Dispatchers.IO).launch {
-            ticketRepository.clearAllData()
-            categoryRepository.clearAllData()
-        }
+        ticketRepository.clearAllData()
+        categoryRepository.clearAllData()
     }
 }

@@ -11,7 +11,6 @@ object ApiClient {
    private const val BASE_URL = "https://eticketapi.xeniapos.com/api/"
    // private const val BASE_URL = "https://192.168.1.38:8085/api/"
 
-
     val okHttpClient = OkHttpClient.Builder()
         .connectTimeout(60, TimeUnit.SECONDS)
         .readTimeout(90, TimeUnit.SECONDS)
@@ -26,6 +25,7 @@ object ApiClient {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
+
     val apiService: ApiService by lazy {
         retrofit.create(ApiService::class.java)
     }

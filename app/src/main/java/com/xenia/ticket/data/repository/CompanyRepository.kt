@@ -114,6 +114,11 @@ class CompanyRepository(
     suspend fun getDefaultLanguage(): String? {
         return getString(CompanyKey.DEFAULT_LANGUAGE)
     }
+
+    suspend fun getPaymentQr(): String? {
+        return getString(CompanyKey.ISPRINTQR)
+    }
+
     fun CompanyResponse.toEntity(): Company {
         return Company(
             keyCode = this.keyCode,

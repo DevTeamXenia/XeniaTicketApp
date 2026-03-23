@@ -48,7 +48,6 @@ val roomModule = module {
     single { ReportPrint(get(), get(), get()) }
 
 
-
     factory { CustomTicketPopupDialogue() }
     factory { CustomQRDarshanPopupDialogue() }
 

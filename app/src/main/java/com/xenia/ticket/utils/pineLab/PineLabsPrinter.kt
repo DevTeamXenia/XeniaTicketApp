@@ -1,18 +1,27 @@
-package com.xenia.ticket.utils.common
+package com.xenia.ticket.utils.pineLab
 
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.os.*
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.Message
+import android.os.Messenger
 import android.util.Log
-import kotlinx.coroutines.*
+import androidx.core.graphics.scale
+import com.xenia.ticket.data.network.model.ItemSummaryReportResponse
+import com.xenia.ticket.utils.common.SessionManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.File
-import androidx.core.graphics.scale
-import com.xenia.ticket.data.network.model.ItemSummaryReportResponse
 
 class PineLabsPrinter(
     private val context: Context,
