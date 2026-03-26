@@ -16,7 +16,6 @@ import com.xenia.ticket.data.network.model.ItemSummaryReportResponse
 import com.xenia.ticket.data.network.model.OfferItem
 import com.xenia.ticket.data.repository.ReportRepository
 import com.xenia.ticket.databinding.ActivityDetailedReportBinding
-import com.xenia.ticket.ui.adapter.DisplayItem
 import com.xenia.ticket.ui.adapter.ItemSummaryAdapter
 import com.xenia.ticket.ui.screens.kiosk.PrinterSettingActivity
 import com.xenia.ticket.utils.common.CommonMethod.dismissLoader
@@ -27,6 +26,7 @@ import com.xenia.ticket.utils.common.SessionManager
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointBackward
 import com.google.android.material.datepicker.MaterialDatePicker
+import com.xenia.ticket.data.network.model.DisplayItem
 import com.xenia.ticket.utils.common.ApiResponseHandler
 import com.xenia.ticket.utils.common.CommonMethod.showSnackbar
 import kotlinx.coroutines.launch

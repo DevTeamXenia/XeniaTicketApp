@@ -9,7 +9,6 @@ data class LabelSettings(
 
     @PrimaryKey
     val id: Int,
-
     val companyId: Int,
     val settingKey: String,
     val displayName: String,

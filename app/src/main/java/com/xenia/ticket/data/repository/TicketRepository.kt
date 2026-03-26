@@ -1,6 +1,5 @@
 package com.xenia.ticket.data.repository
 
-
 import com.xenia.ticket.data.network.model.LogoutResponse
 import com.xenia.ticket.data.network.service.ApiClient.apiService
 import com.xenia.ticket.data.room.dao.TicketDao
@@ -96,5 +95,6 @@ class TicketRepository(private val ticketDao: TicketDao) {
     suspend fun logout(token: String): LogoutResponse {
         return apiService.logout(token)
     }
+
 
 }

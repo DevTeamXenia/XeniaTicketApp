@@ -28,7 +28,6 @@ class InitialSyncManager(
                 val token = sessionManager.getToken()
                     ?: return@coroutineScope SyncResult.Error("Token missing", code = 401)
 
-                // Company API
                 val companyResult = try {
                     companyRepository.loadCompanySettings(token)
                 } catch (e: HttpException) {
@@ -48,7 +47,6 @@ class InitialSyncManager(
 
                 val categoryEnabled = companyRepository.getBoolean(CompanyKey.CATEGORY_ENABLE)
 
-                // Parallel API calls
                 val labelApi = async {
                     try {
                         labelSettingsRepository.loadLabelSettings(token)
@@ -79,6 +77,21 @@ class InitialSyncManager(
                     }
                 }
 
+            /*    val mappingApi = async {
+                    try {
+                        activeTicketRepository.loadMappings(token)
+                    } catch (e: HttpException) {
+                        throw SyncException(
+                            e.message() ?: "Mapping API failed",
+                            e.code()
+                        )
+                    } catch (e: Exception) {
+                        throw SyncException(
+                            e.message ?: "Mapping API failed"
+                        )
+                    }
+                }*/
+
                 val categoryApi = async {
                     if (categoryEnabled) {
                         try {
@@ -96,10 +109,10 @@ class InitialSyncManager(
                     } else true
                 }
 
-                // Await results and handle SyncException
                 try {
                     if (!labelApi.await()) return@coroutineScope SyncResult.Error("Label API failed")
                     if (!offeringApi.await()) return@coroutineScope SyncResult.Error("Offering API failed")
+                  //  if (!mappingApi.await()) return@coroutineScope SyncResult.Error("Mapping API failed")
                     if (!categoryApi.await()) return@coroutineScope SyncResult.Error("Category API failed")
                 } catch (e: SyncException) {
                     return@coroutineScope SyncResult.Error(e.message ?: "Unknown sync error", e.code)

@@ -45,7 +45,6 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
     CustomInactivityDialog.InactivityCallback,
     CustomInternetAvailabilityDialog.InternetAvailabilityListener,
     InactivityHandlerActivity, CategoryAdapter.OnCategoryClickListener {
-
     private lateinit var binding: ActivityTicketBinding
     private val ticketRepository: TicketRepository by inject()
     private val activeTicketRepository: ActiveTicketRepository by inject()
@@ -54,10 +53,8 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
     private val companyRepository: CompanyRepository by inject()
     private lateinit var categoryAdapter: CategoryAdapter
     private lateinit var ticketAdapter: TicketAdapter
-
     private var selectedLanguage: String? = ""
     private var selectedCategoryId: Int = 0
-
     private var formattedTotalAmount: String = ""
     private lateinit var inactivityHandler: InactivityHandler
     private lateinit var inactivityDialog: CustomInactivityDialog
@@ -87,11 +84,13 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
         binding.txtHome.text = getString(R.string.home)
         binding.txtselectTicket.text = getString(R.string.choose_your_tickets)
         binding.btnProceed.text = getString(R.string.proceed)
+
         binding.linHome.setOnClickListener {
             startActivity(Intent(applicationContext, LanguageActivity::class.java))
             finish()
 
         }
+
         binding.btnProceed.setOnClickListener {
             val intent = Intent(applicationContext, TicketCartActivity::class.java)
             startActivity(intent)
@@ -139,14 +138,11 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
         }
 
         lifecycleScope.launch {
-
             try {
-
-                // ✅ Call suspend handler properly
                 val isLoaded = ApiResponseHandler.handleApiCall(
                     activity = this@TicketActivity
                 ) {
-                    true // dummy (only for 401 handling)
+                    true
                 }
 
                 if (isLoaded == null || !isLoaded) {
@@ -191,7 +187,7 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
                         categoryNameMr = entity.categoryNameMr,
                         categoryNamePa = entity.categoryNamePa,
                         categoryNameSi = entity.categoryNameSi,
-                        CategoryCompanyId = entity.CategoryCompanyId,
+                        categoryCompanyId = entity.categoryCompanyId,
                         categoryCreatedDate = entity.categoryCreatedDate,
                         categoryCreatedBy = entity.categoryCreatedBy,
                         categoryModifiedDate = entity.categoryModifiedDate,
@@ -204,7 +200,7 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
 
                 getTickets(selectedCategoryId)
 
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 showSnackbar(binding.root, "Error loading tickets")
             }
         }
@@ -216,7 +212,6 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
         if (token.isNullOrEmpty()) return
 
         lifecycleScope.launch {
-
             try {
                 val tickets = withContext(Dispatchers.IO) {
                     if (categoryId != null && categoryId != 0) {
@@ -323,8 +318,12 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
         withContext(Dispatchers.Main) {
             if (hasData) {
                 formattedTotalAmount = String.format(Locale.ENGLISH, "%.2f", totalAmount)
-                binding.btnProceed.text =
-                    getString(R.string.proceed) + "  Rs.$formattedTotalAmount"
+                if(selectedLanguage == "te")
+                    binding.btnProceed.text =
+                        "${getString(R.string.rs)} $formattedTotalAmount ${getString(R.string.proceed)}"
+                else
+                    binding.btnProceed.text =
+                        getString(R.string.proceed) + "  Rs.$formattedTotalAmount"
 
                 binding.btnProceed.isEnabled = true
                 binding.btnProceed.setBackgroundColor(

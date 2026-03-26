@@ -2,15 +2,19 @@ package com.xenia.ticket.data.repository
 
 import retrofit2.HttpException
 import androidx.room.Transaction
+import com.xenia.ticket.data.network.model.TicketComboMappingDto
 import com.xenia.ticket.data.network.model.TicketDto
 import com.xenia.ticket.data.network.service.ApiClient
 import com.xenia.ticket.data.room.dao.ActiveTicketDao
+import com.xenia.ticket.data.room.dao.TicketComboMappingDao
 import com.xenia.ticket.data.room.entity.ActiveTicket
+import com.xenia.ticket.data.room.entity.TicketComboMapping
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class ActiveTicketRepository(
     private val ticketDao: ActiveTicketDao
+    ,private val mappingDao: TicketComboMappingDao
 
 ) {
 
@@ -73,4 +77,33 @@ class ActiveTicketRepository(
             ticketCreatedBy = ticketCreatedBy,
             ticketActive = ticketActive
         )
+
+
+    suspend fun loadMappings(token: String): Boolean {
+        return try {
+            val response = ApiClient.apiService.getTicketMapping(token)
+            val data = response.data ?: emptyList()
+
+            val entities = data.map { it.toEntity() }
+            mappingDao.replaceAll(entities)
+
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    suspend fun getAllMappings(): List<TicketComboMapping> {
+        return mappingDao.getAll()
+    }
+
+    private fun TicketComboMappingDto.toEntity(): TicketComboMapping {
+        return TicketComboMapping(
+            id = id,
+            parentTicketId = parentTicketId,
+            childTicketId = childTicketId,
+            createdDate = createdDate
+        )
+    }
 }

@@ -242,7 +242,12 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
             } else {
                 ticketCartAdapter.updateTickets(allDarshanTickets)
                 formattedTotalAmount = String.format(Locale.ENGLISH, "%.2f", totalAmount)
-                binding.btnPay.text = getString(R.string.pay) + "  Rs. " + formattedTotalAmount
+                if(sessionManager.getSelectedLanguage() == "te")
+                    binding.btnPay.text =
+                        "${getString(R.string.rs)} $formattedTotalAmount ${getString(R.string.proceed)}"
+                else
+                    binding.btnPay.text =
+                        getString(R.string.pay) + "  Rs.$formattedTotalAmount"
                 binding.btnPay.isEnabled = true
                 binding.btnPay.setBackgroundColor(
                     ContextCompat.getColor(

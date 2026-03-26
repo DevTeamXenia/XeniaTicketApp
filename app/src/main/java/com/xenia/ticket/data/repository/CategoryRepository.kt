@@ -55,7 +55,7 @@ class CategoryRepository(
         categoryNameMr = categoryNameMr,
         categoryNamePa = categoryNamePa,
         categoryNameSi = categoryNameSi,
-        CategoryCompanyId = categoryCompanyId,
+        categoryCompanyId = categoryCompanyId,
         categoryCreatedDate = categoryCreatedDate,
         categoryCreatedBy = categoryCreatedBy,
         categoryModifiedDate = categoryModifiedDate,

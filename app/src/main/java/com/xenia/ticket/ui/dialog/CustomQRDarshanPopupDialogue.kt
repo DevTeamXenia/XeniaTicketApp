@@ -140,8 +140,8 @@
                 textTranscation.text = "Transaction ID : $transactionReferenceID"
 
                 qrCodeImageView.setImageBitmap(generateUPIQRCode(url))
-                postTicketPaymentHistory("S", "Payment Success")
-              //  startTimer()
+
+                startTimer()
 
                 view.findViewById<ImageView>(R.id.btnClose).setOnClickListener {
                    safeDismiss()
@@ -221,14 +221,11 @@
 
         @SuppressLint("SetTextI18n")
         private fun checkPaymentStatus(isManualCheck: Boolean) {
-
             paymentStatusJob = lifecycleScope.launch {
-
                 if (!paymentMutex.tryLock()) {
                     Log.d("PAYMENT_FLOW", "Skipped - another request running")
                     return@launch
                 }
-
                 try {
 
                     if (isManualCheck && isAdded) {

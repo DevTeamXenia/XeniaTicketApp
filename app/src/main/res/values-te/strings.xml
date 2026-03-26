@@ -56,10 +56,10 @@
     <string name="_2018xxxx989">2018XXXX989</string>
     <string name="pay_phone_number">ఫోన్ నంబర్ :</string>
     <string name="pay_id_no">ఐడి నంబర్ :</string>
-    <string name="proceed">కొనసాగించండి</string>
+    <string name="proceed">చెల్లించండి</string>
     <string name="no_of_tickets">టిక్కెట్ల సంఖ్య</string>
     <string name="click_here_to_take_photo">ఫోటో తీయడానికి ఇక్కడ క్లిక్ చేయండి</string>
-
+    <string name="rs">రూ.</string>
 
     <string name="do_you_want_to_logout">మీరు లాగ్ అవుట్ కావాలా?</string>
     <string name="choose_item">అంశాన్ని ఎంచుకోండి</string>

@@ -15,7 +15,7 @@ data class Category(
     val categoryNameMr: String?,
     val categoryNamePa: String?,
     val categoryNameSi: String?,
-    val CategoryCompanyId: Int,
+    val categoryCompanyId: Int,
     val categoryCreatedDate: String,
     val categoryCreatedBy: Int,
     val categoryModifiedDate: String,

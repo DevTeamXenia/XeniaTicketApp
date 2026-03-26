@@ -9,6 +9,7 @@
     <string name="pay">पैसे चुकाएं</string>
     <string name="name">नाम</string>
     <string name="phone_number">फोन नंबर</string>
+    <string name="rs">Rs.</string>
     //payment_Screen
     <string name="transactions">लेन-देन</string>
     <string name="thank_you">धन्यवाद!</string>

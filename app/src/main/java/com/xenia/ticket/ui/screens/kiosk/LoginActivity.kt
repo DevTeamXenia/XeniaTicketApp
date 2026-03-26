@@ -189,7 +189,6 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
             showSnackbar(binding.root, "Please connect to internet...")
             return
         }
-
         showLoader(this, "Logging...")
         CoroutineScope(Dispatchers.Main).launch {
             try {

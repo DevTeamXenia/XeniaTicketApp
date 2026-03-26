@@ -756,7 +756,7 @@ class PaymentActivity : AppCompatActivity() {
 
         yOffset += 35f
 
-        val padding = 15f                 
+        val padding = 15f
         val innerPadding = 25f
         val cornerRadius = 18f
 
@@ -800,7 +800,7 @@ class PaymentActivity : AppCompatActivity() {
             paint
         )
 
-        yOffset = rectBottom + 10f
+        yOffset = rectBottom -10f
 
         if (companyRepository.getPaymentQr() == "True") {
             if (from.isNullOrEmpty() || from != "billing") {

@@ -73,6 +73,7 @@
     <string name="transaction">Transaction</string>
     <string name="summary">Summary</string>
     <string name="report">Report</string>
+    <string name="rs">Rs.</string>
     <string name="report_generated_time">Report Generated Time</string>
     <string name="total_amount">Total Amount</string>
 

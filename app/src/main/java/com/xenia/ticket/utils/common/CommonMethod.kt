@@ -40,6 +40,7 @@ object CommonMethod {
         loader?.dismiss()
         loader = null
     }
+
     fun showSnackbar(view: View, message: String) {
         Snackbar.make(view, message, Snackbar.LENGTH_LONG).show()
     }

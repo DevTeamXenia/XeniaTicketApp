@@ -35,13 +35,14 @@ val roomModule = module {
     single { get<AppDatabase>().categoryDao() }
     single { get<AppDatabase>().activeTicketDao() }
     single { get<AppDatabase>().ticketDao() }
+    single { get<AppDatabase>().mappingDao() }
 
     single { SessionManager(androidContext()) }
     single { LoginRepository() }
     single { CompanyRepository(get(),get()) }
     single { LabelSettingsRepository(get()) }
     single { CategoryRepository(get()) }
-    single { ActiveTicketRepository(get()) }
+    single { ActiveTicketRepository(get(),get()) }
     single { TicketRepository(get()) }
     single { PaymentRepository() }
     single { ReportRepository(get()) }

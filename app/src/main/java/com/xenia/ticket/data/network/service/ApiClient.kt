@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit
 
 
 object ApiClient {
+
    private const val BASE_URL = "https://eticketapi.xeniapos.com/api/"
    // private const val BASE_URL = "https://192.168.1.38:8085/api/"
 

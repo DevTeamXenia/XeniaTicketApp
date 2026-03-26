@@ -1,5 +1,6 @@
 package com.xenia.ticket.data.network.service
 
+import com.xenia.ticket.data.network.model.ApiResponse
 import com.xenia.ticket.data.network.model.CategoryResponse
 import com.xenia.ticket.data.network.model.CompanyResponse
 import com.xenia.ticket.data.network.model.FedQrRequest
@@ -18,6 +19,7 @@ import com.xenia.ticket.data.network.model.SibPaymentStatusResponse
 import com.xenia.ticket.data.network.model.SibQrResponse
 import com.xenia.ticket.data.network.model.SibStatusRequest
 import com.xenia.ticket.data.network.model.SummaryReportResponse
+import com.xenia.ticket.data.network.model.TicketComboMappingDto
 import com.xenia.ticket.data.network.model.TicketPaymentRequest
 import com.xenia.ticket.data.network.model.TicketResponse
 import com.xenia.ticket.data.network.model.TransactionDetailItem
@@ -65,6 +67,10 @@ interface ApiService {
         @Header("Authorization") bearerToken: String
     ): TicketResponse
 
+    @GET("map")
+    suspend fun getTicketMapping(
+        @Header("Authorization") token: String
+    ): ApiResponse<List<TicketComboMappingDto>>
     @POST("orders/create")
     suspend fun postTicket(
         @Header("Authorization") bearerToken: String,
