@@ -22,5 +22,6 @@ data class ActiveTicket(
     val ticketAmount: Double,
     val ticketCreatedDate: String,
     val ticketCreatedBy: Int,
-    val ticketActive: Boolean
+    val ticketActive: Boolean,
+    val ticketCombo: Boolean
 )

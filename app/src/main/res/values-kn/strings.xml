@@ -86,6 +86,7 @@
     <string name="save" >ಉಳಿಸು</string>
     <string name="item_summary_report">ವಿಸ್ತೃತ ವರದಿ</string>
     <string name="item_name">ಅಂಶದ ಹೆಸರು</string>
+    <string name="combo">Combo</string>
 
 
 </resources>

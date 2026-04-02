@@ -16,8 +16,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.xenia.ticket.R
 import com.xenia.ticket.data.listeners.OnTicketClickListener
+import com.xenia.ticket.data.network.model.ActiveItem
 import com.xenia.ticket.data.network.model.PineLabGenerateRequest
-import com.xenia.ticket.data.network.model.TicketDto
 import com.xenia.ticket.data.network.model.TicketPaymentRequest
 import com.xenia.ticket.data.network.service.ApiClient
 import com.xenia.ticket.data.repository.CompanyRepository
@@ -368,9 +368,10 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
             ticketNameSi = ticket.ticketNameSi ?: "",
             ticketNamePa = ticket.ticketNamePa ?: "",
             ticketNameMr = ticket.ticketNameMr ?: "",
-            ticketCtegoryId = ticket.ticketCategoryId,
+            ticketCategoryId = ticket.ticketCategoryId,
             ticketCompanyId = ticket.ticketCompanyId,
-            ticketRate = ticket.ticketAmount
+            ticketRate = ticket.ticketAmount,
+            ticketCombo = false
         )
         customTicketPopupDialogue.setListener(this)
         if (!customTicketPopupDialogue.isAdded) {
@@ -541,11 +542,11 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
         finish()
     }
 
-    override fun onTicketClick(ticketItem: TicketDto) {
+    override fun onTicketClick(item: ActiveItem) {
         TODO("Not yet implemented")
     }
 
-    override fun onTicketClear(ticketItem: TicketDto) {
+    override fun onTicketClear(item: ActiveItem) {
         TODO("Not yet implemented")
     }
 

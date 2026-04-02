@@ -22,6 +22,7 @@ import com.xenia.ticket.data.listeners.OnBookingTicketClick
 import com.xenia.ticket.data.listeners.OnTicketClickListener
 import com.xenia.ticket.data.network.local.InitialSyncManager
 import com.xenia.ticket.data.network.local.SyncResult
+import com.xenia.ticket.data.network.model.ActiveItem
 import com.xenia.ticket.data.network.model.TicketDto
 import com.xenia.ticket.data.repository.ActiveTicketRepository
 import com.xenia.ticket.data.repository.CategoryRepository
@@ -435,8 +436,8 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
         getTickets(selectedCategoryId)
     }
 
-    override fun onTicketClick(ticketItem: TicketDto) {
-        val dialog = CustomTicketPopupDialogue()
+    override fun onTicketClick(item: ActiveItem) {
+/*        val dialog = CustomTicketPopupDialogue()
         dialog.setData(
             ticketId = ticketItem.ticketId,
             ticketName = ticketItem.ticketName,
@@ -448,21 +449,22 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
             ticketNameSi = ticketItem.ticketNameSi ?: "",
             ticketNamePa = ticketItem.ticketNamePa ?: "",
             ticketNameMr = ticketItem.ticketNameMr ?: "",
-            ticketCtegoryId = ticketItem.ticketCategoryId,
+            ticketCategoryId = ticketItem.ticketCategoryId,
             ticketCompanyId = ticketItem.ticketCompanyId,
-            ticketRate = ticketItem.ticketAmount
+            ticketRate = ticketItem.ticketAmount,
+            ticketCombo = ticketItem.ticketCombo,
         )
         dialog.setListener(this)
-        dialog.show(supportFragmentManager, "CustomPopup")
+        dialog.show(supportFragmentManager, "CustomPopup")*/
     }
 
-    override fun onTicketClear(ticketItem: TicketDto) {
-        lifecycleScope.launch {
+    override fun onTicketClear(item: ActiveItem) {
+        /*lifecycleScope.launch {
             ticketItemsItems = ticketItem
             ticketRepository.deleteTicketById(ticketItem.ticketId)
             getTickets(selectedCategoryId)
             updateCartUI()
-        }
+        }*/
     }
 
     override fun onTicketAdded(ticketId: Int) {
@@ -497,7 +499,8 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
         ticketAmount = ticketAmount,
         ticketCreatedDate = ticketCreatedDate,
         ticketCreatedBy = ticketCreatedBy,
-        ticketActive = ticketActive
+        ticketActive = ticketActive,
+        ticketCombo = ticketCombo
     )
 
     override fun onTicketMinusClick(ticketItem: TicketDto) {

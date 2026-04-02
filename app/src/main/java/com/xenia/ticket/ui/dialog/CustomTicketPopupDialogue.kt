@@ -37,6 +37,7 @@ import com.xenia.ticket.utils.common.Constants.LANGUAGE_TELUGU
 import com.xenia.ticket.utils.common.InactivityHandler
 import com.xenia.ticket.utils.common.SessionManager
 import com.google.android.material.button.MaterialButton
+import com.xenia.ticket.data.repository.ActiveTicketRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -46,6 +47,7 @@ import kotlin.getValue
 
 class CustomTicketPopupDialogue : DialogFragment() {
     private lateinit var txtTicketName: TextView
+    private lateinit var txtComboTicketName: TextView
     private lateinit var txtTicketRate: TextView
     private lateinit var txtTickets: TextView
     private lateinit var txtQty: TextView
@@ -61,6 +63,7 @@ class CustomTicketPopupDialogue : DialogFragment() {
     private var firstClick: Boolean = true
 
     private val ticketRepository: TicketRepository by inject()
+    private val activeTicketRepository: ActiveTicketRepository by inject()
     private val sessionManager: SessionManager by inject()
 
     private var ticketId: Int = 0
@@ -77,6 +80,8 @@ class CustomTicketPopupDialogue : DialogFragment() {
     private var totalAmount: String = ""
     private var ticketCompanyId: Int = 0
     private var ticketCategoryId: Int = 0
+    private var ticketCombo: Boolean = false
+    private var ticketType: String = ""
     private var listener: OnTicketClickListener? = null
 
     fun setListener(listener: OnTicketClickListener) {
@@ -94,9 +99,11 @@ class CustomTicketPopupDialogue : DialogFragment() {
         ticketNameSi: String,
         ticketNamePa: String,
         ticketNameMr: String,
-        ticketCtegoryId: Int,
+        ticketCategoryId: Int,
         ticketCompanyId: Int,
-        ticketRate: Double
+        ticketRate: Double,
+        ticketCombo: Boolean,
+        ticketType: String
     ) {
         this.ticketId = ticketId
         this.ticketName = ticketName
@@ -110,7 +117,9 @@ class CustomTicketPopupDialogue : DialogFragment() {
         this.ticketNamePa = ticketNamePa
         this.ticketRate = ticketRate
         this.ticketCompanyId=ticketCompanyId
-        this.ticketCategoryId=ticketCtegoryId
+        this.ticketCategoryId=ticketCategoryId
+        this.ticketCombo=ticketCombo
+        this.ticketType = ticketType
 
 
     }
@@ -145,6 +154,7 @@ class CustomTicketPopupDialogue : DialogFragment() {
         super.onViewCreated(view, savedInstanceState)
         txtTickets = view.findViewById(R.id.txtTickets)
         txtTicketName= view.findViewById(R.id.txtTicketName)
+        txtComboTicketName= view.findViewById(R.id.txtComboTicketName)
         txtTicketRate = view.findViewById(R.id.txtTicketRate)
         txtQty= view.findViewById(R.id.txtQty)
         txtTotalAmount = view.findViewById(R.id.totalAmount)
@@ -185,6 +195,17 @@ class CustomTicketPopupDialogue : DialogFragment() {
 
         val formattedAmount = String.format(Locale.ENGLISH, "%.2f", ticketRate)
         txtTicketRate.text = "Rs. $formattedAmount /-"
+
+
+        if (ticketCombo) {
+            lifecycleScope.launch {
+                val comboTickets = activeTicketRepository.getComboTickets(ticketId)
+                withContext(Dispatchers.Main) {
+                    val names = comboTickets.joinToString(" | ") { it.ticketName }
+                    txtComboTicketName.text = names
+                }
+            }
+        }
 
         editTextTickets.inputType = 0
         editTextTickets.requestFocus()

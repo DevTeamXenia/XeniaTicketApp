@@ -84,6 +84,7 @@
     <string name="item_summary_report">விரிவான அறிக்கை</string>
     <string name="item_name">உருப்படியின் பெயர்</string>
     <string name="pancard_number">பான் கார்ட் எண்</string>
+    <string name="combo">Combo</string>
 
 
     <string-array name="nakshatras">

@@ -88,6 +88,7 @@
     <string name="item_name">අයිතම නාමය</string>
 
     <string name="pancard_number">PAN කාඩ් අංකය</string>
+    <string name="combo">Combo</string>
 
     <string-array name="nakshatras">
         <item>අශ්විනී</item>

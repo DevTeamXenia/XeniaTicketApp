@@ -77,7 +77,7 @@ class InitialSyncManager(
                     }
                 }
 
-            /*    val mappingApi = async {
+                val mappingApi = async {
                     try {
                         activeTicketRepository.loadMappings(token)
                     } catch (e: HttpException) {
@@ -90,7 +90,22 @@ class InitialSyncManager(
                             e.message ?: "Mapping API failed"
                         )
                     }
-                }*/
+                }
+
+                val showApi = async {
+                    try {
+                        activeTicketRepository.loadShows(token)
+                    } catch (e: HttpException) {
+                        throw SyncException(
+                            e.message() ?: "Offering API failed",
+                            e.code()
+                        )
+                    } catch (e: Exception) {
+                        throw SyncException(
+                            e.message ?: "Offering API failed"
+                        )
+                    }
+                }
 
                 val categoryApi = async {
                     if (categoryEnabled) {
@@ -112,7 +127,7 @@ class InitialSyncManager(
                 try {
                     if (!labelApi.await()) return@coroutineScope SyncResult.Error("Label API failed")
                     if (!offeringApi.await()) return@coroutineScope SyncResult.Error("Offering API failed")
-                  //  if (!mappingApi.await()) return@coroutineScope SyncResult.Error("Mapping API failed")
+                    if (!mappingApi.await()) return@coroutineScope SyncResult.Error("Mapping API failed")
                     if (!categoryApi.await()) return@coroutineScope SyncResult.Error("Category API failed")
                 } catch (e: SyncException) {
                     return@coroutineScope SyncResult.Error(e.message ?: "Unknown sync error", e.code)

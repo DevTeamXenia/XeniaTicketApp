@@ -122,6 +122,7 @@
     <string name="pancard_number">PanCard Number</string>
     <string name="transcations">Transcations</string>
     <string name="mandatory">*</string>
+    <string name="combo">Combo</string>
 
 
     <string-array name="nakshatras">

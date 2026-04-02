@@ -71,7 +71,7 @@ class TicketBookingAdapter(
         }
 
         binding.relNoneCardItem.setOnClickListener {
-            onTicketClickListener.onTicketClick(ticketItem)
+           // onTicketClickListener.onTicketClick(ticketItem)
         }
     }
 

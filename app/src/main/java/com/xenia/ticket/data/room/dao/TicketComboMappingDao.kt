@@ -24,4 +24,7 @@ interface TicketComboMappingDao {
         clearAll()
         insertAll(items)
     }
+
+    @Query("SELECT * FROM TicketComboMapping WHERE parentTicketId = :parentId")
+    suspend fun getComboMappings(parentId: Int): List<TicketComboMapping>
 }

@@ -8,10 +8,8 @@ import com.xenia.ticket.data.room.entity.ActiveTicket
 
 @Dao
 interface ActiveTicketDao {
-
     @Query("SELECT * FROM ActiveTickets WHERE ticketActive = 1")
     suspend fun getAllActiveTickets(): List<ActiveTicket>
-
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(tickets: List<ActiveTicket>)
@@ -24,6 +22,10 @@ interface ActiveTicketDao {
         WHERE ticketCategoryId = :categoryId 
         AND ticketActive = 1
     """)
+
     suspend fun getTicketsByCategory(categoryId: Int): List<ActiveTicket>
+
+    @Query("SELECT * FROM ActiveTickets WHERE ticketId IN (:ticketIds)")
+    suspend fun getTicketsByIds(ticketIds: List<Int>): List<ActiveTicket>
 
 }

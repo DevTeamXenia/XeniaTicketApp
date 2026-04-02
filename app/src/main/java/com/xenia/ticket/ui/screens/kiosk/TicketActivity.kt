@@ -14,12 +14,11 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.xenia.ticket.R
 import com.xenia.ticket.data.listeners.InactivityHandlerActivity
 import com.xenia.ticket.data.listeners.OnTicketClickListener
-import com.xenia.ticket.data.network.model.TicketDto
+import com.xenia.ticket.data.network.model.ActiveItem
 import com.xenia.ticket.data.repository.ActiveTicketRepository
 import com.xenia.ticket.data.repository.CategoryRepository
 import com.xenia.ticket.data.repository.CompanyRepository
 import com.xenia.ticket.data.repository.TicketRepository
-import com.xenia.ticket.data.room.entity.ActiveTicket
 import com.xenia.ticket.data.room.entity.Category
 import com.xenia.ticket.databinding.ActivityTicketBinding
 import com.xenia.ticket.ui.adapter.CategoryAdapter
@@ -66,8 +65,7 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
         setLocale(this, sessionManager.getSelectedLanguage())
         selectedLanguage = sessionManager.getSelectedLanguage()
         inactivityDialog = CustomInactivityDialog(this)
-        inactivityHandler =
-            InactivityHandler(this, supportFragmentManager, inactivityDialog)
+        inactivityHandler = InactivityHandler(this, supportFragmentManager, inactivityDialog)
         setupUI()
         setContentView(binding.root)
         setupRecyclerViews()
@@ -120,18 +118,16 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
         ticketAdapter = TicketAdapter(
             context = this,
             selectedLanguage = selectedLanguage ?: "en",
+            ticketRepository = ticketRepository,
             coroutineScope = lifecycleScope,
-            onTicketClickListener = this,
-            ticketRepository = ticketRepository
+            onTicketClickListener = this
         )
         binding.ticketRecycler.layoutManager = GridLayoutManager(this, 4)
         binding.ticketRecycler.adapter = ticketAdapter
     }
 
     private fun getCategory() {
-
         val token = sessionManager.getToken()
-
         if (token.isNullOrEmpty()) {
             binding.ticketCat.visibility = View.GONE
             return
@@ -207,28 +203,28 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
     }
 
     private fun getTickets(categoryId: Int? = null) {
-
         val token = sessionManager.getToken()
         if (token.isNullOrEmpty()) return
 
         lifecycleScope.launch {
             try {
-                val tickets = withContext(Dispatchers.IO) {
+                val items = withContext(Dispatchers.IO) {
                     if (categoryId != null && categoryId != 0) {
-                        activeTicketRepository.getTicketsByCategory(categoryId)
+                        activeTicketRepository.getItemsByCategory(categoryId)
                     } else {
-                        activeTicketRepository.getAllTickets()
+                        activeTicketRepository.getAllItems()
                     }
                 }
 
-                if (tickets.isEmpty()) {
-                    ticketAdapter.updateTickets(emptyList())
-                    showSnackbar(binding.root, "No tickets available")
+                if (items.isEmpty()) {
+                    ticketAdapter.updateItems(emptyList())
+                    showSnackbar(binding.root, "No items available")
                     return@launch
                 }
 
-                val ticketDtos = tickets.map { it.toDto() }
-                ticketAdapter.updateTickets(ticketDtos)
+                val sortedItems = items.sortedBy { it.name }
+
+                ticketAdapter.updateItems(sortedItems)
 
             } catch (e: HttpException) {
 
@@ -247,30 +243,33 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
                     showSnackbar(binding.root, "Server error: ${e.code()}")
                 }
             } catch (_: Exception) {
-                showSnackbar(binding.root, "Error loading tickets")
+                showSnackbar(binding.root, "Error loading items")
             }
         }
     }
 
 
-    override fun onTicketClick(ticketItem: TicketDto) {
+    override fun onTicketClick(item: ActiveItem) {
+
         if (ticketDialog?.isVisible == true) return
 
         ticketDialog = CustomTicketPopupDialogue().apply {
             setData(
-                ticketId = ticketItem.ticketId,
-                ticketName = ticketItem.ticketName,
-                ticketNameMa = ticketItem.ticketNameMa ?: "",
-                ticketNameTa = ticketItem.ticketNameTa ?: "",
-                ticketNameKa = ticketItem.ticketNameKa ?: "",
-                ticketNameTe = ticketItem.ticketNameTe ?: "",
-                ticketNameHi = ticketItem.ticketNameHi ?: "",
-                ticketNameSi = ticketItem.ticketNameSi ?: "",
-                ticketNamePa = ticketItem.ticketNamePa ?: "",
-                ticketNameMr = ticketItem.ticketNameMr ?: "",
-                ticketCtegoryId = ticketItem.ticketCategoryId,
-                ticketCompanyId = ticketItem.ticketCompanyId,
-                ticketRate = ticketItem.ticketAmount
+                ticketId = item.id,
+                ticketName = item.name,
+                ticketNameMa = item.nameMa ?: "",
+                ticketNameTa = item.nameTa ?: "",
+                ticketNameKa = item.nameKa ?: "",
+                ticketNameTe = item.nameTe ?: "",
+                ticketNameHi = item.nameHi ?: "",
+                ticketNameSi = item.nameSi ?: "",
+                ticketNamePa = item.namePa ?: "",
+                ticketNameMr = item.nameMr ?: "",
+                ticketCategoryId = item.category,
+                ticketCompanyId = item.companyId,
+                ticketRate = item.amount,
+                ticketCombo = item.combo,
+                ticketT
             )
             setListener(this@TicketActivity)
         }
@@ -279,17 +278,18 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
     }
 
 
-    override fun onTicketClear(ticketItem: TicketDto) {
+    override fun onTicketClear(item: ActiveItem) {
         lifecycleScope.launch {
-            ticketRepository.deleteTicketById(ticketItem.ticketId)
+            ticketRepository.deleteTicketById(item.id)
             getTickets(selectedCategoryId)
             updateCartUI()
         }
     }
 
+
     override fun onTicketAdded(ticketId: Int) {
         lifecycleScope.launch {
-            ticketAdapter.updateSingleTicket(ticketId)
+            ticketAdapter.updateSingleItem(ticketId)
             updateCartUI()
         }
     }
@@ -374,24 +374,6 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
         inactivityHandler.resetTimer()
     }
 
-    fun ActiveTicket.toDto() = TicketDto(
-        ticketId = ticketId,
-        ticketName = ticketName,
-        ticketNameMa = ticketNameMa,
-        ticketNameTa = ticketNameTa,
-        ticketNameTe = ticketNameTe,
-        ticketNameKa = ticketNameKa,
-        ticketNameHi = ticketNameHi,
-        ticketNamePa = ticketNamePa,
-        ticketNameMr = ticketNameMr,
-        ticketNameSi = ticketNameSi,
-        ticketCategoryId = ticketCategoryId,
-        ticketCompanyId = ticketCompanyId,
-        ticketAmount = ticketAmount,
-        ticketCreatedDate = ticketCreatedDate,
-        ticketCreatedBy = ticketCreatedBy,
-        ticketActive = ticketActive
-    )
 
     override fun onCategoryClick(category: Category) {
         selectedCategoryId = category.categoryId

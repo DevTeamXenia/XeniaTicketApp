@@ -20,7 +20,6 @@ import com.xenia.ticket.data.listeners.InactivityHandlerActivity
 import com.xenia.ticket.data.listeners.OnTicketClickListener
 import com.xenia.ticket.data.network.model.FedQrRequest
 import com.xenia.ticket.data.network.model.SibQrRequest
-import com.xenia.ticket.data.network.model.TicketDto
 import com.xenia.ticket.data.network.model.TicketPaymentRequest
 import com.xenia.ticket.data.repository.CompanyRepository
 import com.xenia.ticket.data.repository.PaymentRepository
@@ -53,6 +52,7 @@ import retrofit2.HttpException
 import java.util.Locale
 import kotlin.getValue
 import androidx.core.graphics.drawable.toDrawable
+import com.xenia.ticket.data.network.model.ActiveItem
 
 
 class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartClickListener,
@@ -152,7 +152,6 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
             }
 
             lifecycleScope.launch {
-
                 val amountValue = formattedTotalAmount.toDoubleOrNull() ?: 0.0
                 val ctx = this@TicketCartActivity
                 val isPaymentGatewayEnabled =
@@ -242,12 +241,14 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
             } else {
                 ticketCartAdapter.updateTickets(allDarshanTickets)
                 formattedTotalAmount = String.format(Locale.ENGLISH, "%.2f", totalAmount)
+
                 if(sessionManager.getSelectedLanguage() == "te")
                     binding.btnPay.text =
                         "${getString(R.string.rs)} $formattedTotalAmount ${getString(R.string.proceed)}"
                 else
                     binding.btnPay.text =
                         getString(R.string.pay) + "  Rs.$formattedTotalAmount"
+
                 binding.btnPay.isEnabled = true
                 binding.btnPay.setBackgroundColor(
                     ContextCompat.getColor(
@@ -282,9 +283,10 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
             ticketNameSi = ticket.ticketNameSi ?: "",
             ticketNamePa = ticket.ticketNamePa ?: "",
             ticketNameMr = ticket.ticketNameMr ?: "",
-            ticketCtegoryId = ticket.ticketCategoryId,
+            ticketCategoryId = ticket.ticketCategoryId,
             ticketCompanyId = ticket.ticketCompanyId,
-            ticketRate = ticket.ticketAmount
+            ticketRate = ticket.ticketAmount,
+            ticketCombo = false
         )
         dialog.setListener(this)
         dialog.show(supportFragmentManager, "CustomPopup")
@@ -477,7 +479,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                     showSnackbar(binding.root, "Unable to load settings!")
                 }
 
-            } catch (e: Exception) {
+            } catch (_: Exception) {
 
                 dismissLoader()
                 showSnackbar(binding.root, "Something went wrong!")
@@ -580,9 +582,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                 }
             }
 
-        } catch (e: Exception) {
-
-            // ApiResponseHandler already handled 401
+        } catch (_: Exception) {
             if (retryCount < 3) {
                 postTicketPaymentHistory(status, statusDesc, retryCount + 1)
             } else {
@@ -621,11 +621,11 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
     }
 
 
-    override fun onTicketClick(ticketItem: TicketDto) {
+    override fun onTicketClick(item: ActiveItem) {
         TODO("Not yet implemented")
     }
 
-    override fun onTicketClear(ticketItem: TicketDto) {
+    override fun onTicketClear(item: ActiveItem) {
         TODO("Not yet implemented")
     }
 

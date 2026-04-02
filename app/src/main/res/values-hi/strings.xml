@@ -66,6 +66,7 @@
     <string name="save" >सहेजें</string>
     <string name="item_summary_report">विस्तृत रिपोर्ट</string>
     <string name="item_name">आइटम का नाम</string>
+    <string name="combo">Combo</string>
 
 
 </resources>

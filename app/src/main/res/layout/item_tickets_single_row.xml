@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
@@ -12,15 +13,14 @@
         android:layout_marginTop="15dp"
         android:layout_marginEnd="5dp"
         android:layout_marginBottom="15dp"
-        android:background="@drawable/ticket_second_bg"
-        android:visibility="gone">
+        android:background="@drawable/ticket_second_bg">
 
         <RelativeLayout
             android:id="@+id/relTop_1"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            tools:ignore="UselessParent">
 
-            <!-- Name bag -->
             <TextView
                 android:id="@+id/txt_ticket_name_1"
                 android:layout_width="match_parent"
@@ -35,22 +35,48 @@
                 android:textAlignment="center"
                 android:textColor="@color/white"
                 android:textSize="17sp" />
-            <!-- Price bag -->
-            <TextView
-                android:id="@+id/txt_ticket_price_1"
+
+            <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_below="@id/txt_ticket_name_1"
-                android:layout_centerHorizontal="true"
                 android:background="@drawable/ticket_price_bg"
-                android:fontFamily="@font/roboto"
-                android:gravity="center"
-                android:layout_marginStart="5dp"
-                android:layout_marginEnd="5dp"
                 android:layout_marginBottom="5dp"
-                android:textColor="@color/black"
-                android:textSize="20sp"
-                android:textStyle="bold"/>
+                android:layout_marginStart="5dp"
+                android:layout_marginEnd="5dp">
+
+                <TextView
+                    android:id="@+id/txt_ticket_combo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:fontFamily="@font/roboto"
+                    android:gravity="center"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginEnd="10dp"
+                    android:visibility="gone"
+                    android:textColor="@color/black"
+                    android:textSize="12sp"
+                    android:textStyle="bold"/>
+
+
+                <TextView
+                    android:id="@+id/txt_ticket_price_1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:fontFamily="@font/roboto"
+                    android:gravity="center"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginEnd="5dp"
+                    android:layout_marginBottom="5dp"
+                    android:textColor="@color/black"
+                    android:textSize="20sp"
+                    android:textStyle="bold"/>
+
+
+            </RelativeLayout>
+
 
 
         </RelativeLayout>
@@ -68,6 +94,7 @@
         android:layout_marginBottom="15dp"
         android:background="@drawable/ticket_cart_bg"
         android:visibility="gone">
+
         <RelativeLayout
             android:id="@+id/relTop_2"
             android:layout_width="200dp"
@@ -134,8 +161,6 @@
             android:textColor="@color/black"
             android:textSize="25sp"
             android:textStyle="bold" />
-
-
 
     </RelativeLayout>
 

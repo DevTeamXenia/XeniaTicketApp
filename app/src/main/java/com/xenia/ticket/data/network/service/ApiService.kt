@@ -15,6 +15,8 @@ import com.xenia.ticket.data.network.model.SibQrRequest
 import com.xenia.ticket.data.network.model.PaymentStatusResponse
 import com.xenia.ticket.data.network.model.PineLabGenerateRequest
 import com.xenia.ticket.data.network.model.PineLabGenerateResponse
+import com.xenia.ticket.data.network.model.ShowResponse
+import com.xenia.ticket.data.network.model.ShowScheduleResponse
 import com.xenia.ticket.data.network.model.SibPaymentStatusResponse
 import com.xenia.ticket.data.network.model.SibQrResponse
 import com.xenia.ticket.data.network.model.SibStatusRequest
@@ -67,10 +69,15 @@ interface ApiService {
         @Header("Authorization") bearerToken: String
     ): TicketResponse
 
-    @GET("map")
+    @GET("Shows/sync")
+    suspend fun getShow(
+        @Header("Authorization") bearerToken: String
+    ): ShowResponse
+
+    @GET("Ticket/map")
     suspend fun getTicketMapping(
         @Header("Authorization") token: String
-    ): ApiResponse<List<TicketComboMappingDto>>
+    ): List<TicketComboMappingDto>
     @POST("orders/create")
     suspend fun postTicket(
         @Header("Authorization") bearerToken: String,
@@ -134,4 +141,11 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Body request: PineLabGenerateRequest
     ): Response<PineLabGenerateResponse>
+
+    @GET("api/ShowSchedules/schedule/{id}")
+    suspend fun getSchedules(
+        @Path("id") id: Int,
+        @Query("day") day: String
+    ): List<ShowScheduleResponse>
+
 }

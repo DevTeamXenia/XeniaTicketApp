@@ -59,5 +59,8 @@ data class TicketDto(
     val ticketCreatedBy: Int,
 
     @SerializedName("TicketActive")
-    val ticketActive: Boolean
+    val ticketActive: Boolean,
+
+    @SerializedName("TicketCombo")
+    val ticketCombo: Boolean
 )

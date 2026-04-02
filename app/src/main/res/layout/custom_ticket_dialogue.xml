@@ -17,15 +17,32 @@
 
         <TextView
             android:id="@+id/txtTicketName"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:layout_marginEnd="3dp"
             android:fontFamily="@font/poppins_regular"
+            android:layout_toStartOf="@+id/imgClose"
             android:maxLines="3"
+            android:text=""
             android:textAlignment="center"
             android:textColor="@color/secondaryColor"
-            android:textSize="14sp" />
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/txtComboTicketName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:layout_toStartOf="@+id/imgClose"
+            android:layout_marginEnd="3dp"
+            android:fontFamily="@font/poppins_regular"
+            android:layout_below="@+id/txtTicketName"
+            android:maxLines="3"
+            android:text=""
+            android:textAlignment="center"
+            android:textColor="@color/secondaryColor"
+            android:textSize="12sp" />
 
         <RelativeLayout
             android:id="@+id/imgClose"
@@ -43,14 +60,14 @@
         </RelativeLayout>
 
 
-
         <TextView
             android:id="@+id/txtTicketRate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/txtTicketName"
+            android:layout_below="@+id/txtComboTicketName"
             android:layout_alignParentEnd="true"
             android:layout_marginTop="20dp"
+            android:layout_marginBottom="15dp"
             android:fontFamily="@font/roboto"
             android:textAlignment="center"
             android:textColor="@color/black"
@@ -61,8 +78,9 @@
             android:id="@+id/txtTickets"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/txtTicketName"
+            android:layout_below="@+id/txtComboTicketName"
             android:layout_marginTop="20dp"
+            android:layout_marginBottom="15dp"
             android:fontFamily="@font/poppins_regular"
             android:textColor="@color/black"
             android:textSize="15sp" />
