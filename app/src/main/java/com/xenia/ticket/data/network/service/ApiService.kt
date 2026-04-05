@@ -1,6 +1,5 @@
 package com.xenia.ticket.data.network.service
 
-import com.xenia.ticket.data.network.model.ApiResponse
 import com.xenia.ticket.data.network.model.CategoryResponse
 import com.xenia.ticket.data.network.model.CompanyResponse
 import com.xenia.ticket.data.network.model.FedQrRequest
@@ -11,15 +10,17 @@ import com.xenia.ticket.data.network.model.LoginRequest
 import com.xenia.ticket.data.network.model.LoginResponse
 import com.xenia.ticket.data.network.model.LogoutResponse
 import com.xenia.ticket.data.network.model.OrderResponse
-import com.xenia.ticket.data.network.model.SibQrRequest
+import com.xenia.ticket.data.network.model.PaymentCanStatusResponse
+import com.xenia.ticket.data.network.model.QrRequest
 import com.xenia.ticket.data.network.model.PaymentStatusResponse
 import com.xenia.ticket.data.network.model.PineLabGenerateRequest
 import com.xenia.ticket.data.network.model.PineLabGenerateResponse
+import com.xenia.ticket.data.network.model.QrCanaraResponse
 import com.xenia.ticket.data.network.model.ShowResponse
 import com.xenia.ticket.data.network.model.ShowScheduleResponse
 import com.xenia.ticket.data.network.model.SibPaymentStatusResponse
-import com.xenia.ticket.data.network.model.SibQrResponse
-import com.xenia.ticket.data.network.model.SibStatusRequest
+import com.xenia.ticket.data.network.model.QrResponse
+import com.xenia.ticket.data.network.model.StatusRequest
 import com.xenia.ticket.data.network.model.SummaryReportResponse
 import com.xenia.ticket.data.network.model.TicketComboMappingDto
 import com.xenia.ticket.data.network.model.TicketPaymentRequest
@@ -126,15 +127,31 @@ interface ApiService {
     suspend fun generateSibQr(
         @Header("Authorization") token: String,
         @Query("payFor") payFor: String,
-        @Body request: SibQrRequest
-    ): SibQrResponse
+        @Body request: QrRequest
+    ): QrResponse
 
     @POST("payments/sib/status")
     suspend fun getSibPaymentStatus(
         @Query("payFor") payFor: String = "Common",
-        @Body request: SibStatusRequest,
+        @Body request: StatusRequest,
         @Header("Authorization") token: String
     ): SibPaymentStatusResponse
+
+    @POST("payments/canara/generateQr")
+    suspend fun generateCanaraQr(
+        @Header("Authorization") token: String,
+        @Query("payFor") payFor: String,
+        @Body request: QrRequest
+    ): QrCanaraResponse
+
+
+    @POST("payments/canara/status")
+    suspend fun getCanaraPaymentStatus(
+        @Query("payFor") payFor: String = "Common",
+        @Body request: StatusRequest,
+        @Header("Authorization") token: String
+    ): PaymentCanStatusResponse
+
 
     @POST("payments/pineLab/generate")
     suspend fun generatePineLabPayment(
@@ -142,8 +159,9 @@ interface ApiService {
         @Body request: PineLabGenerateRequest
     ): Response<PineLabGenerateResponse>
 
-    @GET("api/ShowSchedules/schedule/{id}")
+    @GET("ShowSchedules/schedule/{id}")
     suspend fun getSchedules(
+        @Header("Authorization") token: String,
         @Path("id") id: Int,
         @Query("day") day: String
     ): List<ShowScheduleResponse>

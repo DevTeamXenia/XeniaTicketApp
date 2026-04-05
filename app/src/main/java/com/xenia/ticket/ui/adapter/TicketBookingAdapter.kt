@@ -6,9 +6,10 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.xenia.ticket.data.listeners.OnBookingTicketClick
 import com.xenia.ticket.data.listeners.OnTicketClickListener
-import com.xenia.ticket.data.network.model.TicketDto
+import com.xenia.ticket.data.network.model.Tickets
 
-import com.xenia.ticket.data.room.entity.Ticket
+
+import com.xenia.ticket.data.room.entity.Orders
 import com.xenia.ticket.databinding.BookingTicketItemListRowBinding
 import java.util.Locale
 
@@ -18,8 +19,8 @@ class TicketBookingAdapter(
     private val onTicketClickListener: OnTicketClickListener
 ) : RecyclerView.Adapter<TicketBookingAdapter.TicketViewHolder>() {
 
-    private var ticketItems: List<TicketDto> = emptyList()
-    private var dbItemsMap: Map<Int, Ticket> = emptyMap()
+    private var ticketItems: List<Tickets> = emptyList()
+    private var dbItemsMap: Map<Int, Orders> = emptyMap()
 
     class TicketViewHolder(val binding: BookingTicketItemListRowBinding) :
         RecyclerView.ViewHolder(binding.root)
@@ -77,7 +78,7 @@ class TicketBookingAdapter(
 
 
     @SuppressLint("NotifyDataSetChanged")
-    fun updateTickets(newTickets: List<TicketDto>) {
+    fun updateTickets(newTickets: List<Tickets>) {
         this.ticketItems = newTickets
 
         notifyDataSetChanged()
@@ -86,7 +87,7 @@ class TicketBookingAdapter(
 
 
     @SuppressLint("NotifyDataSetChanged")
-    fun updateDbItemsMap(newMap: Map<Int, Ticket>) {
+    fun updateDbItemsMap(newMap: Map<Int, Orders>) {
         this.dbItemsMap = newMap
         notifyDataSetChanged()
     }

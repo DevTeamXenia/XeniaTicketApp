@@ -14,7 +14,7 @@ import android.widget.Button
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
 import com.xenia.ticket.R
-import com.xenia.ticket.data.repository.CompanyRepository
+import com.xenia.ticket.data.repository.CompanySettingsRepository
 import com.xenia.ticket.ui.screens.kiosk.LanguageActivity
 import com.xenia.ticket.utils.common.CommonMethod.setLocale
 import com.xenia.ticket.utils.common.Constants.LANGUAGE_ENGLISH
@@ -25,7 +25,7 @@ import org.koin.android.ext.android.inject
 
 class CustomInactivityDialog(private val callback: InactivityCallback) : DialogFragment() {
     private val sessionManager: SessionManager by inject()
-    private val companyRepository: CompanyRepository by inject()
+    private val companyRepository: CompanySettingsRepository by inject()
     interface InactivityCallback {
         fun resetInactivityTimer()
     }

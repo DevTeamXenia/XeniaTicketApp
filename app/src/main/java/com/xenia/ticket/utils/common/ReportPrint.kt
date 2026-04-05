@@ -14,7 +14,7 @@ import androidx.lifecycle.LifecycleCoroutineScope
 import com.urovo.sdk.print.PrinterProviderImpl
 import com.xenia.ticket.data.network.model.ItemSummaryReportResponse
 import com.xenia.ticket.data.network.model.OfferItem
-import com.xenia.ticket.data.repository.CompanyRepository
+import com.xenia.ticket.data.repository.CompanySettingsRepository
 import com.xenia.ticket.utils.pineLab.PineLabsPrinter
 import com.xenia.ticket.utils.pineLab.PlutusConstants
 import kotlinx.coroutines.Dispatchers
@@ -35,7 +35,7 @@ import kotlin.coroutines.resume
 class ReportPrint(
     private val context: Context,
     private val sessionManager: SessionManager,
-    private val companyRepository: CompanyRepository
+    private val companyRepository: CompanySettingsRepository
 ) {
 
     private val appContext: Context = context.applicationContext

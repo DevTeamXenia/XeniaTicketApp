@@ -1,17 +1,17 @@
 package com.xenia.ticket.di
 
 import androidx.room.Room
-import com.xenia.ticket.data.network.local.InitialSyncManager
-import com.xenia.ticket.data.repository.ActiveTicketRepository
+import com.xenia.ticket.data.network.sync.InitialSyncManager
+import com.xenia.ticket.data.repository.TicketRepository
 import com.xenia.ticket.data.repository.CategoryRepository
-import com.xenia.ticket.data.repository.CompanyRepository
+import com.xenia.ticket.data.repository.CompanySettingsRepository
 import com.xenia.ticket.data.repository.LabelSettingsRepository
 import com.xenia.ticket.data.repository.LoginRepository
 import com.xenia.ticket.data.repository.PaymentRepository
 import com.xenia.ticket.data.repository.ReportRepository
-import com.xenia.ticket.data.repository.TicketRepository
+import com.xenia.ticket.data.repository.OrderRepository
 import com.xenia.ticket.data.room.AppDatabase
-import com.xenia.ticket.ui.dialog.CustomQRDarshanPopupDialogue
+import com.xenia.ticket.ui.dialog.CustomQRPopupDialogue
 import com.xenia.ticket.ui.dialog.CustomTicketPopupDialogue
 import com.xenia.ticket.utils.common.ReportPrint
 import com.xenia.ticket.utils.common.SessionManager
@@ -30,34 +30,35 @@ val roomModule = module {
             .fallbackToDestructiveMigration(true)
             .build()
     }
-    single { get<AppDatabase>().companyDao() }
-    single { get<AppDatabase>().labelSettingsDao() }
+    single { get<AppDatabase>().companySettings() }
+    single { get<AppDatabase>().companyLabelsDao() }
     single { get<AppDatabase>().categoryDao() }
-    single { get<AppDatabase>().activeTicketDao() }
     single { get<AppDatabase>().ticketDao() }
+    single { get<AppDatabase>().orderDao() }
     single { get<AppDatabase>().showDao() }
     single { get<AppDatabase>().ticketComboMappingDao() }
 
     single { SessionManager(androidContext()) }
     single { LoginRepository() }
-    single { CompanyRepository(get(),get()) }
+    single { CompanySettingsRepository(get(),get()) }
     single { LabelSettingsRepository(get()) }
     single { CategoryRepository(get()) }
     single {
-        ActiveTicketRepository(
+        TicketRepository(
             ticketDao = get(),
             mappingDao = get(),
-            showDao = get()
+            showDao = get(),
+            get()
         )
     }
-    single { TicketRepository(get()) }
+    single { OrderRepository(get()) }
     single { PaymentRepository() }
     single { ReportRepository(get()) }
     single { ReportPrint(get(), get(), get()) }
 
 
     factory { CustomTicketPopupDialogue() }
-    factory { CustomQRDarshanPopupDialogue() }
+    factory { CustomQRPopupDialogue() }
 
     factory {
         InitialSyncManager(

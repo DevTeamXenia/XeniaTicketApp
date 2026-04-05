@@ -49,6 +49,9 @@ data class ShowDto(
     @SerializedName("DurationMinutes")
     val durationMinutes: Int,
 
+    @SerializedName("Amount")
+    val amount: Double,
+
     @SerializedName("CompanyId")
     val companyId: Int,
 

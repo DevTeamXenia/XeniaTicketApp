@@ -5,7 +5,10 @@ import com.google.gson.annotations.SerializedName
 data class OrderResponse(
 
     @SerializedName("Status")
-    val status: String?,
+    val status: Boolean?,
+
+    @SerializedName("Message")
+    val message: String?,
 
     @SerializedName("ticket")
     val ticket: String?,

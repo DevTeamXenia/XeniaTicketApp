@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit
 object ApiClient {
 
   // private const val BASE_URL = "https://eticketapi.xeniapos.com/api/"
-    private const val BASE_URL = "http://192.168.1.37:8084/api/"
+    private const val BASE_URL = "https://eticketapitest.xeniapos.com/api/"
 
 /*    val okHttpClient = OkHttpClient.Builder()
         .connectTimeout(60, TimeUnit.SECONDS)

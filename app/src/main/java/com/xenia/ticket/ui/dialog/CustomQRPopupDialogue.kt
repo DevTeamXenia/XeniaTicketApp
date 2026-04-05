@@ -25,9 +25,9 @@
     import androidx.lifecycle.lifecycleScope
     import com.xenia.ticket.R
     import com.xenia.ticket.data.network.model.TicketPaymentRequest
-    import com.xenia.ticket.data.repository.CompanyRepository
+    import com.xenia.ticket.data.repository.CompanySettingsRepository
     import com.xenia.ticket.data.repository.PaymentRepository
-    import com.xenia.ticket.data.repository.TicketRepository
+    import com.xenia.ticket.data.repository.OrderRepository
     import com.xenia.ticket.ui.screens.kiosk.PaymentActivity
     import com.xenia.ticket.utils.common.ApiResponseHandler
     import com.xenia.ticket.utils.common.CompanyKey
@@ -36,6 +36,7 @@
     import com.google.zxing.MultiFormatWriter
     import com.google.zxing.WriterException
     import com.journeyapps.barcodescanner.BarcodeEncoder
+    import com.xenia.ticket.data.network.model.PaymentCanStatusResponse
     import com.xenia.ticket.utils.common.CommonMethod.dismissLoader
     import com.xenia.ticket.utils.common.CommonMethod.showLoader
     import com.xenia.ticket.utils.common.JwtUtils
@@ -46,7 +47,7 @@
     import com.xenia.ticket.data.network.model.SibPaymentStatusResponse
     import kotlinx.coroutines.sync.Mutex
 
-    class CustomQRDarshanPopupDialogue : DialogFragment() {
+    class CustomQRPopupDialogue : DialogFragment() {
 
         private lateinit var timerTextView: TextView
         private lateinit var textTranscation: TextView
@@ -63,8 +64,8 @@
         private var paymentStatusJob: Job? = null
         private val paymentRepository: PaymentRepository by inject()
         private val sessionManager: SessionManager by inject()
-        private val ticketRepository: TicketRepository by inject()
-        private val companyRepository: CompanyRepository by inject()
+        private val ticketRepository: OrderRepository by inject()
+        private val companyRepository: CompanySettingsRepository by inject()
         private var isCheckingPaymentStatus = false
         private lateinit var btnCheckStatus: Button
         private var lastKnownStatus: String = "PENDING"
@@ -141,7 +142,8 @@
 
                 qrCodeImageView.setImageBitmap(generateUPIQRCode(url))
 
-                startTimer()
+                //startTimer()
+                postTicketPaymentHistory("S", "Payment Success")
 
                 view.findViewById<ImageView>(R.id.btnClose).setOnClickListener {
                    safeDismiss()
@@ -240,7 +242,10 @@
                                 transactionReferenceID,
                                 sessionManager.getToken().toString()
                             )
-
+                            "CanaraBank" -> paymentRepository.getCanaraPaymentStatus(
+                                transactionReferenceID,
+                                sessionManager.getToken().toString()
+                            )
                             else -> paymentRepository.getSibPaymentStatus(
                                 transactionReferenceID,
                                 sessionManager.getToken().toString()
@@ -251,9 +256,9 @@
                     val (rawStatus, rawDesc) = when (response) {
                         is PaymentStatusResponse -> Pair(response.status, "")
                         is SibPaymentStatusResponse -> Pair(response.Status, response.statusDesc)
+                        is PaymentCanStatusResponse -> Pair(response.data.respMessage, "")
                         else -> Pair("PENDING", null)
                     }
-
                     val finalStatus = normalizeStatus(rawStatus, rawDesc)
 
                     Log.d("PAYMENT_FLOW", "Final Status Triggered: $finalStatus")
@@ -318,12 +323,10 @@
         }
 
         private fun normalizeStatus(status: String?, desc: String?): String {
-
             val s = status?.trim()?.uppercase()
             val d = desc?.trim()?.uppercase()
 
             return when {
-
                 s in listOf("S", "SUCCESS", "00") ||
                         d?.contains("SUCCESS") == true -> "SUCCESS"
 
@@ -332,7 +335,7 @@
                         d?.contains("PENDING") == true ||
                         (s == "F" && d?.contains("INVALID") == true) -> "PENDING"
 
-                s == "F" ||
+                s in listOf("F", "SUCCESS", "00") ||
                         d?.contains("FAILED") == true -> "FAILED"
 
                 else -> "RETRY"
@@ -344,6 +347,7 @@
             if (isAdded && !isStateSaved) dismiss()
         }
 
+        @SuppressLint("SetTextI18n")
         private suspend fun postTicketPaymentHistory(
             status: String,
             statusDesc: String
@@ -359,16 +363,35 @@
                     return
                 }
 
-                val itemsList = cartTickets.flatMap { item ->
-                    (1..item.daQty).map {
+                val itemsList = cartTickets
+                    .groupBy { it.ticketId }
+                    .map { (_, items) ->
+
+                        val first = items.first()
+
                         TicketPaymentRequest.Item(
-                            taCategoryId = item.ticketCategoryId,
-                            TicketId = item.ticketId,
-                            Quantity = 1,
-                            Rate = item.daRate
+                            taCategoryId = first.ticketCategoryId,
+                            TicketId = first.ticketId,
+                            Quantity = items.sumOf { it.daQty },
+                            Rate = first.daRate,
+                            IsCombo = first.ticketCombo,
+                            taType = first.ticketType
                         )
                     }
-                }
+
+
+                val schedulesList = cartTickets
+                    .map { item ->
+                        TicketPaymentRequest.Schedule(
+                            scheduleId = item.scheduleId,
+                            screenId = item.screenId,
+                            tsScheduleDay = item.scheduleDay,
+                            tsScheduleTime = item.scheduleTime,
+                            tsScheduleScreen = item.screenName
+                        )
+                    }
+                    .distinctBy { it.scheduleId }
+
 
                 val firstTicket = cartTickets.first()
 
@@ -393,12 +416,13 @@
                     tPaymentStatus = status,
                     tPaymentMode = "UPI",
                     tPaymentDes = statusDesc,
-                    Items = itemsList
+                    Items = itemsList,
+                    Schedules = schedulesList
                 )
 
-                Log.d("PAYMENT_FLOW", "Calling postTicket API")
+                Log.d("PAYMENT_FLOW", "API BODY → $request")
 
-                // ✅ CRITICAL FIX
+
                 val response = withContext(NonCancellable) {
                     ApiResponseHandler.handleApiCall(
                         activity = requireActivity()
@@ -412,7 +436,7 @@
 
                 val (totalAmount) = ticketRepository.getCartStatus()
 
-                if (response != null) {
+                if (response != null && response.status == true) {
 
                     handleTicketTransactionStatus(
                         "S",
@@ -423,7 +447,6 @@
                     )
 
                 } else {
-
                     handleTicketTransactionStatus(
                         "F",
                         transactionReferenceID,

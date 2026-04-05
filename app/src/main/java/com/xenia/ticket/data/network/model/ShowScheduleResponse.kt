@@ -1,7 +1,11 @@
 package com.xenia.ticket.data.network.model
 
 data class ShowScheduleResponse(
-    val showTime: String,
-    val screenName: String,
-    val availableSeats: Int
+    val ScheduleId: Int,
+    val ShowId: Int,
+    val ScreenId: Int,
+    val ShowDay: String,
+    val StartTime: String,
+    val EndTime: String,
+    val ScreenName: String,
 )

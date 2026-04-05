@@ -3,15 +3,15 @@ package com.xenia.ticket.data.repository
 import androidx.room.Transaction
 import com.xenia.ticket.data.network.model.LabelSettingsResponse
 import com.xenia.ticket.data.network.service.ApiClient
-import com.xenia.ticket.data.room.dao.LabelSettingsDao
-import com.xenia.ticket.data.room.entity.LabelSettings
+import com.xenia.ticket.data.room.dao.CompanyLabelsDao
+import com.xenia.ticket.data.room.entity.CompanyLabels
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import kotlin.collections.map
 
 class LabelSettingsRepository(
-    private val labelSettingsDao: LabelSettingsDao
+    private val labelSettingsDao: CompanyLabelsDao
 ) {
 
     suspend fun loadLabelSettings(bearerToken: String): Boolean {
@@ -36,7 +36,7 @@ class LabelSettingsRepository(
 
     @Transaction
     private suspend fun refreshLabelSettings(
-        items: List<LabelSettings>
+        items: List<CompanyLabels>
     ) = withContext(Dispatchers.IO) {
         labelSettingsDao.clearAll()
         labelSettingsDao.insertAll(items)
@@ -47,12 +47,12 @@ class LabelSettingsRepository(
     ): List<LabelSettingsResponse> = withContext(Dispatchers.IO) {
         ApiClient.apiService.getCompanyLabel(bearerToken)
     }
-    fun getLabelSettingsFromDb(): Flow<List<LabelSettings>> {
+    fun getLabelSettingsFromDb(): Flow<List<CompanyLabels>> {
         return labelSettingsDao.getAllActiveLabels()
     }
 
-    private fun LabelSettingsResponse.toEntity(): LabelSettings =
-        LabelSettings(
+    private fun LabelSettingsResponse.toEntity(): CompanyLabels =
+        CompanyLabels(
             id = id,
             companyId = companyId,
             settingKey = settingKey,

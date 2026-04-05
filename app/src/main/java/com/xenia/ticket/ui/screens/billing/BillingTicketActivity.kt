@@ -20,25 +20,24 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.xenia.ticket.R
 import com.xenia.ticket.data.listeners.OnBookingTicketClick
 import com.xenia.ticket.data.listeners.OnTicketClickListener
-import com.xenia.ticket.data.network.local.InitialSyncManager
-import com.xenia.ticket.data.network.local.SyncResult
+import com.xenia.ticket.data.network.sync.InitialSyncManager
+import com.xenia.ticket.data.network.sync.SyncResult
 import com.xenia.ticket.data.network.model.ActiveItem
-import com.xenia.ticket.data.network.model.TicketDto
-import com.xenia.ticket.data.repository.ActiveTicketRepository
-import com.xenia.ticket.data.repository.CategoryRepository
-import com.xenia.ticket.data.repository.CompanyRepository
-import com.xenia.ticket.data.repository.LabelSettingsRepository
+import com.xenia.ticket.data.network.model.Tickets
 import com.xenia.ticket.data.repository.TicketRepository
-import com.xenia.ticket.data.room.entity.ActiveTicket
+import com.xenia.ticket.data.repository.CategoryRepository
+import com.xenia.ticket.data.repository.CompanySettingsRepository
+import com.xenia.ticket.data.repository.LabelSettingsRepository
+import com.xenia.ticket.data.repository.OrderRepository
 import com.xenia.ticket.data.room.entity.Category
-import com.xenia.ticket.data.room.entity.LabelSettings
+import com.xenia.ticket.data.room.entity.CompanyLabels
+import com.xenia.ticket.data.room.entity.Orders
 import com.xenia.ticket.data.room.entity.Ticket
 import com.xenia.ticket.databinding.ActivityBillinTicketBinding
 import com.xenia.ticket.ui.adapter.CategoryAdapter
 import com.xenia.ticket.ui.adapter.TicketBookingAdapter
 import com.xenia.ticket.ui.adapter.TicketCartAdapter
 import com.xenia.ticket.ui.dialog.CustomLogoutPopupDialog
-import com.xenia.ticket.ui.dialog.CustomTicketPopupDialogue
 import com.xenia.ticket.ui.screens.kiosk.LanguageActivity
 import com.xenia.ticket.ui.screens.kiosk.PrinterSettingActivity
 import com.xenia.ticket.utils.common.ApiResponseHandler
@@ -54,7 +53,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
 import java.util.Locale
-import retrofit2.HttpException
 import kotlin.getValue
 import kotlin.toString
 
@@ -62,12 +60,12 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
     CategoryAdapter.OnCategoryClickListener, OnBookingTicketClick,
     TicketCartAdapter.OnTicketCartClickListener {
     private lateinit var binding: ActivityBillinTicketBinding
-    private val ticketRepository: TicketRepository by inject()
-    private val activeTicketRepository: ActiveTicketRepository by inject()
+    private val ticketRepository: OrderRepository by inject()
+    private val activeTicketRepository: TicketRepository by inject()
     private val categoryRepository: CategoryRepository by inject()
     private lateinit var ticketCartAdapter: TicketCartAdapter
     private val sessionManager: SessionManager by inject()
-    private val companyRepository: CompanyRepository by inject()
+    private val companyRepository: CompanySettingsRepository by inject()
     private val labelSettingsRepository: LabelSettingsRepository by inject()
     private val initialSyncManager: InitialSyncManager by inject()
 
@@ -79,7 +77,7 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
     private var selectedCategoryId: Int = 0
     private var spanCount: Int = 2
     private var reportsExpanded = false
-    private lateinit var ticketItemsItems: TicketDto
+    private lateinit var ticketItemsItems: Tickets
     private var formattedTotalAmount: String = ""
 
     private lateinit var plutusManager: PlutusServiceManager
@@ -172,7 +170,7 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
         }
     }
 
-    fun LabelSettings.getDisplayNameByLanguage(context: Context): String {
+    fun CompanyLabels.getDisplayNameByLanguage(context: Context): String {
         val lang = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
             context.resources.configuration.locales[0].language
         } else {
@@ -483,27 +481,27 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
         }
     }
 
-    fun ActiveTicket.toDto() = TicketDto(
-        ticketId = ticketId,
-        ticketName = ticketName,
-        ticketNameMa = ticketNameMa,
-        ticketNameTa = ticketNameTa,
-        ticketNameTe = ticketNameTe,
-        ticketNameKa = ticketNameKa,
-        ticketNameHi = ticketNameHi,
-        ticketNamePa = ticketNamePa,
-        ticketNameMr = ticketNameMr,
-        ticketNameSi = ticketNameSi,
-        ticketCategoryId = ticketCategoryId,
-        ticketCompanyId = ticketCompanyId,
-        ticketAmount = ticketAmount,
-        ticketCreatedDate = ticketCreatedDate,
-        ticketCreatedBy = ticketCreatedBy,
-        ticketActive = ticketActive,
-        ticketCombo = ticketCombo
+    fun Ticket.toDto() = Tickets(
+        ticketId = id,
+        ticketName = name,
+        ticketNameMa = nameMa,
+        ticketNameTa = nameTa,
+        ticketNameTe = nameTe,
+        ticketNameKa = nameKa,
+        ticketNameHi = nameHi,
+        ticketNamePa = namePa,
+        ticketNameMr = nameMr,
+        ticketNameSi = nameSi,
+        ticketCategoryId = categoryId,
+        ticketCompanyId = companyId,
+        ticketAmount = amount,
+        ticketCreatedDate = createdDate,
+        ticketCreatedBy = createdBy,
+        ticketActive = active,
+        ticketCombo = combo
     )
 
-    override fun onTicketMinusClick(ticketItem: TicketDto) {
+    override fun onTicketMinusClick(ticketItem: Tickets) {
         lifecycleScope.launch {
 
             val existingItem =
@@ -522,7 +520,7 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
 
                     val totalAmount = ticketItem.ticketAmount * newQty
 
-                    val cartItem = Ticket(
+                    val cartItem = Orders(
                         id = existingItem?.id ?: 0L,
                         ticketId = ticketItem.ticketId,
                         ticketName = ticketItem.ticketName,
@@ -550,7 +548,14 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
                         daNpciTransId = "",
                         daProofId = binding.editId?.text.toString(),
                         daProof = selectedProofMode,
-                        daImg = byteArrayOf()
+                        daImg = byteArrayOf(),
+                        scheduleId = 0,
+                        screenId =  0,
+                        scheduleDay="",
+                        scheduleTime="",
+                        screenName = "",
+                        ticketCombo = false,
+                        ticketType = "TICKET"
                     )
 
                     ticketRepository.insertCartBookingItem(cartItem, "Sub")
@@ -604,9 +609,9 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
         }
     }
 
-    override fun onTicketPlusClick(ticketItem: TicketDto) {
+    override fun onTicketPlusClick(ticketItem: Tickets) {
         lifecycleScope.launch {
-            val cartItem = Ticket(
+            val cartItem = Orders(
                 ticketId = ticketItem.ticketId,
                 ticketName = ticketItem.ticketName,
                 ticketNameMa = ticketItem.ticketNameMa,
@@ -633,7 +638,14 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
                 daNpciTransId = "",
                 daProofId = binding.editId?.text.toString(),
                 daProof = selectedProofMode,
-                daImg = byteArrayOf()
+                daImg = byteArrayOf(),
+                scheduleId = 0,
+                screenId =  0,
+                scheduleDay="",
+                scheduleTime="",
+                screenName = "",
+                ticketCombo = false,
+                ticketType = "TICKET"
             )
             ticketRepository.insertCartBookingItem(cartItem, "Add")
 
@@ -644,11 +656,11 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
         }
     }
 
-    override fun onDeleteClick(ticket: Ticket) {
+    override fun onDeleteClick(ticket: Orders) {
         TODO("Not yet implemented")
     }
 
-    override fun onEditClick(ticket: Ticket) {
+    override fun onEditClick(ticket: Orders) {
         TODO("Not yet implemented")
     }
 

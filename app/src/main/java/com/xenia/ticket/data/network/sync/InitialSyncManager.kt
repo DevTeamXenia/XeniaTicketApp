@@ -1,8 +1,8 @@
-package com.xenia.ticket.data.network.local
+package com.xenia.ticket.data.network.sync
 
-import com.xenia.ticket.data.repository.ActiveTicketRepository
+import com.xenia.ticket.data.repository.TicketRepository
 import com.xenia.ticket.data.repository.CategoryRepository
-import com.xenia.ticket.data.repository.CompanyRepository
+import com.xenia.ticket.data.repository.CompanySettingsRepository
 import com.xenia.ticket.data.repository.LabelSettingsRepository
 import com.xenia.ticket.utils.common.CompanyKey
 import com.xenia.ticket.utils.common.SessionManager
@@ -14,9 +14,9 @@ import retrofit2.HttpException
 
 
 class InitialSyncManager(
-    private val companyRepository: CompanyRepository,
+    private val companyRepository: CompanySettingsRepository,
     private val categoryRepository: CategoryRepository,
-    private val activeTicketRepository: ActiveTicketRepository,
+    private val activeTicketRepository: TicketRepository,
     private val labelSettingsRepository: LabelSettingsRepository,
     private val sessionManager: SessionManager
 ) {
@@ -24,7 +24,6 @@ class InitialSyncManager(
     suspend fun startInitialLoad(): SyncResult = withContext(Dispatchers.IO) {
         try {
             coroutineScope {
-
                 val token = sessionManager.getToken()
                     ?: return@coroutineScope SyncResult.Error("Token missing", code = 401)
 
@@ -127,6 +126,7 @@ class InitialSyncManager(
                 try {
                     if (!labelApi.await()) return@coroutineScope SyncResult.Error("Label API failed")
                     if (!offeringApi.await()) return@coroutineScope SyncResult.Error("Offering API failed")
+                    if (!showApi.await()) return@coroutineScope SyncResult.Error("Offering API failed")
                     if (!mappingApi.await()) return@coroutineScope SyncResult.Error("Mapping API failed")
                     if (!categoryApi.await()) return@coroutineScope SyncResult.Error("Category API failed")
                 } catch (e: SyncException) {

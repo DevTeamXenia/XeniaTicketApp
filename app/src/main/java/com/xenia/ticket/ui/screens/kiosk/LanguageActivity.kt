@@ -17,10 +17,10 @@ import com.bumptech.glide.Glide
 import com.xenia.ticket.R
 import retrofit2.HttpException
 import com.xenia.ticket.data.listeners.InactivityHandlerActivity
-import com.xenia.ticket.data.network.local.InitialSyncManager
-import com.xenia.ticket.data.network.local.SyncResult
-import com.xenia.ticket.data.repository.CompanyRepository
-import com.xenia.ticket.data.repository.TicketRepository
+import com.xenia.ticket.data.network.sync.InitialSyncManager
+import com.xenia.ticket.data.network.sync.SyncResult
+import com.xenia.ticket.data.repository.CompanySettingsRepository
+import com.xenia.ticket.data.repository.OrderRepository
 import com.xenia.ticket.databinding.ActivitySelectionBinding
 import com.xenia.ticket.ui.dialog.CustomInactivityDialog
 import com.xenia.ticket.ui.dialog.CustomInternetAvailabilityDialog
@@ -51,9 +51,9 @@ class LanguageActivity : AppCompatActivity(),
     InactivityHandlerActivity {
     private lateinit var binding: ActivitySelectionBinding
     private val sessionManager: SessionManager by inject()
-    private val companyRepository: CompanyRepository by inject()
+    private val companyRepository: CompanySettingsRepository by inject()
     private var screen: String? = null
-    private val ticketRepository: TicketRepository by inject()
+    private val ticketRepository: OrderRepository by inject()
     private val initialSyncManager: InitialSyncManager by inject()
     private var enabledLanguages: List<String> = emptyList()
 

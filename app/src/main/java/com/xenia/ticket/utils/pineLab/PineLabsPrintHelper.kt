@@ -6,7 +6,7 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import java.io.ByteArrayOutputStream
 import androidx.core.graphics.scale
-import com.xenia.ticket.data.room.entity.Ticket
+import com.xenia.ticket.data.room.entity.Orders
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -82,7 +82,7 @@ object  PineLabsPrintHelper {
     }
 
     fun calculateReceiptHeight(
-        ticket: List<Ticket>,
+        ticket: List<Orders>,
         paint: Paint,
         width: Int
     ): Int {

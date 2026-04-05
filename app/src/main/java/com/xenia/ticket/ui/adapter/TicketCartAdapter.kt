@@ -1,7 +1,7 @@
 package com.xenia.ticket.ui.adapter
 
 import com.xenia.ticket.R
-import com.xenia.ticket.data.room.entity.Ticket
+import com.xenia.ticket.data.room.entity.Orders
 import com.xenia.ticket.utils.common.Constants.LANGUAGE_ENGLISH
 import com.xenia.ticket.utils.common.Constants.LANGUAGE_HINDI
 import com.xenia.ticket.utils.common.Constants.LANGUAGE_KANNADA
@@ -31,11 +31,11 @@ class TicketCartAdapter(
     private val onTicketCartClickListener: OnTicketCartClickListener
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    private var darshanItems: List<Ticket> = listOf()
+    private var darshanItems: List<Orders> = listOf()
 
     interface OnTicketCartClickListener {
-        fun onDeleteClick(ticket: Ticket)
-        fun onEditClick(ticket: Ticket)
+        fun onDeleteClick(ticket: Orders)
+        fun onEditClick(ticket: Orders)
     }
 
     companion object {
@@ -44,7 +44,7 @@ class TicketCartAdapter(
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    fun updateTickets(darshanItem: List<Ticket>) {
+    fun updateTickets(darshanItem: List<Orders>) {
         darshanItems = darshanItem
         notifyDataSetChanged()
     }
@@ -86,7 +86,7 @@ class TicketCartAdapter(
         private val txtEdit: RelativeLayout = itemView.findViewById(R.id.txtEdit)
 
         @SuppressLint("SetTextI18n")
-        fun bind(ticketItem: Ticket) {
+        fun bind(ticketItem: Orders) {
             txtName.text = when (selectedLanguage) {
                 LANGUAGE_ENGLISH -> ticketItem.ticketName
                 LANGUAGE_MALAYALAM -> ticketItem.ticketNameMa
@@ -118,7 +118,7 @@ class TicketCartAdapter(
         private val totalAmount: TextView = itemView.findViewById(R.id.totalAmount)
 
         @SuppressLint("SetTextI18n")
-        fun bind(ticketItem: Ticket) {
+        fun bind(ticketItem: Orders) {
             txtName.text = when (selectedLanguage) {
                 LANGUAGE_ENGLISH -> ticketItem.ticketName
                 LANGUAGE_MALAYALAM -> ticketItem.ticketNameMa

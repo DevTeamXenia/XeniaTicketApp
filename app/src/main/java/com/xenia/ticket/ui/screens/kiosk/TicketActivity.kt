@@ -15,10 +15,10 @@ import com.xenia.ticket.R
 import com.xenia.ticket.data.listeners.InactivityHandlerActivity
 import com.xenia.ticket.data.listeners.OnTicketClickListener
 import com.xenia.ticket.data.network.model.ActiveItem
-import com.xenia.ticket.data.repository.ActiveTicketRepository
-import com.xenia.ticket.data.repository.CategoryRepository
-import com.xenia.ticket.data.repository.CompanyRepository
 import com.xenia.ticket.data.repository.TicketRepository
+import com.xenia.ticket.data.repository.CategoryRepository
+import com.xenia.ticket.data.repository.CompanySettingsRepository
+import com.xenia.ticket.data.repository.OrderRepository
 import com.xenia.ticket.data.room.entity.Category
 import com.xenia.ticket.databinding.ActivityTicketBinding
 import com.xenia.ticket.ui.adapter.CategoryAdapter
@@ -45,11 +45,11 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
     CustomInternetAvailabilityDialog.InternetAvailabilityListener,
     InactivityHandlerActivity, CategoryAdapter.OnCategoryClickListener {
     private lateinit var binding: ActivityTicketBinding
-    private val ticketRepository: TicketRepository by inject()
-    private val activeTicketRepository: ActiveTicketRepository by inject()
+    private val ticketRepository: OrderRepository by inject()
+    private val activeTicketRepository: TicketRepository by inject()
     private val categoryRepository: CategoryRepository by inject()
     private val sessionManager: SessionManager by inject()
-    private val companyRepository: CompanyRepository by inject()
+    private val companyRepository: CompanySettingsRepository by inject()
     private lateinit var categoryAdapter: CategoryAdapter
     private lateinit var ticketAdapter: TicketAdapter
     private var selectedLanguage: String? = ""
@@ -269,7 +269,7 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
                 ticketCompanyId = item.companyId,
                 ticketRate = item.amount,
                 ticketCombo = item.combo,
-                ticketT
+                ticketType = item.type
             )
             setListener(this@TicketActivity)
         }

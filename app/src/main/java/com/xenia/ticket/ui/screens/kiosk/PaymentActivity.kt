@@ -24,9 +24,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.scale
 import com.xenia.ticket.R
-import com.xenia.ticket.data.repository.CompanyRepository
-import com.xenia.ticket.data.repository.TicketRepository
-import com.xenia.ticket.data.room.entity.Ticket
+import com.xenia.ticket.data.repository.CompanySettingsRepository
+import com.xenia.ticket.data.repository.OrderRepository
+import com.xenia.ticket.data.room.entity.Orders
 import com.xenia.ticket.databinding.ActivityPaymentBinding
 import com.xenia.ticket.ui.screens.billing.BillingTicketActivity
 import com.xenia.ticket.utils.common.CommonMethod.setLocale
@@ -55,15 +55,14 @@ import org.json.JSONObject
 import androidx.lifecycle.ProcessLifecycleOwner
 import java.io.ByteArrayOutputStream
 import java.io.File
-import androidx.core.graphics.get
 import com.xenia.ticket.utils.pineLab.PlutusConstants
 
 
 class PaymentActivity : AppCompatActivity() {
     private lateinit var binding: ActivityPaymentBinding
     private val sessionManager: SessionManager by inject()
-    private val ticketRepository: TicketRepository by inject()
-    private val companyRepository: CompanyRepository by inject()
+    private val ticketRepository: OrderRepository by inject()
+    private val companyRepository: CompanySettingsRepository by inject()
     private var curConnect: IDeviceConnection? = null
     private var prefix: String? = null
     private var status: String? = null
@@ -330,7 +329,7 @@ class PaymentActivity : AppCompatActivity() {
         currentDate: String,
         transID: String?,
         orderID: String?,
-        ticket: List<Ticket>,
+        ticket: List<Orders>,
         selectedLanguage: String
     ): Bitmap {
         val width = 576
@@ -623,7 +622,7 @@ class PaymentActivity : AppCompatActivity() {
         currentDate: String,
         transID: String?,
         orderID: String?,
-        ticket: List<Ticket>,
+        ticket: List<Orders>,
         selectedLanguage: String
     ): Bitmap {
         val width = 576
@@ -878,7 +877,7 @@ class PaymentActivity : AppCompatActivity() {
         currentDate: String,
         transID: String?,
         orderID: String?,
-        ticket: List<Ticket>,
+        ticket: List<Orders>,
         selectedLanguage: String
     ): List<String> {
 
@@ -1022,7 +1021,7 @@ class PaymentActivity : AppCompatActivity() {
         currentDate: String,
         transID: String?,
         orderID: String?,
-        ticket: List<Ticket>,
+        ticket: List<Orders>,
         selectedLanguage: String
     ): List<String> {
         val lines = mutableListOf<String>()

@@ -18,13 +18,16 @@ import android.widget.ImageView
 import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.xenia.ticket.R
 import com.xenia.ticket.data.listeners.OnTicketClickListener
-import com.xenia.ticket.data.repository.TicketRepository
-import com.xenia.ticket.data.room.entity.Ticket
+import com.xenia.ticket.data.repository.OrderRepository
+import com.xenia.ticket.data.room.entity.Orders
 import com.xenia.ticket.utils.common.Constants.LANGUAGE_ENGLISH
 import com.xenia.ticket.utils.common.Constants.LANGUAGE_HINDI
 import com.xenia.ticket.utils.common.Constants.LANGUAGE_KANNADA
@@ -34,10 +37,13 @@ import com.xenia.ticket.utils.common.Constants.LANGUAGE_PUNJABI
 import com.xenia.ticket.utils.common.Constants.LANGUAGE_SINHALA
 import com.xenia.ticket.utils.common.Constants.LANGUAGE_TAMIL
 import com.xenia.ticket.utils.common.Constants.LANGUAGE_TELUGU
-import com.xenia.ticket.utils.common.InactivityHandler
 import com.xenia.ticket.utils.common.SessionManager
 import com.google.android.material.button.MaterialButton
-import com.xenia.ticket.data.repository.ActiveTicketRepository
+import com.xenia.ticket.data.network.model.ShowScheduleResponse
+import com.xenia.ticket.data.repository.TicketRepository
+import com.xenia.ticket.ui.adapter.ShowScheduleAdapter
+import com.xenia.ticket.utils.common.CommonMethod.formatTime
+import com.xenia.ticket.utils.common.CommonMethod.getTodayDay
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -53,19 +59,15 @@ class CustomTicketPopupDialogue : DialogFragment() {
     private lateinit var txtQty: TextView
     private lateinit var txtTotalAmount: TextView
     private lateinit var editTextTickets: EditText
-    private lateinit var inactivityHandler: InactivityHandler
+    private lateinit var backCallback: OnBackPressedCallback
     private lateinit var btnClear: ImageView
     private lateinit var icClose: RelativeLayout
     private lateinit var btnBack: RelativeLayout
-
     private lateinit var btnDone: MaterialButton
-
     private var firstClick: Boolean = true
-
-    private val ticketRepository: TicketRepository by inject()
-    private val activeTicketRepository: ActiveTicketRepository by inject()
+    private val ticketRepository: OrderRepository by inject()
+    private val activeTicketRepository: TicketRepository by inject()
     private val sessionManager: SessionManager by inject()
-
     private var ticketId: Int = 0
     private var ticketName: String = ""
     private var ticketNameMa: String = ""
@@ -83,6 +85,7 @@ class CustomTicketPopupDialogue : DialogFragment() {
     private var ticketCombo: Boolean = false
     private var ticketType: String = ""
     private var listener: OnTicketClickListener? = null
+    var selectedSchedule: ShowScheduleResponse? = null
 
     fun setListener(listener: OnTicketClickListener) {
         this.listener = listener
@@ -120,24 +123,31 @@ class CustomTicketPopupDialogue : DialogFragment() {
         this.ticketCategoryId=ticketCategoryId
         this.ticketCombo=ticketCombo
         this.ticketType = ticketType
-
-
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        return object : Dialog(requireActivity(), theme) {
-            @Deprecated("Deprecated in Java", ReplaceWith("dismiss()"))
-            override fun onBackPressed() {
-                firstClick = true
-                dismiss()
-            }
-        }.apply {
+        return Dialog(requireActivity(), theme).apply {
             requestWindowFeature(Window.FEATURE_NO_TITLE)
             window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
             setCanceledOnTouchOutside(false)
             setCancelable(false)
         }
+    }
 
+    override fun onStart() {
+        super.onStart()
+
+        backCallback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                firstClick = true
+                dismiss()
+            }
+        }
+
+        requireActivity().onBackPressedDispatcher.addCallback(
+            this,
+            backCallback
+        )
     }
 
 
@@ -160,11 +170,13 @@ class CustomTicketPopupDialogue : DialogFragment() {
         txtTotalAmount = view.findViewById(R.id.totalAmount)
         editTextTickets = view.findViewById(R.id.editTextTickets)
         editTextTickets.post { editTextTickets.selectAll() }
+        val recyclerView = view.findViewById<RecyclerView>(R.id.showSchedule)
+
 
         val billingLang = sessionManager.getBillingSelectedLanguage()
         val appLang = sessionManager.getSelectedLanguage()
 
-        val currentLang = if (!billingLang.isNullOrEmpty()) billingLang else appLang
+        val currentLang = billingLang.ifEmpty { appLang }
 
         btnBack = view.findViewById(R.id.btnBack)
         btnClear = view.findViewById(R.id.btnClear)
@@ -196,12 +208,65 @@ class CustomTicketPopupDialogue : DialogFragment() {
         val formattedAmount = String.format(Locale.ENGLISH, "%.2f", ticketRate)
         txtTicketRate.text = "Rs. $formattedAmount /-"
 
+        if (ticketType.equals("SHOW", ignoreCase = true)) {
+
+            recyclerView.visibility = View.VISIBLE
+            txtComboTicketName.visibility = View.GONE
+
+            val adapter = ShowScheduleAdapter(emptyList()) { selectedItem ->
+                selectedSchedule = selectedItem
+            }
+
+            recyclerView.layoutManager = GridLayoutManager(requireContext(), 4)
+            recyclerView.adapter = adapter
+
+            lifecycleScope.launch {
+                try {
+                    val day = getTodayDay()
+
+                    val schedules = withContext(Dispatchers.IO) {
+                        activeTicketRepository.getSchedules(ticketId, day)
+                    }
+
+                    val existingItem = withContext(Dispatchers.IO) {
+                        ticketRepository.getCartItemByTicketId(ticketId)
+                    }
+
+                    if (schedules.isNotEmpty()) {
+                        adapter.updateData(schedules)
+
+                        existingItem?.let { item ->
+                            if (item.scheduleId != 0) {
+                                adapter.setSelectedByScheduleId(item.scheduleId)
+
+                                selectedSchedule = schedules.find {
+                                    it.ScheduleId == item.scheduleId
+                                }
+                            }
+                        }
+
+                        if (schedules.size == 1 && selectedSchedule == null) {
+                            selectedSchedule = schedules[0]
+                            adapter.setSelectedByScheduleId(schedules[0].ScheduleId)
+                        }
+
+                    } else {
+                        recyclerView.visibility = View.GONE
+                    }
+
+                } catch (_: Exception) {
+                    recyclerView.visibility = View.GONE
+                }
+            }
+        }
 
         if (ticketCombo) {
             lifecycleScope.launch {
+                recyclerView.visibility = View.GONE
+                txtComboTicketName.visibility = View.VISIBLE
                 val comboTickets = activeTicketRepository.getComboTickets(ticketId)
                 withContext(Dispatchers.Main) {
-                    val names = comboTickets.joinToString(" | ") { it.ticketName }
+                    val names = comboTickets.joinToString(" | ") { it.name }
                     txtComboTicketName.text = names
                 }
             }
@@ -273,7 +338,12 @@ class CustomTicketPopupDialogue : DialogFragment() {
                 return@setOnClickListener
             }
 
-            val cartItem = Ticket(
+            if (ticketType.equals("SHOW", ignoreCase = true) && selectedSchedule == null) {
+                Toast.makeText(requireContext(), "Please select a schedule", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            val cartItem = Orders(
                 ticketId = ticketId,
                 ticketName = ticketName,
                 ticketNameMa = ticketNameMa,
@@ -291,6 +361,8 @@ class CustomTicketPopupDialogue : DialogFragment() {
                 ticketCreatedDate = System.currentTimeMillis().toString(),
                 ticketCreatedBy =0 ,
                 ticketActive = true,
+                ticketCombo = ticketCombo,
+                ticketType = ticketType,
                 daName = "",
                 daRate = ticketRate,
                 daQty = quantity,
@@ -300,7 +372,14 @@ class CustomTicketPopupDialogue : DialogFragment() {
                 daProof = "",
                 daImg = byteArrayOf(),
                 daCustRefNo = "",
-                daNpciTransId = ""
+                daNpciTransId = "",
+                screenId = selectedSchedule?.ScreenId ?: 0,
+                scheduleId = selectedSchedule?.ScheduleId ?: 0,
+                scheduleDay = selectedSchedule?.ShowDay ?: "",
+                scheduleTime = selectedSchedule?.let {
+                    "${formatTime(it.StartTime)} - ${formatTime(it.EndTime)}"
+                } ?: "",
+                screenName = selectedSchedule?.ScreenName ?: ""
             )
             lifecycleScope.launch {
                 ticketRepository.insertCartItem(cartItem)
@@ -333,7 +412,7 @@ class CustomTicketPopupDialogue : DialogFragment() {
         var currentLine = ""
 
         for (word in words) {
-            if ((currentLine + " " + word).trim().length <= maxCharsPerLine) {
+            if (("$currentLine $word").trim().length <= maxCharsPerLine) {
                 currentLine = if (currentLine.isEmpty()) word else "$currentLine $word"
             } else {
                 lines.add(currentLine)

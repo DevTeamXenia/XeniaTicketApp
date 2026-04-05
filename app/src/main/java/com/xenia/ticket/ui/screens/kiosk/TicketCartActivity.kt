@@ -19,17 +19,17 @@ import com.xenia.ticket.R
 import com.xenia.ticket.data.listeners.InactivityHandlerActivity
 import com.xenia.ticket.data.listeners.OnTicketClickListener
 import com.xenia.ticket.data.network.model.FedQrRequest
-import com.xenia.ticket.data.network.model.SibQrRequest
+import com.xenia.ticket.data.network.model.QrRequest
 import com.xenia.ticket.data.network.model.TicketPaymentRequest
-import com.xenia.ticket.data.repository.CompanyRepository
+import com.xenia.ticket.data.repository.CompanySettingsRepository
 import com.xenia.ticket.data.repository.PaymentRepository
-import com.xenia.ticket.data.repository.TicketRepository
-import com.xenia.ticket.data.room.entity.Ticket
+import com.xenia.ticket.data.repository.OrderRepository
+import com.xenia.ticket.data.room.entity.Orders
 import com.xenia.ticket.databinding.ActivityTicketCartBinding
 import com.xenia.ticket.ui.adapter.TicketCartAdapter
 import com.xenia.ticket.ui.dialog.CustomInactivityDialog
 import com.xenia.ticket.ui.dialog.CustomInternetAvailabilityDialog
-import com.xenia.ticket.ui.dialog.CustomQRDarshanPopupDialogue
+import com.xenia.ticket.ui.dialog.CustomQRPopupDialogue
 import com.xenia.ticket.ui.dialog.CustomTicketPopupDialogue
 import com.xenia.ticket.utils.common.ApiResponseHandler
 import com.xenia.ticket.utils.common.CommonMethod.dismissLoader
@@ -61,13 +61,13 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
     InactivityHandlerActivity {
 
     private lateinit var binding: ActivityTicketCartBinding
-    private val ticketRepository: TicketRepository by inject()
+    private val ticketRepository: OrderRepository by inject()
     private lateinit var ticketCartAdapter: TicketCartAdapter
     private val sessionManager: SessionManager by inject()
     private val paymentRepository: PaymentRepository by inject()
-    private val companyRepository: CompanyRepository by inject()
+    private val companyRepository: CompanySettingsRepository by inject()
     private val customInternetAvailabilityDialog: CustomInternetAvailabilityDialog by inject()
-    private val customQRDarshanPopupDialogue: CustomQRDarshanPopupDialogue by inject()
+    private val customQRDarshanPopupDialogue: CustomQRPopupDialogue by inject()
     private var formattedTotalAmount: String = ""
     private var idProofType: String? = ""
     private var devoteeName: String? = null
@@ -222,6 +222,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
             dialog.show()
         }
     }
+
     @SuppressLint("SetTextI18n", "DefaultLocale")
     private fun loadTicketItems() {
         lifecycleScope.launch {
@@ -242,7 +243,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                 ticketCartAdapter.updateTickets(allDarshanTickets)
                 formattedTotalAmount = String.format(Locale.ENGLISH, "%.2f", totalAmount)
 
-                if(sessionManager.getSelectedLanguage() == "te")
+                if (sessionManager.getSelectedLanguage() == "te")
                     binding.btnPay.text =
                         "${getString(R.string.rs)} $formattedTotalAmount ${getString(R.string.proceed)}"
                 else
@@ -261,7 +262,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
         }
     }
 
-    override fun onDeleteClick(ticket: Ticket) {
+    override fun onDeleteClick(ticket: Orders) {
         lifecycleScope.launch(Dispatchers.IO) {
             ticketRepository.deleteTicketById(ticket.ticketId)
             withContext(Dispatchers.Main) {
@@ -270,7 +271,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
         }
     }
 
-    override fun onEditClick(ticket: Ticket) {
+    override fun onEditClick(ticket: Orders) {
         val dialog = CustomTicketPopupDialogue()
         dialog.setData(
             ticketId = ticket.ticketId,
@@ -286,7 +287,8 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
             ticketCategoryId = ticket.ticketCategoryId,
             ticketCompanyId = ticket.ticketCompanyId,
             ticketRate = ticket.ticketAmount,
-            ticketCombo = false
+            ticketCombo = ticket.ticketCombo,
+            ticketType = ticket.ticketType
         )
         dialog.setListener(this)
         dialog.show(supportFragmentManager, "CustomPopup")
@@ -311,26 +313,22 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                     when {
                         totalAmount == 0.0 -> {
                             dismissLoader()
-                            postTicketPaymentHistory(
-                                status = "S",
-                                statusDesc = "ZERO AMOUNT PAYMENT"
-                            )
+                            postTicketPaymentHistory(status = "S", statusDesc = "ZERO AMOUNT PAYMENT")
                             return@launch
                         }
-
                         totalAmount == 1.0 -> {
                             dismissLoader()
-                            showSnackbar(
-                                findViewById(android.R.id.content),
-                                "Please select an amount greater than 1"
-                            )
+
+                            showSnackbar(findViewById(android.R.id.content), "Please select an amount greater than 1")
                             return@launch
                         }
-
                         totalAmount >= 2.0 -> {
                             generateFederalPaymentQrCode(totalAmount)
                         }
                     }
+                }
+                "CanaraBank" -> {
+                    generateCanaraQrCode(totalAmount)
                 }
                 else -> {
                     generateSibQrCode(totalAmount)
@@ -404,11 +402,12 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
             }
         }
     }
+
     private fun generateSibQrCode(donationAmount: Double) {
 
         val transactionId = generateNumericTransactionReferenceID()
 
-        val paymentRequest = SibQrRequest(
+        val paymentRequest = QrRequest(
             transactionReferenceID = transactionId,
             amount = donationAmount.toString(),
             name = "",
@@ -440,7 +439,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                         return@launch
                     }
 
-                    val dialog = CustomQRDarshanPopupDialogue().apply {
+                    val dialog = CustomQRPopupDialogue().apply {
                         setData(
                             donationAmount.toInt().toString(),
                             upiUrl,
@@ -487,12 +486,83 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
         }
     }
 
-    private suspend fun postTicketPaymentHistory(
-        status: String,
-        statusDesc: String,
-        retryCount: Int = 0
-    ) {
-        try {
+    private fun generateCanaraQrCode(donationAmount: Double) {
+        val qrAmount = donationAmount.toInt().toString()
+        val transactionId = "TXT" + generateNumericTransactionReferenceID()
+        val paymentRequest = QrRequest(
+            transactionReferenceID = transactionId,
+            amount = qrAmount,
+            name = "",
+            phoneNumber = "")
+        lifecycleScope.launch {
+            try {
+                val response = paymentRepository.generateCanaraQr(
+                    token = sessionManager.getToken().toString(),
+                    payFor = "Common",
+                    request = paymentRequest
+                )
+
+                val upiUrl = response.qrString
+
+                val name = binding.editTextName.text.toString().trim()
+                val phone = binding.editTextPhoneNumber.text.toString().trim()
+
+                if (!transactionId.isNullOrEmpty() && !upiUrl.isNullOrEmpty()) {
+                    val existingDialog =
+                        supportFragmentManager.findFragmentByTag("CustomPopup")
+
+                    if (existingDialog != null && existingDialog.isAdded) {
+                        return@launch
+                    }
+
+                    val dialog = CustomQRPopupDialogue().apply {
+                        setData(
+                            donationAmount.toInt().toString(),
+                            upiUrl,
+                            transactionId,
+                            name,
+                            phone
+                        )
+                    }
+
+                    dismissLoader()
+
+                    if (!isFinishing && !supportFragmentManager.isStateSaved) {
+                        dialog.show(supportFragmentManager, "CustomPopup")
+                    }
+
+                } else {
+                    dismissLoader()
+                    showSnackbar(binding.root, "Unable to generate QR code!")
+                }
+
+            } catch (e: HttpException) {
+
+                dismissLoader()
+
+                if (e.code() == 401) {
+                    AlertDialog.Builder(this@TicketCartActivity)
+                        .setTitle("Logout !!")
+                        .setMessage("You have been logged out because your account was used on another device.")
+                        .setCancelable(false)
+                        .setPositiveButton("Logout") { _, _ ->
+                            ApiResponseHandler.logoutUser(this@TicketCartActivity)
+                        }
+                        .show()
+                } else {
+                    showSnackbar(binding.root, "Unable to load settings!")
+                }
+
+            } catch (_: Exception) {
+
+                dismissLoader()
+                showSnackbar(binding.root, "Something went wrong!")
+            }
+        }
+    }
+
+    private suspend fun postTicketPaymentHistory(status: String, statusDesc: String, retryCount: Int = 0) {
+        /*try {
 
             val cartTickets = ticketRepository.getAllTicketsInCart()
 
@@ -592,19 +662,12 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                     showSnackbar(binding.root, "Something went wrong")
                 }
             }
-        }
+        }*/
     }
 
-
-    private fun handleTicketTransactionStatus(
-        orderId: String,
-        ticket: String?,
-        totalAmount: Double,
-        receiptPrefix: String?
-    ) {
+    private fun handleTicketTransactionStatus(orderId: String, ticket: String?, totalAmount: Double, receiptPrefix: String?) {
 
         val intent = Intent(this, PaymentActivity::class.java).apply {
-
             putExtra("status", "S")
             putExtra("amount", totalAmount.toString())
             putExtra("orderID", orderId)
@@ -615,7 +678,6 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
             putExtra("phno", binding.editTextPhoneNumber.text.toString())
 
         }
-
         startActivity(intent)
         finish()
     }

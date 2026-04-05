@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.xenia.ticket.R
 import com.xenia.ticket.data.listeners.OnTicketClickListener
 import com.xenia.ticket.data.network.model.ActiveItem
-import com.xenia.ticket.data.repository.TicketRepository
+import com.xenia.ticket.data.repository.OrderRepository
 import com.xenia.ticket.utils.common.Constants.LANGUAGE_ENGLISH
 import com.xenia.ticket.utils.common.Constants.LANGUAGE_HINDI
 import com.xenia.ticket.utils.common.Constants.LANGUAGE_KANNADA
@@ -32,7 +32,7 @@ import java.util.Locale
 class TicketAdapter(
     private val context: Context,
     private val selectedLanguage: String,
-    private val ticketRepository: TicketRepository,
+    private val ticketRepository: OrderRepository,
     private val coroutineScope: CoroutineScope,
     private val onTicketClickListener: OnTicketClickListener
 ) : RecyclerView.Adapter<TicketAdapter.ViewHolder>() {

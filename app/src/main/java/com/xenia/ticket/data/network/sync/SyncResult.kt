@@ -1,4 +1,4 @@
-package com.xenia.ticket.data.network.local
+package com.xenia.ticket.data.network.sync
 
 
 sealed class SyncResult {

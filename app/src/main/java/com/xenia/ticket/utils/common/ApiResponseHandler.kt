@@ -4,7 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import androidx.appcompat.app.AlertDialog
 import com.xenia.ticket.data.repository.CategoryRepository
-import com.xenia.ticket.data.repository.TicketRepository
+import com.xenia.ticket.data.repository.OrderRepository
 import com.xenia.ticket.ui.screens.kiosk.LoginActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -84,7 +84,7 @@ object ApiResponseHandler {
     }
 
     private suspend fun clearLocalData(activity: Activity) {
-        val ticketRepository: TicketRepository by activity.inject()
+        val ticketRepository: OrderRepository by activity.inject()
         val categoryRepository: CategoryRepository by activity.inject()
 
         ticketRepository.clearAllData()

@@ -21,7 +21,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.xenia.ticket.data.network.model.TransactionItem
-import com.xenia.ticket.data.repository.CompanyRepository
+import com.xenia.ticket.data.repository.CompanySettingsRepository
 import com.xenia.ticket.data.repository.ReportRepository
 import com.xenia.ticket.databinding.ActivityTransactionDetailBinding
 import com.xenia.ticket.ui.adapter.TransactionDetailAdapter
@@ -47,7 +47,7 @@ class TransactionDetailActivity : AppCompatActivity() {
     private lateinit var progressBar: ProgressBar
 
     private val repository: ReportRepository by inject()
-    private val companyRepository: CompanyRepository by inject()
+    private val companyRepository: CompanySettingsRepository by inject()
     private val sessionManager: SessionManager by inject()
     private var orderId: Int = 0
     private var transactionId: String? = null

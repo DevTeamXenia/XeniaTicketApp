@@ -20,10 +20,10 @@ import com.xenia.ticket.data.network.model.ActiveItem
 import com.xenia.ticket.data.network.model.PineLabGenerateRequest
 import com.xenia.ticket.data.network.model.TicketPaymentRequest
 import com.xenia.ticket.data.network.service.ApiClient
-import com.xenia.ticket.data.repository.CompanyRepository
+import com.xenia.ticket.data.repository.CompanySettingsRepository
 import com.xenia.ticket.data.repository.PaymentRepository
-import com.xenia.ticket.data.repository.TicketRepository
-import com.xenia.ticket.data.room.entity.Ticket
+import com.xenia.ticket.data.repository.OrderRepository
+import com.xenia.ticket.data.room.entity.Orders
 import com.xenia.ticket.databinding.ActivityBillingCartBinding
 import com.xenia.ticket.ui.adapter.TicketCartAdapter
 import com.xenia.ticket.ui.dialog.CustomInternetAvailabilityDialog
@@ -60,17 +60,17 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
     CustomInternetAvailabilityDialog.InternetAvailabilityListener {
 
     private lateinit var binding: ActivityBillingCartBinding
-    private val ticketRepository: TicketRepository by inject()
+    private val ticketRepository: OrderRepository by inject()
     private lateinit var ticketCartAdapter: TicketCartAdapter
     private val sessionManager: SessionManager by inject()
     private val paymentRepository: PaymentRepository by inject()
     private val customInternetAvailabilityDialog: CustomInternetAvailabilityDialog by inject()
-    private val companyRepository: CompanyRepository by inject()
+    private val companyRepository: CompanySettingsRepository by inject()
     private var selectedPaymentMode: String = ""
     private var formattedTotalAmount: String = ""
     private var selectedLanguage: String? = ""
     private val customTicketPopupDialogue: CustomTicketPopupDialogue by inject()
-    private lateinit var ticketItemsItems: Ticket
+    private lateinit var ticketItemsItems: Orders
 
     private lateinit var jwtToken: String
     private var userId: Int = 0
@@ -328,7 +328,7 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                 finish()
             } else {
                 val firstItem = allDarshanTickets.first()
-                BitmapFactory.decodeByteArray(firstItem.daImg, 0, firstItem.daImg.size)
+                BitmapFactory.decodeByteArray(firstItem.daImg, 0, firstItem.daImg!!.size)
                 ticketCartAdapter.updateTickets(allDarshanTickets)
                 formattedTotalAmount = String.format(Locale.ENGLISH, "%.2f", totalAmount)
                 binding.btnPay.text = getString(R.string.pay) + "  Rs. " + formattedTotalAmount
@@ -344,7 +344,7 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
         }
     }
 
-    override fun onDeleteClick(ticket: Ticket) {
+    override fun onDeleteClick(ticket: Orders) {
         lifecycleScope.launch(Dispatchers.IO) {
             ticketRepository.deleteTicketById(ticket.ticketId)
             withContext(Dispatchers.Main) {
@@ -353,7 +353,7 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
         }
     }
 
-    override fun onEditClick(ticket: Ticket) {
+    override fun onEditClick(ticket: Orders) {
 
         ticketItemsItems = ticket
 
@@ -371,7 +371,8 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
             ticketCategoryId = ticket.ticketCategoryId,
             ticketCompanyId = ticket.ticketCompanyId,
             ticketRate = ticket.ticketAmount,
-            ticketCombo = false
+            ticketCombo = false,
+            ticketType = "TICKET"
         )
         customTicketPopupDialogue.setListener(this)
         if (!customTicketPopupDialogue.isAdded) {
@@ -387,7 +388,7 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
         statusDesc: String,
         retryCount: Int = 0
     ) {
-        try {
+        /*try {
 
             val cartTickets = ticketRepository.getAllTicketsInCart()
 
@@ -412,7 +413,7 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
             val firstTicket = cartTickets.first()
 
             val imageBase64String =
-                if (firstTicket.daImg.isNotEmpty())
+                if (firstTicket.daImg!!.isNotEmpty())
                     Base64.encodeToString(firstTicket.daImg, Base64.NO_WRAP)
                 else ""
 
@@ -492,7 +493,7 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
                     showSnackbar(binding.root, "Something went wrong")
                 }
             }
-        }
+        }*/
     }
 
     private fun handleRetry(

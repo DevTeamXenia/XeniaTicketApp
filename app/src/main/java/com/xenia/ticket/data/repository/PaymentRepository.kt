@@ -3,11 +3,13 @@ package com.xenia.ticket.data.repository
 import com.xenia.ticket.data.network.model.FedQrRequest
 import com.xenia.ticket.data.network.model.FedQrResponse
 import com.xenia.ticket.data.network.model.OrderResponse
+import com.xenia.ticket.data.network.model.PaymentCanStatusResponse
 import com.xenia.ticket.data.network.model.PaymentStatusResponse
+import com.xenia.ticket.data.network.model.QrCanaraResponse
 import com.xenia.ticket.data.network.model.SibPaymentStatusResponse
-import com.xenia.ticket.data.network.model.SibQrRequest
-import com.xenia.ticket.data.network.model.SibQrResponse
-import com.xenia.ticket.data.network.model.SibStatusRequest
+import com.xenia.ticket.data.network.model.QrRequest
+import com.xenia.ticket.data.network.model.QrResponse
+import com.xenia.ticket.data.network.model.StatusRequest
 import com.xenia.ticket.data.network.model.TicketPaymentRequest
 
 import com.xenia.ticket.data.network.service.ApiClient.apiService
@@ -39,8 +41,8 @@ class PaymentRepository {
     suspend fun generateSibQr(
         token: String,
         payFor: String,
-        request: SibQrRequest
-    ): SibQrResponse {
+        request: QrRequest
+    ): QrResponse {
 
         return apiService.generateSibQr(
             token = token,
@@ -55,7 +57,34 @@ class PaymentRepository {
 
         return apiService.getSibPaymentStatus(
             payFor = "Common",
-            request = SibStatusRequest(pspRefNo = orderId),
+            request = StatusRequest(pspRefNo = orderId),
+            token = token
+        )
+    }
+
+
+    suspend fun generateCanaraQr(
+        token: String,
+        payFor: String,
+        request: QrRequest
+    ): QrCanaraResponse {
+
+        return apiService.generateCanaraQr(
+            token = token,
+            payFor = payFor,
+            request = request
+        )
+    }
+
+
+    suspend fun getCanaraPaymentStatus(
+        orderId: String,
+        token: String
+    ): PaymentCanStatusResponse {
+
+        return apiService.getCanaraPaymentStatus(
+            payFor = "Common",
+            request = StatusRequest(pspRefNo = orderId),
             token = token
         )
     }

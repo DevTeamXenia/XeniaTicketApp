@@ -9,10 +9,10 @@ data class TicketResponse(
     val status: String,
 
     @SerializedName("Data")
-    val data: List<TicketDto>
+    val data: List<Tickets>
 )
 
-data class TicketDto(
+data class Tickets(
     @SerializedName("TicketId")
     val ticketId: Int,
 

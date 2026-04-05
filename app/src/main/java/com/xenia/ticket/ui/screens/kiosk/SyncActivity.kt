@@ -12,8 +12,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import androidx.lifecycle.lifecycleScope
 import com.xenia.ticket.R
-import com.xenia.ticket.data.network.local.InitialSyncManager
-import com.xenia.ticket.data.network.local.SyncResult
+import com.xenia.ticket.data.network.sync.InitialSyncManager
+import com.xenia.ticket.data.network.sync.SyncResult
 import com.xenia.ticket.databinding.ActivitySyncBinding
 import com.xenia.ticket.utils.common.ApiResponseHandler
 import com.xenia.ticket.utils.common.CommonMethod

@@ -1,56 +1,31 @@
 package com.xenia.ticket.data.room.dao
 
-
-
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.xenia.ticket.data.room.entity.Ticket
 
-
 @Dao
 interface TicketDao {
-
-    @Query("SELECT * FROM tickets")
-    suspend fun getAllCart(): List<Ticket>
+    @Query("SELECT * FROM Ticket WHERE active = 1")
+    suspend fun getTickets(): List<Ticket>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertCartItem(ticket: Ticket)
+    suspend fun insertAll(tickets: List<Ticket>)
 
-    @Query("SELECT EXISTS(SELECT 1 FROM tickets WHERE ticketId = :ticketId)")
-    suspend fun doesTicketExist(ticketId: Int): Boolean
+    @Query("DELETE FROM Ticket")
+    suspend fun clearAll()
 
-    @Query("UPDATE tickets SET daQty = :newQty, daTotalAmount = :additionalAmount WHERE ticketId = :ticketId")
-    suspend fun updateExistingTicket(ticketId: Int, newQty: Int, additionalAmount: Double)
+    @Query("""
+        SELECT * FROM Ticket 
+        WHERE categoryId = :categoryId 
+        AND active = 1
+""")
 
-    @Query("SELECT * FROM tickets WHERE ticketId = :ticketId")
-    suspend fun getCartItemByTicketId(ticketId: Int): Ticket?
-    @Query("SELECT COUNT(*) FROM tickets")
-    suspend fun getCartCount(): Int
+    suspend fun getTicketsByCategory(categoryId: Int): List<Ticket>
 
-    @Query("SELECT SUM(daTotalAmount) FROM tickets")
-    suspend fun getCartTotalAmount(): Double?
+    @Query("SELECT * FROM Ticket WHERE id IN (:ticketIds)")
+    suspend fun getTicketsByIds(ticketIds: List<Int>): List<Ticket>
 
-    @Query("DELETE FROM tickets WHERE ticketId = :ticketId")
-    suspend fun deleteByTicketId(ticketId: Int)
-
-    @Query(
-        """UPDATE tickets 
-           SET daName = :newName, 
-               daPhoneNumber = :newPhoneNumber,
-               daProofId = :newIdno,
-               daProof = :newIdProof,
-               daImg = :newImg"""
-    )
-    suspend fun updateAllCartItems(
-        newName: String,
-        newPhoneNumber: String,
-        newIdno: String,
-        newIdProof: String,
-        newImg: ByteArray
-    )
-
-    @Query("DELETE FROM tickets")
-    suspend fun truncateTable()
 }

@@ -45,6 +45,23 @@ object CommonMethod {
         Snackbar.make(view, message, Snackbar.LENGTH_LONG).show()
     }
 
+    fun getTodayDay(): String {
+        return java.text.SimpleDateFormat("EEEE", Locale.ENGLISH)
+            .format(java.util.Date())
+    }
+
+    fun formatTime(time: String): String {
+        return try {
+            val inputFormat = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
+            val outputFormat = java.text.SimpleDateFormat("h:mm a", java.util.Locale.getDefault())
+
+            val date = inputFormat.parse(time)
+            outputFormat.format(date!!)
+        } catch (_: Exception) {
+            time
+        }
+    }
+
     fun generateNumericTransactionReferenceID(): String {
         val secureRandom = SecureRandom()
         val numberStringBuilder = StringBuilder(10)

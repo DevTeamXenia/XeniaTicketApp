@@ -4,9 +4,8 @@ package com.xenia.ticket.data.room.entity
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "CompanyLabel")
-data class LabelSettings(
-
+@Entity(tableName = "CompanyLabels")
+data class CompanyLabels(
     @PrimaryKey
     val id: Int,
     val companyId: Int,

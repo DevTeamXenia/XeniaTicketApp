@@ -18,6 +18,7 @@ data class Show(
     val description: String?,
     val showNameSi: String?,
     val durationMinutes: Int,
+    val amount: Double,
     val companyId: Int,
     val createdDate: String,
     val createdBy: Int,

@@ -6,8 +6,8 @@ import android.graphics.BitmapFactory
 import androidx.room.Transaction
 import com.xenia.ticket.data.network.model.CompanyResponse
 import com.xenia.ticket.data.network.service.ApiClient
-import com.xenia.ticket.data.room.dao.CompanyDao
-import com.xenia.ticket.data.room.entity.Company
+import com.xenia.ticket.data.room.dao.CompanySettingsDao
+import com.xenia.ticket.data.room.entity.CompanySettings
 import com.xenia.ticket.utils.common.CompanyKey
 
 import kotlinx.coroutines.Dispatchers
@@ -20,12 +20,11 @@ import kotlin.let
 import kotlin.text.equals
 
 
-class CompanyRepository(
-    private val companyDao: CompanyDao,
-    context: Context
-
-) {
+class CompanySettingsRepository(
+    private val companyDao: CompanySettingsDao,
+    context: Context) {
     private val cacheDirectory: File = context.cacheDir
+
     suspend fun loadCompanySettings(bearerToken: String): Boolean {
         return try {
             val apiCompanies = fetchCompanySettings(bearerToken)
@@ -76,11 +75,6 @@ class CompanyRepository(
         }
     }
 
-    fun loadCachedBitmap(fileName: String, cacheDir: File): Bitmap? {
-        val file = File(cacheDir, fileName)
-        return if (file.exists()) BitmapFactory.decodeFile(file.absolutePath) else null
-    }
-
     private suspend fun fetchCompanySettings(
         bearerToken: String
     ): List<CompanyResponse> = withContext(Dispatchers.IO) {
@@ -88,12 +82,12 @@ class CompanyRepository(
     }
 
     @Transaction
-    private suspend fun refreshCompanies(companies: List<Company>) = withContext(Dispatchers.IO) {
+    private suspend fun refreshCompanies(companies: List<CompanySettings>) = withContext(Dispatchers.IO) {
         companyDao.deleteCompanies()
         companyDao.insertCompanies(companies)
     }
 
-    suspend fun getCompany(): Company? {
+    suspend fun getCompany(): CompanySettings? {
         return companyDao.getCompany()
     }
     suspend fun getGateway(): String? {
@@ -119,8 +113,8 @@ class CompanyRepository(
         return getString(CompanyKey.ISPRINTQR)
     }
 
-    fun CompanyResponse.toEntity(): Company {
-        return Company(
+    fun CompanyResponse.toEntity(): CompanySettings {
+        return CompanySettings(
             keyCode = this.keyCode,
             value = this.value,
             applicationId = this.paymentConfig?.applicationId
