@@ -14,5 +14,17 @@ data class OrderResponse(
     val ticket: String?,
 
     @SerializedName("receipt")
-    val receipt: String?
+    val receipt: String?,
+
+    @SerializedName("seatAllocation")
+    val seatAllocation: List<SeatAllocationDto>?
+)
+
+data class SeatAllocationDto(
+
+    @SerializedName("ScheduleId")
+    val scheduleId: Int,
+
+    @SerializedName("Seats")
+    val seats: List<String>
 )

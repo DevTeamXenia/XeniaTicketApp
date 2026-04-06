@@ -222,7 +222,7 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
                     return@launch
                 }
 
-                val sortedItems = items.sortedBy { it.name }
+                val sortedItems = items.sortedBy { it.id }
 
                 ticketAdapter.updateItems(sortedItems)
 

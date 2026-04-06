@@ -6,9 +6,11 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Base64
+import android.util.Log
 import android.view.MotionEvent
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -52,7 +54,11 @@ import retrofit2.HttpException
 import java.util.Locale
 import kotlin.getValue
 import androidx.core.graphics.drawable.toDrawable
+import com.google.gson.Gson
 import com.xenia.ticket.data.network.model.ActiveItem
+import com.xenia.ticket.data.network.model.SeatAllocationDto
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.delay
 
 
 class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartClickListener,
@@ -328,7 +334,8 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                     }
                 }
                 "CanaraBank" -> {
-                    generateCanaraQrCode(totalAmount)
+                    postTicketPaymentHistory("S", "Payment Success")
+                  //  generateCanaraQrCode(totalAmount)
                 }
                 else -> {
                     generateSibQrCode(totalAmount)
@@ -507,7 +514,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                 val name = binding.editTextName.text.toString().trim()
                 val phone = binding.editTextPhoneNumber.text.toString().trim()
 
-                if (!transactionId.isNullOrEmpty() && !upiUrl.isNullOrEmpty()) {
+                if (transactionId.isNotEmpty() && !upiUrl.isNullOrEmpty()) {
                     val existingDialog =
                         supportFragmentManager.findFragmentByTag("CustomPopup")
 
@@ -533,6 +540,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
 
                 } else {
                     dismissLoader()
+                    binding.btnPay.isEnabled = true
                     showSnackbar(binding.root, "Unable to generate QR code!")
                 }
 
@@ -561,30 +569,54 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
         }
     }
 
-    private suspend fun postTicketPaymentHistory(status: String, statusDesc: String, retryCount: Int = 0) {
-        /*try {
+    @SuppressLint("SetTextI18n")
+    private suspend fun postTicketPaymentHistory(
+        status: String,
+        statusDesc: String
+    ) {
+        try {
+
+            Log.d("PAYMENT_FLOW", "Entered postTicketPaymentHistory")
 
             val cartTickets = ticketRepository.getAllTicketsInCart()
 
             if (cartTickets.isEmpty()) {
-                withContext(Dispatchers.Main) {
-                    binding.btnPay.isEnabled = true
-                }
+                handleTicketTransactionStatus("F", "", null, 0.0, "")
                 return
             }
 
-            val itemsList = cartTickets.flatMap { item ->
-                (1..item.daQty).map {
+            val itemsList = cartTickets
+                .groupBy { it.ticketId }
+                .map { (_, items) ->
+
+                    val first = items.first()
+
                     TicketPaymentRequest.Item(
-                        taCategoryId = item.ticketCategoryId,
-                        TicketId = item.ticketId,
-                        Quantity = 1,
-                        Rate = item.daRate
+                        taCategoryId = first.ticketCategoryId,
+                        TicketId = first.ticketId,
+                        Quantity = items.sumOf { it.daQty },
+                        Rate = first.daRate,
+                        IsCombo = first.ticketCombo,
+                        taType = first.ticketType
                     )
                 }
-            }
+
+
+            val schedulesList = cartTickets
+                .map { item ->
+                    TicketPaymentRequest.Schedule(
+                        scheduleId = item.scheduleId,
+                        screenId = item.screenId,
+                        tsScheduleDay = item.scheduleDay,
+                        tsScheduleTime = item.scheduleTime,
+                        tsScheduleScreen = item.screenName
+                    )
+                }
+                .distinctBy { it.scheduleId }
+
 
             val firstTicket = cartTickets.first()
+
             val imageBase64String = Base64.encodeToString(
                 firstTicket.daImg,
                 Base64.NO_WRAP
@@ -593,93 +625,104 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
             val token = sessionManager.getToken().toString()
             val companyId = JwtUtils.getCompanyId(token)
 
-            if (token.isBlank()) {
-                withContext(Dispatchers.Main) {
-                    binding.btnPay.isEnabled = true
-                    showSnackbar(binding.root, "Authorization token missing")
-                }
-                return
-            }
-
-            val name = binding.editTextName.text.toString().trim()
-            val phone = binding.editTextPhoneNumber.text.toString().trim()
-
             val request = TicketPaymentRequest(
                 CompanyId = companyId!!,
-                UserId = userId,
-                Name = name,
-                tTranscationId = generateNumericTransactionReferenceID(),
+                UserId = sessionManager.getUserId(),
+                Name = binding.editTextName.text.toString(),
+                tTranscationId = "",
                 tCustRefNo = "",
                 tNpciTransId = "",
                 tIdProofNo = "",
                 tImage = imageBase64String,
-                PhoneNumber = phone,
+                PhoneNumber = binding.editTextPhoneNumber.text.toString(),
                 tPaymentStatus = status,
-                tPaymentMode = "CASH",
+                tPaymentMode = "UPI",
                 tPaymentDes = statusDesc,
-                Items = itemsList
+                Items = itemsList,
+                Schedules = schedulesList
             )
 
-            // ✅ NEW suspend-based call (IMPORTANT)
-            val response = ApiResponseHandler.handleApiCall(
-                activity = this@TicketCartActivity
-            ) {
-                paymentRepository.postTicket(
-                    bearerToken = "Bearer $token",
-                    request = request
-                )
+            Log.d("PAYMENT_FLOW", "API BODY → $request")
+
+
+            val response = withContext(NonCancellable) {
+                ApiResponseHandler.handleApiCall(
+                    activity = this@TicketCartActivity
+                ) {
+                    paymentRepository.postTicket(
+                        bearerToken = "Bearer $token",
+                        request = request
+                    )
+                }
             }
 
             val (totalAmount) = ticketRepository.getCartStatus()
 
-            withContext(Dispatchers.Main) {
+            if (response != null && response.status == true) {
 
-                dismissLoader()
-                binding.btnPay.isEnabled = true
+                handleTicketTransactionStatus(
+                    "S",
+                    response.receipt ?: "",
+                    response.ticket,
+                    totalAmount,
+                    companyRepository.getString(CompanyKey.PREFIX) ?: "",
+                    response.seatAllocation
+                )
 
-                if (response != null &&
-                    response.status.equals("Success", ignoreCase = true) &&
-                    !response.receipt.isNullOrBlank()
-                ) {
-                    handleTicketTransactionStatus(
-                        orderId = response.receipt,
-                        ticket = response.ticket,
-                        totalAmount = totalAmount,
-                        companyRepository.getString(CompanyKey.PREFIX) ?: ""
-                    )
-                } else {
-                    showSnackbar(binding.root, "Failed to post order")
-                }
-            }
-
-        } catch (_: Exception) {
-            if (retryCount < 3) {
-                postTicketPaymentHistory(status, statusDesc, retryCount + 1)
             } else {
-                withContext(Dispatchers.Main) {
-                    dismissLoader()
-                    binding.btnPay.isEnabled = true
-                    showSnackbar(binding.root, "Something went wrong")
-                }
+                Toast.makeText(this,response?.message, Toast.LENGTH_SHORT).show()
+                binding.btnPay.isEnabled = true
+                dismissLoader()
+                /*handleTicketTransactionStatus(
+                    "F",
+                    transactionReferenceID,
+                    null,
+                    totalAmount,
+                    companyRepository.getString(CompanyKey.PREFIX) ?: "",
+                )*/
             }
-        }*/
+
+        } catch (e: Exception) {
+
+            Log.e("PAYMENT_FLOW", "FINAL ERROR", e)
+
+            val (totalAmount) = ticketRepository.getCartStatus()
+
+            handleTicketTransactionStatus(
+                "F",
+                "",
+                null,
+                totalAmount,
+                ""
+            )
+        }
     }
 
-    private fun handleTicketTransactionStatus(orderId: String, ticket: String?, totalAmount: Double, receiptPrefix: String?) {
 
+    private fun handleTicketTransactionStatus(
+        status: String,
+        orderId: String,
+        ticket: String?,
+        totalAmount: Double,
+        receiptPrefix: String?,
+        seatAllocations: List<SeatAllocationDto>? = null
+    ) {
+        val seatJson = Gson().toJson(seatAllocations)
         val intent = Intent(this, PaymentActivity::class.java).apply {
-            putExtra("status", "S")
+            putExtra("status", status)
             putExtra("amount", totalAmount.toString())
             putExtra("orderID", orderId)
-            putExtra("transID", "")
             putExtra("ticket", ticket)
             putExtra("prefix", receiptPrefix)
             putExtra("name", binding.editTextName.text.toString())
             putExtra("phno", binding.editTextPhoneNumber.text.toString())
-
+            putExtra("transID", "")
+            putExtra("seatAllocations", seatJson)
         }
         startActivity(intent)
-        finish()
+        lifecycleScope.launch {
+            delay(300)
+        }
     }
 
 

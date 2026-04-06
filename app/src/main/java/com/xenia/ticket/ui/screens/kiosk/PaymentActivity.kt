@@ -53,6 +53,9 @@ import androidx.core.graphics.set
 import org.json.JSONArray
 import org.json.JSONObject
 import androidx.lifecycle.ProcessLifecycleOwner
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import com.xenia.ticket.data.network.model.SeatAllocationDto
 import java.io.ByteArrayOutputStream
 import java.io.File
 import com.xenia.ticket.utils.pineLab.PlutusConstants
@@ -78,6 +81,7 @@ class PaymentActivity : AppCompatActivity() {
     private var selectedLanguage: String? = null
     private var isBound = false
     private var serverMessenger: Messenger? = null
+    private var seatAllocations: List<SeatAllocationDto> = emptyList()
 
     @SuppressLint("SetTextI18n", "DefaultLocale")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -96,6 +100,17 @@ class PaymentActivity : AppCompatActivity() {
         idProof = intent.getStringExtra("IDNO")
         idProofMode = intent.getStringExtra("ID")
         name = intent.getStringExtra("name")
+        val seatJson = intent.getStringExtra("seatAllocations")
+
+        seatAllocations = if (!seatJson.isNullOrEmpty()) {
+            Gson().fromJson(
+                seatJson,
+                object : TypeToken<List<SeatAllocationDto>>() {}.type
+            )
+        } else {
+            emptyList()
+        }
+
         selectedLanguage = if (from == "billing")
             sessionManager.getBillingSelectedLanguage()
         else
@@ -267,7 +282,8 @@ class PaymentActivity : AppCompatActivity() {
                         transID,
                         orderID.toString(),
                         ticketItems,
-                        selectedLanguage!!
+                        selectedLanguage!!,
+                        seatAllocations = seatAllocations
                     )
                 } else {
                     generateReceiptBitmap(
@@ -275,7 +291,8 @@ class PaymentActivity : AppCompatActivity() {
                         transID,
                         orderID.toString(),
                         ticketItems,
-                        selectedLanguage!!
+                        selectedLanguage!!,
+                        seatAllocations = seatAllocations
                     )
                 }
 
@@ -330,7 +347,8 @@ class PaymentActivity : AppCompatActivity() {
         transID: String?,
         orderID: String?,
         ticket: List<Orders>,
-        selectedLanguage: String
+        selectedLanguage: String,
+        seatAllocations: List<SeatAllocationDto>,
     ): Bitmap {
         val width = 576
         val paint = Paint().apply { isAntiAlias = true }
@@ -439,6 +457,7 @@ class PaymentActivity : AppCompatActivity() {
         yOffset += 40f
 
         var totalAmount = 0.0
+        val seatMap = seatAllocations.associateBy { it.scheduleId }
         for (item in ticket) {
             val priceStr = String.format(Locale.ENGLISH, "%.2f", item.daRate)
             val qtyStr = item.daQty.toString()
@@ -487,7 +506,6 @@ class PaymentActivity : AppCompatActivity() {
             ) + 10f
 
             yOffset += 15f
-
             if (printDefaultLang) {
                 yOffset = drawMultilineText(
                     canvas = tempCanvas,
@@ -497,8 +515,31 @@ class PaymentActivity : AppCompatActivity() {
                     maxWidth = maxItemNameWidth,
                     paint = paint
                 ) + 10f
-                yOffset += 35f
             }
+
+            if (item.ticketType == "SHOW") {
+
+                tempCanvas.drawText(item.screenName +" - "+item.scheduleTime, 20f, yOffset, paint)
+
+                yOffset += 25f
+
+                val seats = seatMap[item.scheduleId]?.seats
+
+                if (!seats.isNullOrEmpty()) {
+                    val seatText = "Seats: ${seats.joinToString(", ")}"
+
+                    yOffset = drawMultilineText(
+                        canvas = tempCanvas,
+                        text = seatText,
+                        x = 20f,
+                        startY = yOffset,
+                        maxWidth = width * 0.9f,
+                        paint = paint
+                    ) + 10f
+                }
+            }
+
+            yOffset += 35f
 
             paint.textAlign = Paint.Align.CENTER
             tempCanvas.drawText(priceStr, width * 0.5f, yOffset, paint)
@@ -599,14 +640,12 @@ class PaymentActivity : AppCompatActivity() {
         yOffset = rectBottom + 10f
 
         if (companyRepository.getPaymentQr().equals("True")) {
-            if (from.isNullOrEmpty() || from != "billing") {
                 yOffset = rectBottom + 40f
                 generateQRCode()?.let { qrBitmap ->
                     val qrSize = 300
                     val qrX = (width - qrSize) / 2f
                     tempCanvas.drawBitmap(qrBitmap, qrX, yOffset, paint)
                     yOffset += qrSize
-                }
             }
         }
 
@@ -623,7 +662,8 @@ class PaymentActivity : AppCompatActivity() {
         transID: String?,
         orderID: String?,
         ticket: List<Orders>,
-        selectedLanguage: String
+        selectedLanguage: String,
+        seatAllocations: List<SeatAllocationDto>,
     ): Bitmap {
         val width = 576
         val paint = Paint().apply { isAntiAlias = true }
@@ -685,6 +725,7 @@ class PaymentActivity : AppCompatActivity() {
         yOffset += 40f
 
         var totalAmount = 0.0
+        val seatMap = seatAllocations.associateBy { it.scheduleId }
         for (item in ticket) {
             val priceStr = String.format("%.2f", item.daRate)
             val qtyStr = item.daQty.toString()
@@ -693,7 +734,7 @@ class PaymentActivity : AppCompatActivity() {
 
             paint.textAlign = Paint.Align.LEFT
             paint.isAntiAlias = true
-
+            paint.textSize = 28f
 
             val itemName = when (selectedLanguage.lowercase()) {
                 "ml" -> item.ticketNameMa
@@ -717,9 +758,26 @@ class PaymentActivity : AppCompatActivity() {
                 maxWidth = maxItemNameWidth,
                 paint = paint
             ) + 10f
+            paint.textSize = 22f
+            if (item.ticketType == "SHOW") {
+                tempCanvas.drawText(item.screenName +" - "+ item.scheduleTime, 20f, yOffset, paint)
+                yOffset += 25f
+                val seats = seatMap[item.scheduleId]?.seats
 
+                if (!seats.isNullOrEmpty()) {
+                    val seatText = "Seats: ${seats.joinToString(", ")}"
+
+                    yOffset = drawMultilineText(
+                        canvas = tempCanvas,
+                        text = seatText,
+                        x = 20f,
+                        startY = yOffset,
+                        maxWidth = width * 0.9f,
+                        paint = paint
+                    ) + 10f
+                }
+            }
             yOffset += 35f
-
             paint.textAlign = Paint.Align.CENTER
             tempCanvas.drawText(priceStr, width * 0.5f, yOffset, paint)
             tempCanvas.drawText(qtyStr, width * 0.65f, yOffset, paint)
@@ -799,17 +857,16 @@ class PaymentActivity : AppCompatActivity() {
             paint
         )
 
-        yOffset = rectBottom -10f
+        yOffset = rectBottom - 10f
 
         if (companyRepository.getPaymentQr() == "True") {
-            if (from.isNullOrEmpty() || from != "billing") {
                 yOffset = rectBottom + 50f
                 generateQRCode()?.let { qrBitmap ->
                     val qrSize = 300
                     val qrX = (width - qrSize) / 2f
                     tempCanvas.drawBitmap(qrBitmap, qrX, yOffset, paint)
                     yOffset += qrSize
-                }
+
             }
         }
         val finalBitmap = createBitmap(width, (yOffset + 20f).toInt())

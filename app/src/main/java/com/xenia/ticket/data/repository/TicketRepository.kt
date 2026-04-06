@@ -189,13 +189,12 @@ class TicketRepository(
     suspend fun loadShows(bearerToken: String): Boolean {
         return try {
             val apiResponse = fetchShows(bearerToken)
-            if (apiResponse.isEmpty()) return false
-
             val entities = apiResponse.map { it.toEntity() }
             refreshShows(entities)
-            true
-        } catch (e: HttpException) {
 
+            true
+
+        } catch (e: HttpException) {
             throw e
         } catch (e: Exception) {
             e.printStackTrace()

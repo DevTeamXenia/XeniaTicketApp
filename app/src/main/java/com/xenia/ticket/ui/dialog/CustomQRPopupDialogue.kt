@@ -20,9 +20,11 @@
     import android.widget.Button
     import android.widget.ImageView
     import android.widget.TextView
+    import android.widget.Toast
     import androidx.core.graphics.drawable.toDrawable
     import androidx.fragment.app.DialogFragment
     import androidx.lifecycle.lifecycleScope
+    import com.google.gson.Gson
     import com.xenia.ticket.R
     import com.xenia.ticket.data.network.model.TicketPaymentRequest
     import com.xenia.ticket.data.repository.CompanySettingsRepository
@@ -44,6 +46,7 @@
     import org.koin.android.ext.android.inject
     import java.util.Locale
     import com.xenia.ticket.data.network.model.PaymentStatusResponse
+    import com.xenia.ticket.data.network.model.SeatAllocationDto
     import com.xenia.ticket.data.network.model.SibPaymentStatusResponse
     import kotlinx.coroutines.sync.Mutex
 
@@ -443,17 +446,20 @@
                         response.receipt ?: transactionReferenceID,
                         response.ticket,
                         totalAmount,
-                        companyRepository.getString(CompanyKey.PREFIX) ?: ""
+                        companyRepository.getString(CompanyKey.PREFIX) ?: "",
+                        response.seatAllocation
                     )
 
                 } else {
-                    handleTicketTransactionStatus(
+
+                    Toast.makeText(requireContext(),response?.message, Toast.LENGTH_SHORT).show()
+                    /*handleTicketTransactionStatus(
                         "F",
                         transactionReferenceID,
                         null,
                         totalAmount,
-                        companyRepository.getString(CompanyKey.PREFIX) ?: ""
-                    )
+                        companyRepository.getString(CompanyKey.PREFIX) ?: "",
+                    )*/
                 }
 
             } catch (e: Exception) {
@@ -478,8 +484,10 @@
             orderId: String,
             ticket: String?,
             totalAmount: Double,
-            receiptPrefix: String?
+            receiptPrefix: String?,
+            seatAllocations: List<SeatAllocationDto>? = null
         ) {
+            val seatJson = Gson().toJson(seatAllocations)
             val intent = Intent(requireContext(), PaymentActivity::class.java).apply {
                 putExtra("status", status)
                 putExtra("amount", totalAmount.toString())
@@ -489,6 +497,7 @@
                 putExtra("name", name)
                 putExtra("phno", phoneNumber)
                 putExtra("transID", transactionReferenceID)
+                putExtra("seatAllocations", seatJson)
             }
             startActivity(intent)
             lifecycleScope.launch {
