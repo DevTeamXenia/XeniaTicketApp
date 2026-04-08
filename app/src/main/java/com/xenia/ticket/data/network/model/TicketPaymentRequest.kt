@@ -1,7 +1,4 @@
 package com.xenia.ticket.data.network.model
-
-import com.google.gson.annotations.SerializedName
-
 data class TicketPaymentRequest(
     val CompanyId: Int,
     val UserId: Int,
@@ -15,8 +12,7 @@ data class TicketPaymentRequest(
     val tPaymentStatus: String,
     val tPaymentMode: String,
     val tPaymentDes: String,
-    val Items: List<Item>,
-    val Schedules: List<Schedule>
+    val Items: List<Item>
 ) {
     data class Item(
         val taCategoryId: Int,
@@ -24,7 +20,8 @@ data class TicketPaymentRequest(
         val Quantity: Int,
         val Rate: Double,
         val IsCombo: Boolean,
-        val taType: String
+        val taType: String,
+        val Schedules: List<Schedule>
     )
 
     data class Schedule(

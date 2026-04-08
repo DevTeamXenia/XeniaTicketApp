@@ -372,29 +372,28 @@
 
                         val first = items.first()
 
+                        val schedules = items
+                            .map {
+                                TicketPaymentRequest.Schedule(
+                                    scheduleId = it.scheduleId,
+                                    screenId = it.screenId,
+                                    tsScheduleDay = it.scheduleDay,
+                                    tsScheduleTime = it.scheduleTime,
+                                    tsScheduleScreen = it.screenName
+                                )
+                            }
+                            .distinctBy { it.scheduleId }
+
                         TicketPaymentRequest.Item(
                             taCategoryId = first.ticketCategoryId,
                             TicketId = first.ticketId,
                             Quantity = items.sumOf { it.daQty },
                             Rate = first.daRate,
                             IsCombo = first.ticketCombo,
-                            taType = first.ticketType
+                            taType = first.ticketType,
+                            Schedules = schedules
                         )
                     }
-
-
-                val schedulesList = cartTickets
-                    .map { item ->
-                        TicketPaymentRequest.Schedule(
-                            scheduleId = item.scheduleId,
-                            screenId = item.screenId,
-                            tsScheduleDay = item.scheduleDay,
-                            tsScheduleTime = item.scheduleTime,
-                            tsScheduleScreen = item.screenName
-                        )
-                    }
-                    .distinctBy { it.scheduleId }
-
 
                 val firstTicket = cartTickets.first()
 
@@ -406,11 +405,12 @@
                 val token = sessionManager.getToken().toString()
                 val companyId = JwtUtils.getCompanyId(token)
 
+
                 val request = TicketPaymentRequest(
                     CompanyId = companyId!!,
                     UserId = sessionManager.getUserId(),
                     Name = name,
-                    tTranscationId = transactionReferenceID,
+                    tTranscationId = "",
                     tCustRefNo = "",
                     tNpciTransId = "",
                     tIdProofNo = "",
@@ -420,8 +420,8 @@
                     tPaymentMode = "UPI",
                     tPaymentDes = statusDesc,
                     Items = itemsList,
-                    Schedules = schedulesList
                 )
+
 
                 Log.d("PAYMENT_FLOW", "API BODY → $request")
 
