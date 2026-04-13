@@ -145,8 +145,8 @@
 
                 qrCodeImageView.setImageBitmap(generateUPIQRCode(url))
 
-                //startTimer()
-                postTicketPaymentHistory("S", "Payment Success")
+                startTimer()
+               // postTicketPaymentHistory("S", "Payment Success")
 
                 view.findViewById<ImageView>(R.id.btnClose).setOnClickListener {
                    safeDismiss()

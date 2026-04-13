@@ -334,8 +334,8 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                     }
                 }
                 "CanaraBank" -> {
-                    postTicketPaymentHistory("S", "Payment Success")
-                  //  generateCanaraQrCode(totalAmount)
+                  //  postTicketPaymentHistory("S", "Payment Success")
+                    generateCanaraQrCode(totalAmount)
                 }
                 else -> {
                     generateSibQrCode(totalAmount)
