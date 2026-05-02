@@ -61,11 +61,10 @@ class ShowScheduleAdapter(
             holder.txtTime.setTextColor(holder.itemView.context.getColor(R.color.black))
         }
     }
-
     @SuppressLint("NotifyDataSetChanged")
     fun updateData(newList: List<ShowScheduleResponse>) {
         list = newList
-        selectedPosition = -1
+        selectedPosition = if (newList.isNotEmpty()) 0 else -1
         notifyDataSetChanged()
     }
 

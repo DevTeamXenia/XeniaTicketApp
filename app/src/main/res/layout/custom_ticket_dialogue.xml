@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="10dp"
         android:layout_marginTop="10dp"
-        android:layout_marginEnd="20dp"
+        android:layout_marginEnd="15dp"
         android:orientation="vertical">
 
         <TextView
@@ -44,8 +44,6 @@
 
         </RelativeLayout>
 
-
-
         <LinearLayout
             android:id="@+id/linTop"
             android:layout_width="match_parent"
@@ -75,55 +73,110 @@
         </LinearLayout>
 
 
-        <TextView
-            android:id="@+id/txtTicketRate"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/linTop"
-            android:layout_alignParentEnd="true"
-            android:layout_marginTop="20dp"
-            android:layout_marginBottom="15dp"
-            android:fontFamily="@font/roboto"
-            android:textAlignment="center"
-            android:textColor="@color/black"
-            android:textSize="20sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/txtTickets"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/linTop"
-            android:layout_marginTop="20dp"
-            android:layout_marginBottom="15dp"
-            android:fontFamily="@font/poppins_regular"
-            android:textColor="@color/black"
-            android:textSize="15sp" />
-
-        <EditText
-            android:id="@+id/editTextTickets"
+        <LinearLayout
+            android:id="@+id/linTopTicket"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_below="@+id/txtTickets"
-            android:layout_marginBottom="10dp"
-            android:background="@drawable/edittext_bg"
-            android:focusable="true"
-            android:focusableInTouchMode="true"
-            android:hint="@string/no_of_tickets"
-            android:imeOptions="actionNext"
-            android:inputType="number"
-            android:maxLength="7"
-            android:paddingEnd="7dp"
-            android:textAlignment="center"
-            android:textColor="@color/black"
-            android:textSize="30sp"
-            tools:ignore="RtlSymmetry" />
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_below="@+id/linTop">
+
+            <RelativeLayout
+                android:id="@+id/relTicket"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="2.5dp"
+                android:layout_weight="1">
+
+                <TextView
+                    android:id="@+id/txtTicketRate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:fontFamily="@font/roboto"
+                    android:text="Adult Ticket"
+                    android:textAlignment="center"
+                    android:textColor="@color/black"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+
+                <EditText
+                    android:id="@+id/editTextTickets"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:layout_below="@+id/txtTicketRate"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="10dp"
+                    android:background="@drawable/edittext_bg"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:hint="@string/no_of_tickets"
+                    android:imeOptions="actionNext"
+                    android:inputType="number"
+                    android:maxLength="7"
+                    android:paddingEnd="7dp"
+                    android:textAlignment="center"
+                    android:textColor="@color/black"
+                    android:textSize="30sp"
+                    tools:ignore="RtlSymmetry" />
+
+
+            </RelativeLayout>
+
+
+            <RelativeLayout
+                android:id="@+id/relChild"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="2.5dp"
+                android:layout_weight="1">
+
+                <TextView
+                    android:id="@+id/txtTicketChildRate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:fontFamily="@font/roboto"
+                    android:text="Child Ticket"
+                    android:textAlignment="center"
+                    android:textColor="@color/black"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+
+                <EditText
+                    android:id="@+id/editTextChildTickets"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:layout_below="@+id/txtTicketChildRate"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="10dp"
+                    android:background="@drawable/edittext_bg"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:hint="@string/no_of_child_tickets"
+                    android:imeOptions="actionNext"
+                    android:inputType="number"
+                    android:maxLength="7"
+                    android:paddingEnd="7dp"
+                    android:textAlignment="center"
+                    android:textColor="@color/black"
+                    android:textSize="30sp"
+                    tools:ignore="RtlSymmetry" />
+
+
+            </RelativeLayout>
+
+
+        </LinearLayout>
+
+
 
         <ScrollView
             android:id="@+id/scrollkeybord"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/editTextTickets"
+            android:layout_below="@+id/linTopTicket"
             android:fillViewport="true">
 
             <LinearLayout

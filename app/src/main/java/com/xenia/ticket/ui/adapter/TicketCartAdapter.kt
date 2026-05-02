@@ -99,8 +99,31 @@ class TicketCartAdapter(
                 LANGUAGE_MARATHI -> ticketItem.ticketNameMr
                 else -> ticketItem.ticketName
             }
-            txtQty.text = "Rs. ${String.format(Locale.ENGLISH, "%.2f", ticketItem.daRate)} x ${String.format(Locale.ENGLISH, "%d", ticketItem.daQty)}"
-            totalAmount.text = "Rs. ${String.format(Locale.ENGLISH, "%.2f", ticketItem.daTotalAmount)}/-"
+            val adultQty = ticketItem.ticketQty
+            val childQty = ticketItem.ticketChildQty
+
+            val adultRate = ticketItem.ticketRate
+            val childRate = ticketItem.ticketChildRate
+
+            val adultText = if (adultQty > 0) {
+                "Adult: $adultQty x ${String.format(Locale.ENGLISH, "%.2f", adultRate)}"
+            } else ""
+
+            val childText = if (childQty > 0) {
+                "Child: $childQty x ${String.format(Locale.ENGLISH, "%.2f", childRate)}"
+            } else ""
+
+            val finalText = when {
+                adultQty > 0 && childQty > 0 -> "$adultText\n$childText"
+                adultQty > 0 -> adultText
+                childQty > 0 -> childText
+                else -> ""
+            }
+
+            txtQty.text = finalText
+
+            totalAmount.text = "Rs. ${String.format(Locale.ENGLISH, "%.2f", ticketItem.ticketTotalAmount)}/-"
+
             imgDelete.setOnClickListener {
                 onTicketCartClickListener.onDeleteClick(ticketItem)
             }
@@ -131,10 +154,10 @@ class TicketCartAdapter(
                 LANGUAGE_MARATHI -> ticketItem.ticketNameMr
                 else -> ticketItem.ticketName
             }
-            txtQty.text = ticketItem.daQty.toString()
-            txtRate.text = "Rs. ${String.format(Locale.ENGLISH, "%.0f", ticketItem.daRate)}"  // Use %.0f to truncate decimals like toInt(), but with English digits
-            totalAmount.text = "Rs. ${String.format(Locale.ENGLISH, "%.0f", ticketItem.daTotalAmount)}/-"
-            totalAmount.text = "Rs. ${ticketItem.daTotalAmount.toInt()}/-"
+            txtQty.text = ticketItem.ticketQty.toString()
+            txtRate.text = "Rs. ${String.format(Locale.ENGLISH, "%.0f", ticketItem.ticketRate)}"  // Use %.0f to truncate decimals like toInt(), but with English digits
+            totalAmount.text = "Rs. ${String.format(Locale.ENGLISH, "%.0f", ticketItem.ticketTotalAmount)}/-"
+            totalAmount.text = "Rs. ${ticketItem.ticketTotalAmount.toInt()}/-"
 
 
         }

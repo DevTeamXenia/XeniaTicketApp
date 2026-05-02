@@ -113,6 +113,15 @@ class CompanySettingsRepository(
         return getString(CompanyKey.ISPRINTQR)
     }
 
+    suspend fun getIsNameMandatoryQr(): String? {
+        return getString(CompanyKey.IS_NAME_MANDATORY)
+    }
+
+    suspend fun getIsWhatAppEnable(): String? {
+        return getString(CompanyKey.ISWHATSAPPENABLED)
+    }
+
+
     fun CompanyResponse.toEntity(): CompanySettings {
         return CompanySettings(
             keyCode = this.keyCode,

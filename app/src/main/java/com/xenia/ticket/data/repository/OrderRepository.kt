@@ -18,8 +18,9 @@ class OrderRepository(private val ticketDao: OrderDao) {
         if (existing != null) {
             ticketDao.updateExistingTicket(
                 ticketId = ticket.ticketId,
-                newQty = ticket.daQty,
-                additionalAmount = ticket.daTotalAmount,
+                newQty = ticket.ticketQty,
+                newChildQty = ticket.ticketChildQty,
+                additionalAmount = ticket.ticketTotalAmount,
                 screenId = ticket.screenId,
                 scheduleId = ticket.scheduleId,
                 scheduleDay = ticket.scheduleDay,
@@ -35,16 +36,17 @@ class OrderRepository(private val ticketDao: OrderDao) {
     suspend fun insertCartBookingItem(ticket: Orders, key: String) = withContext(Dispatchers.IO) {
         val existingTicket = ticketDao.getCartItemByTicketId(ticket.ticketId)
         if (existingTicket != null) {
-            val currentQty = existingTicket.daQty
+            val currentQty = existingTicket.ticketQty
             val updatedQty = if (key == "Add") currentQty + 1 else currentQty - 1
 
             if (updatedQty <= 0) {
                 ticketDao.deleteByTicketId(ticket.ticketId)
             } else {
-                val newTotalAmount = ticket.ticketAmount * updatedQty
+                val newTotalAmount = ticket.ticketTotalAmount * updatedQty
                 ticketDao.updateExistingTicket(
                     ticketId = ticket.ticketId,
                     newQty = updatedQty,
+                    newChildQty = updatedQty,
                     additionalAmount = newTotalAmount,
                     screenId = ticket.screenId,
                     scheduleId = ticket.scheduleId,

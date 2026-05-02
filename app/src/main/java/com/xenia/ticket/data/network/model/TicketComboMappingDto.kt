@@ -12,6 +12,9 @@ data class TicketComboMappingDto(
     @SerializedName("ChildTicketId")
     val childTicketId: Int,
 
+    @SerializedName("ChildTicketType")
+    val childTicketType: String,
+
     @SerializedName("CreatedDate")
     val createdDate: String?
 )

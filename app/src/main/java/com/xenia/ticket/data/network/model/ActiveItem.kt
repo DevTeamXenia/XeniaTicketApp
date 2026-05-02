@@ -14,7 +14,9 @@ data class ActiveItem(
     val category: Int,
     val companyId: Int,
     val amount: Double,
+    val childAmount: Double,
     val active: Boolean,
     val combo: Boolean,
-    val type: String
+    val type: String,
+    val child: Boolean
 )

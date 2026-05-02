@@ -387,8 +387,10 @@
                         TicketPaymentRequest.Item(
                             taCategoryId = first.ticketCategoryId,
                             TicketId = first.ticketId,
-                            Quantity = items.sumOf { it.daQty },
-                            Rate = first.daRate,
+                            Quantity = items.sumOf { it.ticketQty },
+                            ChildQuantity = items.sumOf { it.ticketChildQty },
+                            Rate = first.ticketRate,
+                            ChildRate = first.ticketChildRate,
                             IsCombo = first.ticketCombo,
                             taType = first.ticketType,
                             Schedules = schedules

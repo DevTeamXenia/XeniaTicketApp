@@ -5,8 +5,6 @@ import android.app.Dialog
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -42,8 +40,10 @@ import com.google.android.material.button.MaterialButton
 import com.xenia.ticket.data.network.model.ShowScheduleResponse
 import com.xenia.ticket.data.repository.TicketRepository
 import com.xenia.ticket.ui.adapter.ShowScheduleAdapter
+import com.xenia.ticket.utils.common.CommonMethod.dismissLoader
 import com.xenia.ticket.utils.common.CommonMethod.formatTime
 import com.xenia.ticket.utils.common.CommonMethod.getTodayDay
+import com.xenia.ticket.utils.common.CommonMethod.showLoader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -55,10 +55,11 @@ class CustomTicketPopupDialogue : DialogFragment() {
     private lateinit var txtTicketName: TextView
     private lateinit var txtComboTicketName: TextView
     private lateinit var txtTicketRate: TextView
-    private lateinit var txtTickets: TextView
+    private lateinit var txtTicketChildRate: TextView
     private lateinit var txtQty: TextView
     private lateinit var txtTotalAmount: TextView
     private lateinit var editTextTickets: EditText
+    private lateinit var editTextChildTickets: EditText
     private lateinit var backCallback: OnBackPressedCallback
     private lateinit var btnClear: ImageView
     private lateinit var icClose: RelativeLayout
@@ -79,13 +80,17 @@ class CustomTicketPopupDialogue : DialogFragment() {
     private var ticketNameMr: String = ""
     private var ticketNameSi: String = ""
     private var ticketRate: Double = 0.00
+    private var ticketChildRate: Double = 0.00
     private var totalAmount: String = ""
     private var ticketCompanyId: Int = 0
     private var ticketCategoryId: Int = 0
     private var ticketCombo: Boolean = false
     private var ticketType: String = ""
+    private var ticketChild: Boolean = false
     private var listener: OnTicketClickListener? = null
     var selectedSchedule: ShowScheduleResponse? = null
+    private var activeEditText: EditText? = null
+    private var comboShowId: Int? = null
 
     fun setListener(listener: OnTicketClickListener) {
         this.listener = listener
@@ -105,8 +110,10 @@ class CustomTicketPopupDialogue : DialogFragment() {
         ticketCategoryId: Int,
         ticketCompanyId: Int,
         ticketRate: Double,
+        ticketChildRate: Double,
         ticketCombo: Boolean,
-        ticketType: String
+        ticketType: String,
+        ticketChild: Boolean
     ) {
         this.ticketId = ticketId
         this.ticketName = ticketName
@@ -119,10 +126,12 @@ class CustomTicketPopupDialogue : DialogFragment() {
         this.ticketNameMr = ticketNameMr
         this.ticketNamePa = ticketNamePa
         this.ticketRate = ticketRate
+        this.ticketChildRate = ticketChildRate
         this.ticketCompanyId=ticketCompanyId
         this.ticketCategoryId=ticketCategoryId
         this.ticketCombo=ticketCombo
         this.ticketType = ticketType
+        this.ticketChild = ticketChild
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -162,17 +171,17 @@ class CustomTicketPopupDialogue : DialogFragment() {
     @SuppressLint("SetTextI18n", "DefaultLocale", "ClickableViewAccessibility")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        txtTickets = view.findViewById(R.id.txtTickets)
         txtTicketName= view.findViewById(R.id.txtTicketName)
         txtComboTicketName= view.findViewById(R.id.txtComboTicketName)
         txtTicketRate = view.findViewById(R.id.txtTicketRate)
+        txtTicketChildRate = view.findViewById(R.id.txtTicketChildRate)
         txtQty= view.findViewById(R.id.txtQty)
         txtTotalAmount = view.findViewById(R.id.totalAmount)
         editTextTickets = view.findViewById(R.id.editTextTickets)
+        editTextChildTickets = view.findViewById(R.id.editTextChildTickets)
         editTextTickets.post { editTextTickets.selectAll() }
         val recyclerView = view.findViewById<RecyclerView>(R.id.showSchedule)
-
-
+        applyTicketUIRules()
         val billingLang = sessionManager.getBillingSelectedLanguage()
         val appLang = sessionManager.getSelectedLanguage()
 
@@ -182,10 +191,7 @@ class CustomTicketPopupDialogue : DialogFragment() {
         btnClear = view.findViewById(R.id.btnClear)
         icClose = view.findViewById(R.id.imgClose)
         btnDone = view.findViewById(R.id.btnDone)
-        txtTickets.text = getString(R.string.no_of_tickets)
         btnDone.text  = getString(R.string.done)
-        val text = getString(R.string.no_of_tickets)
-        txtTickets.text = wrapTextByLength(text, 20)
 
         val displayTicketName = when (currentLang) {
             LANGUAGE_ENGLISH -> ticketName
@@ -205,8 +211,21 @@ class CustomTicketPopupDialogue : DialogFragment() {
             maxLines = 2
         )
 
-        val formattedAmount = String.format(Locale.ENGLISH, "%.2f", ticketRate)
-        txtTicketRate.text = "Rs. $formattedAmount /-"
+        if(ticketCombo && ticketChild){
+            val formattedAmount = String.format(Locale.ENGLISH, "%.2f", ticketRate)
+            txtTicketRate.text = getString(R.string.no_of_tickets) +" "+ "Rs. $formattedAmount /-"
+
+            val formattedChildAmount = String.format(Locale.ENGLISH, "%.2f", ticketRate)
+            txtTicketChildRate.text = getString(R.string.no_of_child_tickets) +" "+ "Rs. $formattedChildAmount /-"
+        }else{
+            val formattedAmount = String.format(Locale.ENGLISH, "%.2f", ticketRate)
+            txtTicketRate.text = getString(R.string.no_of_tickets) +" "+ "Rs. $formattedAmount /-"
+
+            val formattedChildAmount = String.format(Locale.ENGLISH, "%.2f", ticketChildRate)
+            txtTicketChildRate.text = getString(R.string.no_of_child_tickets) +" "+ "Rs. $formattedChildAmount /-"
+        }
+
+
 
         if (ticketType.equals("SHOW", ignoreCase = true)) {
 
@@ -222,6 +241,7 @@ class CustomTicketPopupDialogue : DialogFragment() {
 
             lifecycleScope.launch {
                 try {
+                    showLoader(requireContext(), "Loading schedules...")
                     val day = getTodayDay()
 
                     val schedules = withContext(Dispatchers.IO) {
@@ -231,23 +251,83 @@ class CustomTicketPopupDialogue : DialogFragment() {
                     val existingItem = withContext(Dispatchers.IO) {
                         ticketRepository.getCartItemByTicketId(ticketId)
                     }
-
+                    dismissLoader()
                     if (schedules.isNotEmpty()) {
                         adapter.updateData(schedules)
 
-                        existingItem?.let { item ->
-                            if (item.scheduleId != 0) {
-                                adapter.setSelectedByScheduleId(item.scheduleId)
-
-                                selectedSchedule = schedules.find {
-                                    it.ScheduleId == item.scheduleId
-                                }
+                        selectedSchedule = when {
+                            existingItem?.scheduleId != null && existingItem.scheduleId != 0 -> {
+                                schedules.find { it.ScheduleId == existingItem.scheduleId }
                             }
+                            else -> schedules[0]
                         }
 
-                        if (schedules.size == 1 && selectedSchedule == null) {
-                            selectedSchedule = schedules[0]
-                            adapter.setSelectedByScheduleId(schedules[0].ScheduleId)
+                        selectedSchedule?.let {
+                            adapter.setSelectedByScheduleId(it.ScheduleId)
+                        }
+
+                    } else {
+                        recyclerView.visibility = View.GONE
+                    }
+
+                } catch (_: Exception) {
+                    dismissLoader()
+                    recyclerView.visibility = View.GONE
+                }
+            }
+        }
+
+        if (ticketCombo) {
+            lifecycleScope.launch {
+                try {
+                    showLoader(requireContext(), "Loading schedules...")
+
+                    val result = withContext(Dispatchers.IO) {
+                        activeTicketRepository.getComboResult(ticketId)
+                    }
+
+                    comboShowId = result.showId
+
+                    txtComboTicketName.visibility = View.VISIBLE
+                    txtComboTicketName.text = result.names.joinToString(" | ")
+
+                    if (result.showId != null) {
+
+                        recyclerView.visibility = View.VISIBLE
+
+                        val adapter = ShowScheduleAdapter(emptyList()) { selectedItem ->
+                            selectedSchedule = selectedItem
+                        }
+
+                        recyclerView.layoutManager = GridLayoutManager(requireContext(), 4)
+                        recyclerView.adapter = adapter
+
+                        val day = getTodayDay()
+
+                        val schedules = withContext(Dispatchers.IO) {
+                            activeTicketRepository.getSchedules(result.showId, day)
+                        }
+
+                        val existingItem = withContext(Dispatchers.IO) {
+                            ticketRepository.getCartItemByTicketId(ticketId)
+                        }
+
+                        if (schedules.isNotEmpty()) {
+                            adapter.updateData(schedules)
+
+                            selectedSchedule = when {
+                                existingItem?.scheduleId != null && existingItem.scheduleId != 0 -> {
+                                    schedules.find { it.ScheduleId == existingItem.scheduleId }
+                                }
+                                else -> schedules[0]
+                            }
+
+                            selectedSchedule?.let {
+                                adapter.setSelectedByScheduleId(it.ScheduleId)
+                            }
+
+                        } else {
+                            recyclerView.visibility = View.GONE
                         }
 
                     } else {
@@ -256,36 +336,42 @@ class CustomTicketPopupDialogue : DialogFragment() {
 
                 } catch (_: Exception) {
                     recyclerView.visibility = View.GONE
+                } finally {
+                    dismissLoader()
                 }
             }
         }
-
-        if (ticketCombo) {
-            lifecycleScope.launch {
-                recyclerView.visibility = View.GONE
-                txtComboTicketName.visibility = View.VISIBLE
-                val comboTickets = activeTicketRepository.getComboTickets(ticketId)
-                withContext(Dispatchers.Main) {
-                    val names = comboTickets.joinToString(" | ") { it.name }
-                    txtComboTicketName.text = names
-                }
-            }
-        }
-
         editTextTickets.inputType = 0
+        editTextChildTickets.inputType = 0
+
+        activeEditText = editTextTickets
         editTextTickets.requestFocus()
+        updateFocusUI(editTextTickets)
+
         lifecycleScope.launch {
             val cartItem = ticketRepository.getCartItemByTicketId(ticketId)
-            cartItem?.let { item ->
-                withContext(Dispatchers.Main) {
-                    editTextTickets.setText(item.daQty.toString())
-                    updateTotalAmount(item.daQty)
+
+            withContext(Dispatchers.Main) {
+
+                val childOnlyMode = isChildOnlyMode()
+
+                if (cartItem != null) {
+                    editTextTickets.setText(cartItem.ticketQty.toString())
+                    editTextChildTickets.setText(cartItem.ticketChildQty.toString())
+                } else {
+                    if (childOnlyMode) {
+                        editTextTickets.setText("0")
+                        editTextChildTickets.setText("1")
+                    } else {
+                        editTextTickets.setText("1")
+                        editTextChildTickets.setText("0")
+                    }
                 }
-            } ?: run {
-                withContext(Dispatchers.Main) {
-                    editTextTickets.setText("1")
-                    updateTotalAmount(1)
-                }
+
+                activeEditText = if (childOnlyMode) editTextChildTickets else editTextTickets
+                activeEditText?.requestFocus()
+                updateFocusUI(activeEditText)
+                updateAmounts()
             }
         }
         hideSoftKeyboard()
@@ -301,23 +387,12 @@ class CustomTicketPopupDialogue : DialogFragment() {
             view.findViewById<TextView>(buttonId).setOnClickListener { v ->
                 if(firstClick){
                     firstClick = false
-                    editTextTickets.setText("")
+                    activeEditText?.setText("")
                 }
                 appendToFocusedEditText((v as TextView).text.toString())
             }
         }
 
-
-        editTextTickets.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                val quantity = s?.toString()?.toIntOrNull() ?: 0
-                updateTotalAmount(quantity)
-            }
-
-            override fun afterTextChanged(s: Editable?) {}
-        })
 
         btnBack.setOnClickListener {
             removeLastCharacterFromFocusedEditText()
@@ -329,19 +404,55 @@ class CustomTicketPopupDialogue : DialogFragment() {
             dismiss()
         }
 
-
         btnDone.setOnClickListener {
-            val quantity = editTextTickets.text.toString().toIntOrNull() ?: 0
+            val childOnlyMode =
+                ticketType.equals("TICKET", true) && ticketCombo && ticketChild
 
-            if (quantity <= 0) {
-                Toast.makeText(requireContext(), "Please enter a valid quantity", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
+            val quantityInput = editTextTickets.text.toString().toIntOrNull() ?: 0
+            val childQuantityInput = editTextChildTickets.text.toString().toIntOrNull() ?: 0
+
+            val quantity = if (childOnlyMode) 0 else quantityInput
+
+            val totalQty = if (childOnlyMode) childQuantityInput else (quantity + childQuantityInput)
+
+            if (childOnlyMode) {
+                if (childQuantityInput <= 0) {
+                    Toast.makeText(requireContext(), "Please enter child quantity", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+            } else {
+                if (quantity <= 0) {
+                    Toast.makeText(requireContext(), "Please enter a valid quantity", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
             }
 
-            if (ticketType.equals("SHOW", ignoreCase = true) && selectedSchedule == null) {
+            val isSeatCheckRequired =
+                ticketCombo || ticketType.equals("SHOW", ignoreCase = true)
+
+            if (isSeatCheckRequired && selectedSchedule == null) {
                 Toast.makeText(requireContext(), "Please select a schedule", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
+
+            if (isSeatCheckRequired) {
+                val availableSeats = selectedSchedule?.AvailableSeats ?: 0
+
+                if (totalQty > availableSeats) {
+                    Toast.makeText(
+                        requireContext(),
+                        "Only $availableSeats seats available",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return@setOnClickListener
+                }
+            }
+
+            val finalChildRate = if (childOnlyMode) ticketRate else ticketChildRate
+
+            val adultTotal = ticketRate * quantity
+            val childTotal = finalChildRate * childQuantityInput
+            val grandTotal = adultTotal + childTotal
 
             val cartItem = Orders(
                 ticketId = ticketId,
@@ -356,17 +467,17 @@ class CustomTicketPopupDialogue : DialogFragment() {
                 ticketNameSi = ticketNameSi,
                 ticketCategoryId = ticketCategoryId,
                 ticketCompanyId = ticketCompanyId,
-                ticketAmount = ticketRate,
-                ticketTotalAmount = totalAmount.toDouble(),
                 ticketCreatedDate = System.currentTimeMillis().toString(),
-                ticketCreatedBy =0 ,
+                ticketCreatedBy = 0,
                 ticketActive = true,
                 ticketCombo = ticketCombo,
                 ticketType = ticketType,
                 daName = "",
-                daRate = ticketRate,
-                daQty = quantity,
-                daTotalAmount = totalAmount.toDouble(),
+                ticketRate = ticketRate,
+                ticketChildRate = finalChildRate,
+                ticketQty = quantity,
+                ticketChildQty = childQuantityInput,
+                ticketTotalAmount = grandTotal,
                 daPhoneNumber = "",
                 daProofId = "",
                 daProof = "",
@@ -379,8 +490,10 @@ class CustomTicketPopupDialogue : DialogFragment() {
                 scheduleTime = selectedSchedule?.let {
                     "${formatTime(it.StartTime)} - ${formatTime(it.EndTime)}"
                 } ?: "",
-                screenName = selectedSchedule?.ScreenName ?: ""
+                screenName = selectedSchedule?.ScreenName ?: "",
+                ticketChild = ticketChild
             )
+
             lifecycleScope.launch {
                 ticketRepository.insertCartItem(cartItem)
                 listener?.onTicketAdded(ticketId)
@@ -395,12 +508,60 @@ class CustomTicketPopupDialogue : DialogFragment() {
 
         editTextTickets.setOnTouchListener { _, event ->
             if (event.action == MotionEvent.ACTION_UP) {
+                activeEditText = editTextTickets
+                updateFocusUI(editTextTickets)
                 editTextTickets.requestFocus()
                 hideSoftKeyboard()
             }
             true
         }
+
+        editTextChildTickets.setOnTouchListener { _, event ->
+            if (event.action == MotionEvent.ACTION_UP) {
+                activeEditText = editTextChildTickets
+                updateFocusUI(editTextChildTickets)
+                editTextChildTickets.requestFocus()
+                hideSoftKeyboard()
+            }
+            true
+        }
     }
+
+    private fun applyTicketUIRules() {
+
+        val childOnlyMode = isChildOnlyMode()
+
+        val showAdult = !childOnlyMode
+        val showChild = childOnlyMode || ticketChildRate > 0.0
+
+        editTextTickets.visibility = if (showAdult) View.VISIBLE else View.GONE
+        txtTicketRate.visibility = if (showAdult) View.VISIBLE else View.GONE
+
+        editTextChildTickets.visibility = if (showChild) View.VISIBLE else View.GONE
+        txtTicketChildRate.visibility = if (showChild) View.VISIBLE else View.GONE
+
+        if (childOnlyMode) {
+            editTextTickets.setText("0")
+            editTextChildTickets.setText("1")
+
+            activeEditText = editTextChildTickets
+        } else {
+            if (editTextTickets.text.isNullOrEmpty()) {
+                editTextTickets.setText("1")
+            }
+            if (editTextChildTickets.text.isNullOrEmpty()) {
+                editTextChildTickets.setText("0")
+            }
+
+            activeEditText = editTextTickets
+        }
+
+        activeEditText?.requestFocus()
+        updateFocusUI(activeEditText)
+
+        updateAmounts()
+    }
+
     fun splitTextByWords(
         text: String,
         maxCharsPerLine: Int,
@@ -428,44 +589,48 @@ class CustomTicketPopupDialogue : DialogFragment() {
         return lines.joinToString("\n")
     }
 
-    fun wrapTextByLength(text: String, maxChars: Int = 30): String {
-        val builder = StringBuilder()
-        var index = 0
-        while (index < text.length) {
-            val end = (index + maxChars).coerceAtMost(text.length)
-            builder.append(text.substring(index, end))
-            if (end < text.length) builder.append("\n")
-            index = end
-        }
-        return builder.toString()
-    }
-
-    @SuppressLint("SetTextI18n")
     private fun appendToFocusedEditText(text: String) {
-        val currentText = editTextTickets.text.toString()
-        if (currentText.isEmpty() && text == "0") {
-            return
+        val editText = activeEditText ?: return
+
+        if (firstClick) {
+            firstClick = false
+            editText.setText(text)
+        } else {
+            val currentText = editText.text.toString()
+            if (currentText == "0") {
+                editText.setText(text)
+            } else {
+                val newText = currentText + text
+                editText.setText(newText)
+            }
         }
 
-        editTextTickets.setText(currentText + text)
-        editTextTickets.setSelection(editTextTickets.text.length)
+        editText.setSelection(editText.text.length)
+        updateAmounts()
     }
 
 
     private fun removeLastCharacterFromFocusedEditText() {
-        val currentText = editTextTickets.text?.toString().orEmpty()
+        val editText = activeEditText ?: return
+
+        val currentText = editText.text?.toString().orEmpty()
 
         if (currentText.isNotEmpty()) {
             val updatedText = currentText.dropLast(1)
-            editTextTickets.setText(updatedText)
-            editTextTickets.setSelection(updatedText.length)
+            editText.setText(updatedText)
+            editText.setSelection(updatedText.length)
         }
+
+        updateAmounts()
     }
 
     private fun clearFocusedEditText() {
-        editTextTickets.text!!.clear()
-        editTextTickets.requestFocus()
-        updateTotalAmount(0)
+        val editText = activeEditText ?: return
+
+        editText.text?.clear()
+        editText.requestFocus()
+
+        updateAmounts()
     }
 
 
@@ -474,25 +639,101 @@ class CustomTicketPopupDialogue : DialogFragment() {
         imm.hideSoftInputFromWindow(editTextTickets.windowToken, 0)
     }
 
-    @SuppressLint("DefaultLocale", "SetTextI18n")
-    private fun updateTotalAmount(quantity: Int) {
-        if (quantity == 0) {
-            txtQty.text = getString(R.string.txt_amount)+" :"
-            txtTotalAmount.visibility = View.GONE
-            return
-        } else {
-            txtQty.visibility = View.VISIBLE
-            txtTotalAmount.visibility = View.VISIBLE
-        }
-
-        totalAmount = (ticketRate * quantity).toString()
-        val formattedRate = String.format(Locale.ENGLISH, "%.2f", ticketRate)
-        txtQty.text = getString(R.string.txt_amount)+" : " + formattedRate + " x " + quantity
-
-        val formattedTotal = String.format(Locale.ENGLISH, "%.2f", totalAmount.toDouble())
-        txtTotalAmount.text = "Rs. $formattedTotal/-"
+    private fun isChildOnlyMode(): Boolean {
+        return ticketType.equals("TICKET", true) && ticketCombo && ticketChild
     }
 
+    @SuppressLint("DefaultLocale", "SetTextI18n")
+    private fun updateAmounts() {
+
+        val childOnlyMode = isChildOnlyMode()
+
+        val adultQtyInput = editTextTickets.text.toString().toIntOrNull() ?: 0
+        val childQtyInput = editTextChildTickets.text.toString().toIntOrNull() ?: 0
 
 
+        val adultQty = if (childOnlyMode) 0 else adultQtyInput
+
+        val totalQty = if (childOnlyMode) childQtyInput else adultQty + childQtyInput
+
+        val isSeatCheckRequired =
+            ticketCombo || ticketType.equals("SHOW", true)
+
+        if (isSeatCheckRequired && selectedSchedule != null) {
+
+            val availableSeats = selectedSchedule?.AvailableSeats ?: Int.MAX_VALUE
+
+            if (totalQty > availableSeats) {
+
+                Toast.makeText(
+                    requireContext(),
+                    "Maximum $availableSeats seats allowed",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                if (childOnlyMode) {
+                    editTextChildTickets.setText(availableSeats.toString())
+                } else {
+                    val allowedAdult = minOf(adultQty, availableSeats)
+                    val allowedChild = minOf(childQtyInput, availableSeats - allowedAdult)
+
+                    editTextTickets.setText(allowedAdult.toString())
+                    editTextChildTickets.setText(allowedChild.toString())
+                }
+
+                return
+            }
+        }
+
+        // =========================
+        // RATE LOGIC
+        // =========================
+        val finalChildRate = if (childOnlyMode) ticketRate else ticketChildRate
+
+        val adultTotal = ticketRate * adultQty
+        val childTotal = finalChildRate * childQtyInput
+
+        val grandTotal = adultTotal + childTotal
+        totalAmount = grandTotal.toString()
+
+        // =========================
+        // UI DISPLAY
+        // =========================
+        if (adultQty == 0 && childQtyInput == 0) {
+            txtQty.text = getString(R.string.txt_amount) + " :"
+            txtTotalAmount.visibility = View.GONE
+            return
+        }
+
+        txtTotalAmount.visibility = View.VISIBLE
+
+        val adultText = if (adultQty > 0) {
+            "${getString(R.string.no_of_tickets)} : $adultQty x ${"%.2f".format(ticketRate)}"
+        } else ""
+
+        val childText = if (childQtyInput > 0) {
+            "${getString(R.string.no_of_child_tickets)} : $childQtyInput x ${"%.2f".format(finalChildRate)}"
+        } else ""
+
+        txtQty.text = when {
+            adultQty > 0 && childQtyInput > 0 -> "$adultText\n$childText"
+            adultQty > 0 -> adultText
+            else -> childText
+        }
+
+        txtTotalAmount.text = "Rs. %.2f/-".format(grandTotal)
+    }
+
+    private fun updateFocusUI(focused: EditText?) {
+        val normal = R.drawable.edittext_bg
+        val selected = R.drawable.edittext_selected
+
+        editTextTickets.setBackgroundResource(
+            if (focused == editTextTickets) selected else normal
+        )
+
+        editTextChildTickets.setBackgroundResource(
+            if (focused == editTextChildTickets) selected else normal
+        )
+    }
 }

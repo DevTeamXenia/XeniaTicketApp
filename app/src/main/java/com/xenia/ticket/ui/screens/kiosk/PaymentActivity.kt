@@ -56,6 +56,7 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.xenia.ticket.data.network.model.SeatAllocationDto
+import com.xenia.ticket.data.repository.TicketRepository
 import java.io.ByteArrayOutputStream
 import java.io.File
 import com.xenia.ticket.utils.pineLab.PlutusConstants
@@ -82,6 +83,8 @@ class PaymentActivity : AppCompatActivity() {
     private var isBound = false
     private var serverMessenger: Messenger? = null
     private var seatAllocations: List<SeatAllocationDto> = emptyList()
+
+    private val activeTicketRepository: TicketRepository by inject()
 
     @SuppressLint("SetTextI18n", "DefaultLocale")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -350,6 +353,7 @@ class PaymentActivity : AppCompatActivity() {
         selectedLanguage: String,
         seatAllocations: List<SeatAllocationDto>,
     ): Bitmap {
+
         val width = 576
         val paint = Paint().apply { isAntiAlias = true }
         val defaultLang = companyRepository.getDefaultLanguage().toString()
@@ -409,7 +413,6 @@ class PaymentActivity : AppCompatActivity() {
             else -> "Entry Ticket"
         }
 
-        // Draw receipt titles
         tempCanvas.drawText(receiptTitle, width / 2f, 40f, paint)
         if (printDefaultLang) {
             tempCanvas.drawText(receiptDTitle, width / 2f, 80f, paint)
@@ -419,18 +422,16 @@ class PaymentActivity : AppCompatActivity() {
         paint.textAlign = Paint.Align.LEFT
         paint.textSize = 22f
 
-        // Receipt No & Date
-        tempCanvas.drawText(
-            "$labelReceiptNo($labelDReceiptNo): ${prefix}$orderID",
-            20f,
-            yOffset,
-            paint
-        )
+        tempCanvas.drawText("$labelReceiptNo($labelDReceiptNo): ${prefix}$orderID", 20f, yOffset, paint)
         yOffset += 35f
         tempCanvas.drawText("$labelDate($labelDDate): $currentDate", 20f, yOffset, paint)
         yOffset += 35f
+        tempCanvas.drawText("$labelName($labelDName): $name", 20f, yOffset, paint)
+        yOffset += 35f
+        tempCanvas.drawText("$labelPhoneNumber($labelDPhonenumber): $phoneNo", 20f, yOffset, paint)
+        yOffset += 35f
 
-        // Column headers
+        tempCanvas.drawLine(20f, yOffset, width - 20f, yOffset, paint)
         yOffset += 30f
         paint.textAlign = Paint.Align.LEFT
         tempCanvas.drawText(labelItem, 20f, yOffset, paint)
@@ -457,15 +458,21 @@ class PaymentActivity : AppCompatActivity() {
         yOffset += 40f
 
         var totalAmount = 0.0
-        val seatMap = seatAllocations.associateBy { it.scheduleId }
+        val seatMapQueue = mutableMapOf<Int, MutableList<String>>()
+
+        seatAllocations.forEach {
+            val existing = seatMapQueue[it.scheduleId] ?: mutableListOf()
+            existing.addAll(it.seats)
+            seatMapQueue[it.scheduleId] = existing
+        }
         for (item in ticket) {
-            val priceStr = String.format(Locale.ENGLISH, "%.2f", item.daRate)
-            val qtyStr = item.daQty.toString()
-            val amountStr = String.format(Locale.ENGLISH, "%.2f", item.daTotalAmount)
-            totalAmount += item.daTotalAmount
+
+            val priceStr = String.format(Locale.ENGLISH, "%.2f", item.ticketRate)
+            val qtyStr = item.ticketQty.toString()
+            val amountStr = String.format(Locale.ENGLISH, "%.2f", item.ticketTotalAmount)
+            totalAmount += item.ticketTotalAmount
 
             paint.textAlign = Paint.Align.LEFT
-            paint.isAntiAlias = true
 
             val itemName = when (selectedLanguage.lowercase()) {
                 "ml" -> item.ticketNameMa
@@ -479,63 +486,99 @@ class PaymentActivity : AppCompatActivity() {
                 else -> item.ticketName
             }
 
-            var itemDName: String? = null
-            if (printDefaultLang) {
-                itemDName = when (defaultLang.lowercase()) {
-                    "ml" -> item.ticketNameMa
-                    "hi" -> item.ticketNameHi
-                    "ta" -> item.ticketNameTa
-                    "kn" -> item.ticketNameKa
-                    "te" -> item.ticketNameTe
-                    "si" -> item.ticketNameSi!!
-                    "pa" -> item.ticketNamePa
-                    "mr" -> item.ticketNameMr
-                    else -> item.ticketName
-                }
-            }
-
-            val maxItemNameWidth = width * 0.95f
+            val maxWidth = width * 0.95f
 
             yOffset = drawMultilineText(
-                canvas = tempCanvas,
-                text = itemName ?: "",
-                x = 20f,
-                startY = yOffset,
-                maxWidth = maxItemNameWidth,
-                paint = paint
+                tempCanvas,
+                itemName ?: "",
+                20f,
+                yOffset,
+                maxWidth,
+                paint
             ) + 10f
 
-            yOffset += 15f
-            if (printDefaultLang) {
-                yOffset = drawMultilineText(
-                    canvas = tempCanvas,
-                    text = itemDName ?: "",
-                    x = 20f,
-                    startY = yOffset,
-                    maxWidth = maxItemNameWidth,
-                    paint = paint
-                ) + 10f
-            }
+            paint.textSize = 22f
 
-            if (item.ticketType == "SHOW") {
+            if (item.ticketCombo) {
 
-                tempCanvas.drawText(item.screenName +" - "+item.scheduleTime, 20f, yOffset, paint)
+                val comboResult = activeTicketRepository.getComboResult(item.ticketId)
 
+                val showName = comboResult.names.lastOrNull()
+                val subTickets = comboResult.names.dropLast(1)
+
+                subTickets.forEach {
+
+                    val cleanText = it
+                        .replace("\\s+".toRegex(), " ")
+                        .trim()
+
+                    if (cleanText.isNotEmpty()) {
+
+                        val newY = drawMultilineText(
+                            tempCanvas,
+                            cleanText,
+                            40f,
+                            yOffset,
+                            width * 0.9f,
+                            paint
+                        )
+
+                        yOffset = newY + 2f
+                    }
+                }
+
+                showName?.let {
+                    yOffset = drawMultilineText(
+                        tempCanvas, it, 40f, yOffset, width * 0.9f, paint
+                    )
+                    yOffset += 10f
+                    if (item.scheduleId != 0) {
+
+                        tempCanvas.drawText(
+                            item.screenName + " - " + item.scheduleTime,
+                            60f,
+                            yOffset,
+                            paint
+                        )
+                        yOffset += 25f
+
+                        val seats = seatMapQueue[item.scheduleId]?.take(item.ticketQty)
+
+                        if (!seats.isNullOrEmpty()) {
+
+                            val seatText = "Seats: ${seats.joinToString(", ")}"
+
+                            yOffset = drawMultilineText(
+                                tempCanvas, seatText, 20f, yOffset, width * 0.9f, paint
+                            ) + 10f
+
+                            seatMapQueue[item.scheduleId]?.removeAll(seats)
+                        }
+                    }
+                }
+
+            } else if (item.ticketType == "SHOW") {
+
+                tempCanvas.drawText(
+                    item.screenName + " - " + item.scheduleTime,
+                    20f,
+                    yOffset,
+                    paint
+                )
                 yOffset += 25f
 
-                val seats = seatMap[item.scheduleId]?.seats
+                val seats = seatMapQueue[item.scheduleId]?.take(item.ticketQty)
 
                 if (!seats.isNullOrEmpty()) {
+
                     val seatText = "Seats: ${seats.joinToString(", ")}"
 
                     yOffset = drawMultilineText(
-                        canvas = tempCanvas,
-                        text = seatText,
-                        x = 20f,
-                        startY = yOffset,
-                        maxWidth = width * 0.9f,
-                        paint = paint
+                        tempCanvas, seatText, 60f, yOffset, width * 0.85f, paint
                     ) + 10f
+
+                    // REMOVE USED SEATS
+                    seatMapQueue[item.scheduleId]?.removeAll(seats)
                 }
             }
 
@@ -554,98 +597,22 @@ class PaymentActivity : AppCompatActivity() {
         tempCanvas.drawLine(20f, yOffset, width - 20f, yOffset, paint)
         yOffset += 60f
 
-        // Total amount
-        paint.textSize = 24f
         paint.textAlign = Paint.Align.RIGHT
         tempCanvas.drawText(
-            "$labelTotalAmount ($labelDTotalAmount): ${
-                String.format(Locale.ENGLISH, "%.2f", totalAmount)
-            }",
+            "$labelTotalAmount: ${String.format("%.2f", totalAmount)}",
             width - 20f,
             yOffset,
             paint
         )
-        yOffset += 30f
 
-        // UPI reference
-        if (!transID.isNullOrEmpty()) {
-            paint.textSize = 18f
-            paint.textAlign = Paint.Align.RIGHT
-            tempCanvas.drawText(
-                "$labelUPI: $transID",
-                width - 20f,
-                yOffset,
-                paint
-            )
-            yOffset += 25f
-        }
+        if (companyRepository.getPaymentQr() == "True") {
+            yOffset += 35f
+            generateQRCode()?.let { qrBitmap ->
+                val qrSize = 300
+                val qrX = (width - qrSize) / 2f
+                tempCanvas.drawBitmap(qrBitmap, qrX, yOffset, paint)
+                yOffset += qrSize
 
-        yOffset += 35f
-        paint.textSize = 22f
-        paint.textAlign = Paint.Align.CENTER
-
-        // User info box
-        val padding = 20f
-        val innerPadding = 30f
-        val cornerRadius = 20f
-
-        paint.textAlign = Paint.Align.LEFT
-        paint.textSize = 20f
-        paint.typeface = Typeface.DEFAULT
-
-        val textX = padding + innerPadding
-        var textY = yOffset + innerPadding - paint.fontMetrics.ascent
-
-        tempCanvas.drawText("$labelName : $name", textX, textY, paint)
-        textY += 25f
-        if (printDefaultLang) {
-            tempCanvas.drawText(labelDName, textX, textY, paint)
-            textY += 25f
-        }
-
-        textY += 10f
-
-        tempCanvas.drawText("$labelPhoneNumber: $phoneNo", textX, textY, paint)
-        textY += 25f
-
-        if (printDefaultLang) {
-            tempCanvas.drawText(labelDPhonenumber, textX, textY, paint)
-            textY += 25f
-        }
-
-        val rectTop = yOffset
-        val rectBottom = textY + innerPadding
-        val rectLeft = padding
-        val rectRight = width - padding
-
-
-        paint.style = Paint.Style.STROKE
-        paint.strokeWidth = 2f
-        paint.isAntiAlias = true
-
-
-        val halfStroke = paint.strokeWidth / 2
-
-        tempCanvas.drawRoundRect(
-            rectLeft + halfStroke,
-            rectTop + halfStroke,
-            rectRight - halfStroke,
-            rectBottom - halfStroke,
-            cornerRadius,
-            cornerRadius,
-            paint
-        )
-
-
-        yOffset = rectBottom + 10f
-
-        if (companyRepository.getPaymentQr().equals("True")) {
-                yOffset = rectBottom + 40f
-                generateQRCode()?.let { qrBitmap ->
-                    val qrSize = 300
-                    val qrX = (width - qrSize) / 2f
-                    tempCanvas.drawBitmap(qrBitmap, qrX, yOffset, paint)
-                    yOffset += qrSize
             }
         }
 
@@ -706,9 +673,14 @@ class PaymentActivity : AppCompatActivity() {
         yOffset += 35f
         tempCanvas.drawText("$labelDate: $currentDate", 20f, yOffset, paint)
         yOffset += 35f
+        tempCanvas.drawText("$labelName: $name", 20f, yOffset, paint)
+        yOffset += 35f
+        tempCanvas.drawText("$labelPhoneNumber: $phoneNo", 20f, yOffset, paint)
+        yOffset += 35f
 
 
-        yOffset += 30f
+        tempCanvas.drawLine(20f, yOffset, width - 20f, yOffset, paint)
+        yOffset += 40f
         paint.textAlign = Paint.Align.LEFT
         tempCanvas.drawText(labelItem, 20f, yOffset, paint)
 
@@ -725,12 +697,16 @@ class PaymentActivity : AppCompatActivity() {
         yOffset += 40f
 
         var totalAmount = 0.0
-        val seatMap = seatAllocations.associateBy { it.scheduleId }
+        val seatMapQueue = mutableMapOf<Int, MutableList<String>>()
+
+        seatAllocations.forEach {
+            seatMapQueue[it.scheduleId] = it.seats.toMutableList()
+        }
         for (item in ticket) {
-            val priceStr = String.format("%.2f", item.daRate)
-            val qtyStr = item.daQty.toString()
-            val amountStr = String.format("%.2f", item.daTotalAmount)
-            totalAmount += item.daTotalAmount
+            val priceStr = String.format("%.2f", item.ticketRate)
+            val qtyStr = item.ticketQty.toString()
+            val amountStr = String.format("%.2f", item.ticketTotalAmount)
+            totalAmount += item.ticketTotalAmount
 
             paint.textAlign = Paint.Align.LEFT
             paint.isAntiAlias = true
@@ -759,22 +735,90 @@ class PaymentActivity : AppCompatActivity() {
                 paint = paint
             ) + 10f
             paint.textSize = 22f
-            if (item.ticketType == "SHOW") {
-                tempCanvas.drawText(item.screenName +" - "+ item.scheduleTime, 20f, yOffset, paint)
-                yOffset += 25f
-                val seats = seatMap[item.scheduleId]?.seats
+            if (item.ticketCombo) {
 
-                if (!seats.isNullOrEmpty()) {
-                    val seatText = "Seats: ${seats.joinToString(", ")}"
+                val comboResult = activeTicketRepository.getComboResult(item.ticketId)
 
+                val showName = comboResult.names.lastOrNull()
+                val subTickets = comboResult.names.dropLast(1)
+                subTickets.forEach {
+
+                    val cleanText = it
+                        .replace("\\s+".toRegex(), " ")
+                        .trim()
+
+                    if (cleanText.isNotEmpty()) {
+
+                        val newY = drawMultilineText(
+                            tempCanvas,
+                            cleanText,
+                            40f,
+                            yOffset,
+                            width * 0.9f,
+                            paint
+                        )
+
+                        yOffset = newY + 2f
+                    }
+                }
+                showName?.let { show ->
                     yOffset = drawMultilineText(
                         canvas = tempCanvas,
-                        text = seatText,
-                        x = 20f,
+                        text = show,
+                        x = 40f,
                         startY = yOffset,
                         maxWidth = width * 0.9f,
                         paint = paint
                     ) + 10f
+
+                    if (item.scheduleId != 0) {
+
+                        if (item.screenName.isNotEmpty() && item.scheduleTime.isNotEmpty()) {
+                            tempCanvas.drawText(
+                                item.screenName + " - " + item.scheduleTime,
+                                60f,
+                                yOffset,
+                                paint
+                            )
+                            yOffset += 25f
+                        }
+
+                        val seats = seatMapQueue[item.scheduleId]?.take(item.ticketQty)
+
+                        if (!seats.isNullOrEmpty()) {
+
+                            val seatText = "Seats: ${seats.joinToString(", ")}"
+
+                            yOffset = drawMultilineText(
+                                tempCanvas, seatText, 20f, yOffset, width * 0.9f, paint
+                            ) + 10f
+
+                            // REMOVE USED SEATS
+                            seatMapQueue[item.scheduleId]?.removeAll(seats)
+                        }
+                    }
+                }
+            } else if (item.ticketType == "SHOW") {
+                tempCanvas.drawText(
+                    item.screenName + " - " + item.scheduleTime,
+                    20f,
+                    yOffset,
+                    paint
+                )
+                yOffset += 25f
+
+                val seats = seatMapQueue[item.scheduleId]?.take(item.ticketQty)
+
+                if (!seats.isNullOrEmpty()) {
+
+                    val seatText = "Seats: ${seats.joinToString(", ")}"
+
+                    yOffset = drawMultilineText(
+                        tempCanvas, seatText, 60f, yOffset, width * 0.85f, paint
+                    ) + 10f
+
+                    // REMOVE USED SEATS
+                    seatMapQueue[item.scheduleId]?.removeAll(seats)
                 }
             }
             yOffset += 35f
@@ -786,6 +830,7 @@ class PaymentActivity : AppCompatActivity() {
 
             yOffset += 45f
         }
+
         paint.strokeWidth = 2f
         tempCanvas.drawLine(20f, yOffset, width - 20f, yOffset, paint)
         yOffset += 60f
@@ -811,61 +856,13 @@ class PaymentActivity : AppCompatActivity() {
             yOffset += 35f
         }
 
-        yOffset += 35f
-
-        val padding = 15f
-        val innerPadding = 25f
-        val cornerRadius = 18f
-
-        paint.textAlign = Paint.Align.LEFT
-        paint.textSize = 20f
-        paint.typeface = Typeface.DEFAULT
-        paint.isAntiAlias = true
-
-        val nameText = "$labelName : $name"
-        val phoneText = "$labelPhoneNumber: $phoneNo"
-
-        val rectLeft = padding
-        val rectRight = width - padding
-
-        val rectTop = yOffset
-
-        val textX = rectLeft + innerPadding
-        var textY = rectTop + innerPadding - paint.fontMetrics.ascent
-
-
-        tempCanvas.drawText(nameText, textX, textY, paint)
-        textY += 30f
-
-        tempCanvas.drawText(phoneText, textX, textY, paint)
-        textY += 30f
-
-        val rectBottom = textY + innerPadding
-
-        paint.style = Paint.Style.STROKE
-        paint.strokeWidth = 1.5f
-
-        val halfStroke = paint.strokeWidth / 2
-
-        tempCanvas.drawRoundRect(
-            rectLeft + halfStroke,
-            rectTop + halfStroke,
-            rectRight - halfStroke,
-            rectBottom - halfStroke,
-            cornerRadius,
-            cornerRadius,
-            paint
-        )
-
-        yOffset = rectBottom - 10f
-
         if (companyRepository.getPaymentQr() == "True") {
-                yOffset = rectBottom + 50f
-                generateQRCode()?.let { qrBitmap ->
-                    val qrSize = 300
-                    val qrX = (width - qrSize) / 2f
-                    tempCanvas.drawBitmap(qrBitmap, qrX, yOffset, paint)
-                    yOffset += qrSize
+            yOffset += 35f
+            generateQRCode()?.let { qrBitmap ->
+                val qrSize = 300
+                val qrX = (width - qrSize) / 2f
+                tempCanvas.drawBitmap(qrBitmap, qrX, yOffset, paint)
+                yOffset += qrSize
 
             }
         }
@@ -1013,10 +1010,10 @@ class PaymentActivity : AppCompatActivity() {
 
         var totalAmount = 0.0
         for (item in ticket) {
-            val priceStr = String.format(Locale.ENGLISH, "%.2f", item.daRate)
-            val qtyStr = item.daQty.toString()
-            val amtStr = String.format(Locale.ENGLISH, "%.2f", item.daTotalAmount)
-            totalAmount += item.daTotalAmount
+            val priceStr = String.format(Locale.ENGLISH, "%.2f", item.ticketRate)
+            val qtyStr = item.ticketQty.toString()
+            val amtStr = String.format(Locale.ENGLISH, "%.2f", item.ticketTotalAmount)
+            totalAmount += item.ticketTotalAmount
 
             val itemName = when (selectedLanguage.lowercase()) {
                 "ml" -> item.ticketNameMa
@@ -1118,7 +1115,7 @@ class PaymentActivity : AppCompatActivity() {
         val qtyColWidth = 4
         val amountColWidth = 8
         val totalWidth = itemColWidth + priceColWidth + qtyColWidth + amountColWidth + 3
-
+        lines.add("-".repeat(totalWidth))
         lines.add(
             labelItem.padEnd(itemColWidth) +
                     labelPrice.padStart(priceColWidth) + " " +
@@ -1129,7 +1126,7 @@ class PaymentActivity : AppCompatActivity() {
 
         var totalAmount = 0.0
         for (item in ticket) {
-            totalAmount += item.daTotalAmount
+            totalAmount += item.ticketTotalAmount
 
             val itemName = when (selectedLanguage.lowercase()) {
                 "ml" -> item.ticketNameMa
@@ -1143,9 +1140,9 @@ class PaymentActivity : AppCompatActivity() {
                 else -> item.ticketName
             } ?: ""
 
-            val priceStr = String.format(Locale.ENGLISH, "%.2f", item.daRate)
-            val qtyStr = item.daQty.toString()
-            val amountStr = String.format(Locale.ENGLISH, "%.2f", item.daTotalAmount)
+            val priceStr = String.format(Locale.ENGLISH, "%.2f", item.ticketRate)
+            val qtyStr = item.ticketRate.toString()
+            val amountStr = String.format(Locale.ENGLISH, "%.2f", item.ticketTotalAmount)
             lines.add(" ")
             itemName.chunked(totalWidth + 10).forEach { lines.add(it.padEnd(itemColWidth)) }
             lines.add("")
@@ -1575,40 +1572,39 @@ class PaymentActivity : AppCompatActivity() {
         }
     }
 
-
     private fun drawMultilineText(
         canvas: Canvas,
         text: String,
         x: Float,
         startY: Float,
         maxWidth: Float,
-        paint: Paint,
-        lineSpacing: Float = 8f
+        paint: Paint
     ): Float {
+
         val words = text.split(" ")
         var line = ""
         var y = startY
-        val lineHeight = paint.fontMetrics.run { descent - ascent }
 
         for (word in words) {
             val testLine = if (line.isEmpty()) word else "$line $word"
-            if (paint.measureText(testLine) <= maxWidth) {
-                line = testLine
-            } else {
+            val width = paint.measureText(testLine)
+
+            if (width > maxWidth) {
                 canvas.drawText(line, x, y, paint)
-                y += lineHeight + lineSpacing
                 line = word
+                y += paint.textSize + 8   // 🔥 IMPORTANT spacing
+            } else {
+                line = testLine
             }
         }
 
         if (line.isNotEmpty()) {
             canvas.drawText(line, x, y, paint)
-            y += lineHeight
+            y += paint.textSize + 8   // 🔥 IMPORTANT
         }
 
-        return y
+        return y   // ✅ always return NEXT SAFE Y
     }
-
 
     private fun redirect() {
         Handler(mainLooper).postDelayed({

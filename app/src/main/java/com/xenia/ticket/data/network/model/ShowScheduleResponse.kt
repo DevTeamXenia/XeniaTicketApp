@@ -8,4 +8,7 @@ data class ShowScheduleResponse(
     val StartTime: String,
     val EndTime: String,
     val ScreenName: String,
+    val TotalSeats: Int,
+    val BookedSeats: Int,
+    val AvailableSeats: Int,
 )

@@ -8,5 +8,6 @@ data class TicketComboMapping(
     @PrimaryKey val id: Int,
     val parentTicketId: Int,
     val childTicketId: Int,
+    val childTicketType: String?,
     val createdDate: String?
 )

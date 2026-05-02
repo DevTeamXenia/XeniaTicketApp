@@ -3,6 +3,7 @@ package com.xenia.ticket.data.repository
 import retrofit2.HttpException
 import androidx.room.Transaction
 import com.xenia.ticket.data.network.model.ActiveItem
+import com.xenia.ticket.data.network.model.ComboResult
 import com.xenia.ticket.data.network.model.ShowDto
 import com.xenia.ticket.data.network.model.ShowScheduleResponse
 import com.xenia.ticket.data.network.model.TicketComboMappingDto
@@ -42,9 +43,11 @@ class TicketRepository(
                     category = it.categoryId,
                     companyId = it.companyId,
                     amount = it.amount,
+                    childAmount = 0.00,
                     active = it.active,
                     combo = it.combo,
-                    type = "TICKET"
+                    type = "TICKET",
+                    child = it.child
                 )
             }
 
@@ -63,9 +66,11 @@ class TicketRepository(
                     category = 0,
                     companyId = it.companyId,
                     amount = it.amount,
+                    childAmount = it.childAmount,
                     active = it.isActive,
                     combo = false,
-                    type = "SHOW"
+                    type = "SHOW",
+                    child = false
                 )
             }
 
@@ -91,9 +96,11 @@ class TicketRepository(
                     category = it.categoryId,
                     companyId = it.companyId,
                     amount = it.amount,
+                    childAmount = 0.00,
                     active = it.active,
                     combo = it.combo,
-                    type = "TICKET"
+                    type = "TICKET",
+                    child = it.child
                 )
             }
 
@@ -111,10 +118,12 @@ class TicketRepository(
                     nameMr = it.showNameMr,
                     category = 0,
                     companyId = it.companyId,
-                    amount = 0.00,
+                    amount = it.amount,
+                    childAmount = it.childAmount,
                     active = it.isActive,
                     combo = false,
-                    type = "SHOW"
+                    type = "SHOW",
+                    child = false
                 )
             }
 
@@ -172,7 +181,8 @@ class TicketRepository(
             createdDate = ticketCreatedDate,
             createdBy = ticketCreatedBy,
             active = ticketActive,
-            combo = ticketCombo
+            combo = ticketCombo,
+            child = ticketChild
         )
 
     suspend fun getAllTickets(): List<Ticket> =
@@ -233,6 +243,7 @@ class TicketRepository(
             showNameSi = showNameSi,
             durationMinutes = durationMinutes,
             amount = amount,
+            childAmount = childAmount,
             companyId = companyId,
             createdDate = createdDate,
             createdBy = createdBy,
@@ -254,14 +265,39 @@ class TicketRepository(
         }
     }
 
-    suspend fun getComboTickets(parentTicketId: Int): List<Ticket> {
+    suspend fun getComboResult(parentTicketId: Int): ComboResult {
         val mappings = mappingDao.getComboMappings(parentTicketId)
+        if (mappings.isEmpty()) return ComboResult(emptyList(), null)
 
-        if (mappings.isEmpty()) return emptyList()
+        val ticketIds = mappings
+            .filter { it.childTicketType == "Ticket" }
+            .map { it.childTicketId }
 
-        val childIds = mappings.map { it.childTicketId }
+        val showMapping = mappings
+            .firstOrNull { it.childTicketType == "Show" }
 
-        return ticketDao.getTicketsByIds(childIds)
+        val showId = showMapping?.childTicketId
+
+        val tickets = if (ticketIds.isNotEmpty())
+            ticketDao.getTicketsByIds(ticketIds)
+        else emptyList()
+
+        val shows = if (showId != null)
+            showDao.getShowsByIds(listOf(showId))
+        else emptyList()
+
+        val ticketMap = tickets.associateBy { it.id }
+        val showMap = shows.associateBy { it.showId }
+
+        val names = mappings.mapNotNull { mapping ->
+            when (mapping.childTicketType) {
+                "Ticket" -> ticketMap[mapping.childTicketId]?.name
+                "Show" -> showMap[mapping.childTicketId]?.showName
+                else -> null
+            }
+        }
+
+        return ComboResult(names, showId)
     }
 
     private fun TicketComboMappingDto.toEntity(): TicketComboMapping {
@@ -269,6 +305,7 @@ class TicketRepository(
             id = id,
             parentTicketId = parentTicketId,
             childTicketId = childTicketId,
+            childTicketType = childTicketType,
             createdDate = createdDate
         )
     }

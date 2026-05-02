@@ -498,7 +498,8 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
         ticketCreatedDate = createdDate,
         ticketCreatedBy = createdBy,
         ticketActive = active,
-        ticketCombo = combo
+        ticketCombo = combo,
+        ticketChild = child
     )
 
     override fun onTicketMinusClick(ticketItem: Tickets) {
@@ -507,7 +508,7 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
             val existingItem =
                 ticketRepository.getCartItemByTicketId(ticketItem.ticketId)
 
-            val currentQty = existingItem?.daQty ?: 0
+            val currentQty = existingItem?.ticketQty ?: 0
 
             if (currentQty > 0) {
 
@@ -534,15 +535,15 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
                         ticketNameSi = ticketItem.ticketNameSi,
                         ticketCategoryId = ticketItem.ticketCategoryId,
                         ticketCompanyId = ticketItem.ticketCompanyId,
-                        ticketAmount = ticketItem.ticketAmount,
+                        ticketRate = ticketItem.ticketAmount,
+                        ticketChildRate = ticketItem.ticketAmount,
                         ticketTotalAmount = totalAmount,
                         ticketCreatedDate = existingItem?.ticketCreatedDate ?: "",
                         ticketCreatedBy = existingItem?.ticketCreatedBy ?: 1,
                         ticketActive = true,
                         daName = binding.editName?.text.toString(),
-                        daRate = ticketItem.ticketAmount,
-                        daQty = newQty,
-                        daTotalAmount = totalAmount,
+                        ticketQty = newQty,
+                        ticketChildQty = newQty,
                         daPhoneNumber = binding.editPhNo?.text.toString(),
                         daCustRefNo = "",
                         daNpciTransId = "",
@@ -555,7 +556,8 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
                         scheduleTime="",
                         screenName = "",
                         ticketCombo = false,
-                        ticketType = "TICKET"
+                        ticketType = "TICKET",
+                        ticketChild = ticketItem.ticketChild
                     )
 
                     ticketRepository.insertCartBookingItem(cartItem, "Sub")
@@ -624,15 +626,15 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
                 ticketNameSi = ticketItem.ticketNameSi,
                 ticketCategoryId = ticketItem.ticketCategoryId,
                 ticketCompanyId = ticketItem.ticketCompanyId,
-                ticketAmount = ticketItem.ticketAmount,
+                ticketRate = ticketItem.ticketAmount,
+                ticketChildRate = ticketItem.ticketAmount,
                 ticketTotalAmount = ticketItem.ticketAmount,
                 ticketCreatedDate = "",
                 ticketCreatedBy = 1,
                 ticketActive = true,
                 daName = binding.editName?.text.toString(),
-                daRate = ticketItem.ticketAmount,
-                daQty = 1,
-                daTotalAmount = ticketItem.ticketAmount,
+                ticketQty = 1,
+                ticketChildQty = 1,
                 daPhoneNumber = binding.editPhNo?.text.toString(),
                 daCustRefNo = "",
                 daNpciTransId = "",
@@ -645,7 +647,8 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
                 scheduleTime="",
                 screenName = "",
                 ticketCombo = false,
-                ticketType = "TICKET"
+                ticketType = "TICKET",
+                ticketChild = ticketItem.ticketChild
             )
             ticketRepository.insertCartBookingItem(cartItem, "Add")
 

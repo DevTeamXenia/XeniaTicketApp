@@ -79,19 +79,15 @@ class TicketAdapter(
     }
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-
         private val relNoneCardItem: RelativeLayout = itemView.findViewById(R.id.relNoneCardItem)
         private val relCardItem: RelativeLayout = itemView.findViewById(R.id.relCardItem)
-
         private val txtTicketName1: TextView = itemView.findViewById(R.id.txt_ticket_name_1)
         private val txtTicketPrice1: TextView = itemView.findViewById(R.id.txt_ticket_price_1)
         private val txtTicketCombo: TextView = itemView.findViewById(R.id.txt_ticket_combo)
-
         private val txtTicketName2: TextView = itemView.findViewById(R.id.txt_ticket_name_2)
         private val txtTicketPrice2: TextView = itemView.findViewById(R.id.txt_ticket_price_2)
         private val quantity: TextView = itemView.findViewById(R.id.txtQty)
         private val txtTotalAmount: TextView = itemView.findViewById(R.id.txt_ticket_total_price_2)
-
         private val imgClearCart: ImageView = itemView.findViewById(R.id.imgClearCart)
 
         @SuppressLint("SetTextI18n")
@@ -111,19 +107,30 @@ class TicketAdapter(
 
                             txtTicketName2.text = name
 
-                            val qty = cartItem.daQty
-                            val rate = item.amount
+                            val adultQty = cartItem.ticketQty
+                            val childQty = cartItem.ticketChildQty
 
-                            txtTicketPrice2.text =
-                                "Rs. ${String.format(Locale.ENGLISH, "%.2f", rate)}"
+                            val adultRate = cartItem.ticketRate
+                            val childRate = cartItem.ticketChildRate
 
-                            quantity.text =
-                                context.getString(R.string.txt_amount) + " " +
-                                        String.format(Locale.ENGLISH, "%.2f", rate) +
-                                        " * " +
-                                        String.format(Locale.ENGLISH, "%d", qty)
+                            val adultText = if (adultQty > 0) {
+                                "Adult: $adultQty x ${String.format(Locale.ENGLISH, "%.2f", adultRate)}"
+                            } else ""
 
-                            val total = rate * qty
+                            val childText = if (childQty > 0) {
+                                "Child: $childQty x ${String.format(Locale.ENGLISH, "%.2f", childRate)}"
+                            } else ""
+
+                            val finalText = when {
+                                adultQty > 0 && childQty > 0 -> "$adultText\n$childText"
+                                adultQty > 0 -> adultText
+                                childQty > 0 -> childText
+                                else -> ""
+                            }
+
+                            quantity.text = finalText
+
+                            val total = (adultQty * adultRate) + (childQty * childRate)
                             txtTotalAmount.text =
                                 String.format(Locale.ENGLISH, "%.2f/-", total)
 

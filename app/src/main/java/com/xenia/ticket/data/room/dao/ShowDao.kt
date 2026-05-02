@@ -16,4 +16,7 @@ interface ShowDao {
     @Query("DELETE FROM Show")
     suspend fun clearAll()
 
+    @Query("SELECT * FROM Show WHERE showId IN (:showIds)")
+    suspend fun getShowsByIds(showIds: List<Int>): List<Show>
+
 }

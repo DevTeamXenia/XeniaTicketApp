@@ -52,7 +52,7 @@ class TicketBookingAdapter(
         }
 
         val dbItem = dbItemsMap[ticketItem.ticketId]
-        val qty = dbItem?.daQty ?: 0
+        val qty = dbItem?.ticketQty ?: 0
 
         binding.txtQty.text = qty.toString()
 

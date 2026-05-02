@@ -52,6 +52,9 @@ data class ShowDto(
     @SerializedName("Amount")
     val amount: Double,
 
+    @SerializedName("ChildAmount")
+    val childAmount: Double,
+
     @SerializedName("CompanyId")
     val companyId: Int,
 

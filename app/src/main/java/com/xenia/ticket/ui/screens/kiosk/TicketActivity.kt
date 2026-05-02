@@ -268,8 +268,10 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
                 ticketCategoryId = item.category,
                 ticketCompanyId = item.companyId,
                 ticketRate = item.amount,
+                ticketChildRate = item.childAmount,
                 ticketCombo = item.combo,
-                ticketType = item.type
+                ticketType = item.type,
+                ticketChild = item.child
             )
             setListener(this@TicketActivity)
         }

@@ -24,4 +24,5 @@ data class Ticket(
     val createdBy: Int,
     val active: Boolean,
     val combo: Boolean,
+    val child: Boolean,
 )

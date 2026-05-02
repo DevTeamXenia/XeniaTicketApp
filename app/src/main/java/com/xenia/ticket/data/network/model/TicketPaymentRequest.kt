@@ -18,7 +18,9 @@ data class TicketPaymentRequest(
         val taCategoryId: Int,
         val TicketId: Int,
         val Quantity: Int,
+        val ChildQuantity: Int,
         val Rate: Double,
+        val ChildRate: Double,
         val IsCombo: Boolean,
         val taType: String,
         val Schedules: List<Schedule>

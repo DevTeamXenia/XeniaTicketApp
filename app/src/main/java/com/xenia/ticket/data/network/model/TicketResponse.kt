@@ -62,5 +62,8 @@ data class Tickets(
     val ticketActive: Boolean,
 
     @SerializedName("TicketCombo")
-    val ticketCombo: Boolean
+    val ticketCombo: Boolean,
+
+    @SerializedName("TicketChild")
+     val ticketChild: Boolean
 )

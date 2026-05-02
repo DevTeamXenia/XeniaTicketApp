@@ -20,8 +20,9 @@ interface OrderDao {
 
     @Query("""
     UPDATE Orders SET 
-        daQty = :newQty,
-        daTotalAmount = :additionalAmount,
+        ticketQty = :newQty,
+        ticketChildQty = :newChildQty,
+        ticketTotalAmount = :additionalAmount,
         screenId = :screenId,
         scheduleId = :scheduleId,
         scheduleDay = :scheduleDay,
@@ -32,6 +33,7 @@ interface OrderDao {
     suspend fun updateExistingTicket(
         ticketId: Int,
         newQty: Int,
+        newChildQty: Int,
         additionalAmount: Double,
         screenId: Int,
         scheduleId: Int,
@@ -45,7 +47,7 @@ interface OrderDao {
     @Query("SELECT COUNT(*) FROM Orders")
     suspend fun getCartCount(): Int
 
-    @Query("SELECT SUM(daTotalAmount) FROM Orders")
+    @Query("SELECT SUM(ticketTotalAmount) FROM Orders")
     suspend fun getCartTotalAmount(): Double?
 
     @Query("DELETE FROM Orders WHERE ticketId = :ticketId")

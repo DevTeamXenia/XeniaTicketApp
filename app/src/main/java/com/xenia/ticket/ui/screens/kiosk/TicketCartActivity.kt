@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.util.Base64
 import android.util.Log
 import android.view.MotionEvent
+import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
@@ -84,6 +85,8 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
     private lateinit var jwtToken: String
     private var userId: Int = 0
     private var imageData: ByteArray? = null
+    private var isQrNameMandatory = false
+    private var isWhatsappEnabled = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -111,14 +114,29 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
             TicketCartAdapter(this, sessionManager.getSelectedLanguage(), "Ticket", this)
 
         binding.relTicketCart.adapter = ticketCartAdapter
+        lifecycleScope.launch {
+            isQrNameMandatory = companyRepository
+                .getIsNameMandatoryQr()
+                .equals("True", ignoreCase = true)
 
+            isWhatsappEnabled = companyRepository
+                .getIsWhatAppEnable()
+                .equals("True", ignoreCase = true)
+
+            updateUIBasedOnConfig()
+        }
         initUI()
 
         binding.btnPay.setOnClickListener {
-            val name = binding.editTextName.text.toString()
+            var isQrNameMandatory = false
+            val name = binding.editTextName.text.toString().trim()
             val phone = binding.editTextPhoneNumber.text.toString().trim()
-
-            if (name.isEmpty()) {
+            lifecycleScope.launch {
+                isQrNameMandatory = companyRepository
+                    .getIsNameMandatoryQr()
+                    .equals("True", ignoreCase = true)
+            }
+            if (isQrNameMandatory && name.isEmpty()) {
                 binding.editTextName.error = "Name is required"
                 binding.editTextName.requestFocus()
                 binding.editTextName.post {
@@ -127,6 +145,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                 }
                 return@setOnClickListener
             }
+
 
             if (phone.isEmpty()) {
                 binding.editTextPhoneNumber.error = "Phone number is required"
@@ -137,6 +156,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                 }
                 return@setOnClickListener
             }
+
             if (phone.length < 10) {
                 binding.editTextPhoneNumber.error =
                     "Enter valid phone number with at least 10 digits"
@@ -147,6 +167,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                 }
                 return@setOnClickListener
             }
+
             lifecycleScope.launch {
                 ticketRepository.updateCartItemsInfo(
                     newName = name,
@@ -158,29 +179,40 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
             }
 
             lifecycleScope.launch {
-                val amountValue = formattedTotalAmount.toDoubleOrNull() ?: 0.0
+                formattedTotalAmount.toDoubleOrNull() ?: 0.0
                 val ctx = this@TicketCartActivity
                 val isPaymentGatewayEnabled =
                     companyRepository.getBoolean(CompanyKey.ISPAYMENTGATEWAY)
+
                 binding.btnPay.isEnabled = false
 
                 if (isPaymentGatewayEnabled) {
-                    if (amountValue >= 2) {
-                        showLoader(ctx, "Generating QR code...")
-                        generatePayment()
-                    } else {
-                        showLoader(ctx, "Generating QR code...")
-                        generatePayment()
-                    }
-
+                    showLoader(ctx, "Generating QR code...")
+                    generatePayment()
                 } else {
                     showLoader(ctx, "Posting ticket...")
                     postTicketPaymentHistory("S", "Successful")
                 }
             }
-
         }
         loadTicketItems()
+    }
+
+    @SuppressLint("ResourceType")
+    private fun updateUIBasedOnConfig() {
+        if (isQrNameMandatory) {
+            binding.txtNameMandatory.visibility = View.VISIBLE
+        } else {
+            binding.txtNameMandatory.visibility = View.GONE
+        }
+
+        if (isWhatsappEnabled) {
+            binding.txtPhoneNumber.text = getString(R.string.whatApp_number)
+            binding.editTextPhoneNumber.hint = getString(R.string.whatApp_number)
+        } else {
+            binding.txtPhoneNumber.text = getString(R.string.phone_number)
+            binding.editTextPhoneNumber.hint = getString(R.string.phone_number)
+        }
     }
 
     private fun initUI() {
@@ -292,9 +324,11 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
             ticketNameMr = ticket.ticketNameMr ?: "",
             ticketCategoryId = ticket.ticketCategoryId,
             ticketCompanyId = ticket.ticketCompanyId,
-            ticketRate = ticket.ticketAmount,
+            ticketRate = ticket.ticketRate,
+            ticketChildRate = ticket.ticketChildRate,
             ticketCombo = ticket.ticketCombo,
-            ticketType = ticket.ticketType
+            ticketType = ticket.ticketType,
+            ticketChild = ticket.ticketChild
         )
         dialog.setListener(this)
         dialog.show(supportFragmentManager, "CustomPopup")
@@ -334,7 +368,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                     }
                 }
                 "CanaraBank" -> {
-                  //  postTicketPaymentHistory("S", "Payment Success")
+                   // postTicketPaymentHistory("S", "Payment Success")
                     generateCanaraQrCode(totalAmount)
                 }
                 else -> {
@@ -576,8 +610,6 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
     ) {
         try {
 
-            Log.d("PAYMENT_FLOW", "Entered postTicketPaymentHistory")
-
             val cartTickets = ticketRepository.getAllTicketsInCart()
 
             if (cartTickets.isEmpty()) {
@@ -605,8 +637,10 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                     TicketPaymentRequest.Item(
                         taCategoryId = first.ticketCategoryId,
                         TicketId = first.ticketId,
-                        Quantity = items.sumOf { it.daQty },
-                        Rate = first.daRate,
+                        Quantity = items.sumOf { it.ticketQty },
+                        ChildQuantity = items.sumOf { it.ticketChildQty },
+                        Rate = first.ticketRate,
+                        ChildRate = first.ticketChildRate,
                         IsCombo = first.ticketCombo,
                         taType = first.ticketType,
                         Schedules = schedules

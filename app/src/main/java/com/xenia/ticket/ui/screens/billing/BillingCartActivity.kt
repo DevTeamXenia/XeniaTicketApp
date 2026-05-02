@@ -370,9 +370,11 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
             ticketNameMr = ticket.ticketNameMr ?: "",
             ticketCategoryId = ticket.ticketCategoryId,
             ticketCompanyId = ticket.ticketCompanyId,
-            ticketRate = ticket.ticketAmount,
+            ticketRate = ticket.ticketTotalAmount,
+            ticketChildRate = ticket.ticketChildRate,
             ticketCombo = false,
-            ticketType = "TICKET"
+            ticketType = "TICKET",
+            ticketChild = ticket.ticketChild
         )
         customTicketPopupDialogue.setListener(this)
         if (!customTicketPopupDialogue.isAdded) {

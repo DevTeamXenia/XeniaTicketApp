@@ -33,6 +33,7 @@
     <string name="_10_000">Rs.</string>
     <string name="pay">PAY</string>
     <string name="phone_number">Phone Number</string>
+    <string name="whatApp_number">WhatsApp Number</string>
     <string name="_91">+91</string>
     <string name="name">Name</string>
     <string name="select_your_janma_nakshatra">Select Your Janma Nakshatra</string>
@@ -78,7 +79,8 @@
     <string name="total_amount">Total Amount</string>
 
     <string name="choose_your_tickets">Choose your Tickets</string>
-    <string name="no_of_tickets">No : of tickets</string>
+    <string name="no_of_tickets">Adult tickets</string>
+    <string name="no_of_child_tickets">Child tickets</string>
     <string name="id_no">Id No</string>
     <string name="_2018xxxx989">2018XXXX989</string>
     <string name="pay_phone_number">Phone Number :</string>
