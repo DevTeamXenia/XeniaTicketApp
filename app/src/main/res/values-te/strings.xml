@@ -57,7 +57,8 @@
     <string name="pay_phone_number">ఫోన్ నంబర్ :</string>
     <string name="pay_id_no">ఐడి నంబర్ :</string>
     <string name="proceed">చెల్లించండి</string>
-    <string name="no_of_tickets">టిక్కెట్ల సంఖ్య</string>
+    <string name="no_of_tickets">వయోజన టికెట్లు</string>
+    <string name="no_of_child_tickets">పిల్లల టికెట్లు</string>
     <string name="click_here_to_take_photo">ఫోటో తీయడానికి ఇక్కడ క్లిక్ చేయండి</string>
     <string name="rs">రూ.</string>
 

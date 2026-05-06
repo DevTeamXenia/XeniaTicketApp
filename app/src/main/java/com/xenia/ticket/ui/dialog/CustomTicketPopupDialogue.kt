@@ -54,6 +54,7 @@ import kotlin.getValue
 class CustomTicketPopupDialogue : DialogFragment() {
     private lateinit var txtTicketName: TextView
     private lateinit var txtComboTicketName: TextView
+    private lateinit var txtDesc: TextView
     private lateinit var txtTicketRate: TextView
     private lateinit var txtTicketChildRate: TextView
     private lateinit var txtQty: TextView
@@ -86,6 +87,7 @@ class CustomTicketPopupDialogue : DialogFragment() {
     private var ticketCategoryId: Int = 0
     private var ticketCombo: Boolean = false
     private var ticketType: String = ""
+    private var ticketDesc: String = ""
     private var ticketChild: Boolean = false
     private var listener: OnTicketClickListener? = null
     var selectedSchedule: ShowScheduleResponse? = null
@@ -107,6 +109,7 @@ class CustomTicketPopupDialogue : DialogFragment() {
         ticketNameSi: String,
         ticketNamePa: String,
         ticketNameMr: String,
+        ticketDesc: String,
         ticketCategoryId: Int,
         ticketCompanyId: Int,
         ticketRate: Double,
@@ -125,6 +128,7 @@ class CustomTicketPopupDialogue : DialogFragment() {
         this.ticketNameSi = ticketNameSi
         this.ticketNameMr = ticketNameMr
         this.ticketNamePa = ticketNamePa
+        this.ticketDesc = ticketDesc
         this.ticketRate = ticketRate
         this.ticketChildRate = ticketChildRate
         this.ticketCompanyId=ticketCompanyId
@@ -173,6 +177,7 @@ class CustomTicketPopupDialogue : DialogFragment() {
         super.onViewCreated(view, savedInstanceState)
         txtTicketName= view.findViewById(R.id.txtTicketName)
         txtComboTicketName= view.findViewById(R.id.txtComboTicketName)
+        txtDesc= view.findViewById(R.id.txtDesc)
         txtTicketRate = view.findViewById(R.id.txtTicketRate)
         txtTicketChildRate = view.findViewById(R.id.txtTicketChildRate)
         txtQty= view.findViewById(R.id.txtQty)
@@ -228,9 +233,10 @@ class CustomTicketPopupDialogue : DialogFragment() {
 
 
         if (ticketType.equals("SHOW", ignoreCase = true)) {
-
             recyclerView.visibility = View.VISIBLE
             txtComboTicketName.visibility = View.GONE
+            txtDesc.visibility = View.VISIBLE
+            txtDesc.text = ticketDesc
 
             val adapter = ShowScheduleAdapter(emptyList()) { selectedItem ->
                 selectedSchedule = selectedItem
@@ -285,16 +291,14 @@ class CustomTicketPopupDialogue : DialogFragment() {
                     val result = withContext(Dispatchers.IO) {
                         activeTicketRepository.getComboResult(ticketId)
                     }
-
                     comboShowId = result.showId
-
                     txtComboTicketName.visibility = View.VISIBLE
                     txtComboTicketName.text = result.names.joinToString(" | ")
 
                     if (result.showId != null) {
-
                         recyclerView.visibility = View.VISIBLE
-
+                        txtDesc.visibility = View.VISIBLE
+                        txtDesc.text = ticketDesc
                         val adapter = ShowScheduleAdapter(emptyList()) { selectedItem ->
                             selectedSchedule = selectedItem
                         }
@@ -406,7 +410,7 @@ class CustomTicketPopupDialogue : DialogFragment() {
 
         btnDone.setOnClickListener {
             val childOnlyMode =
-                ticketType.equals("TICKET", true) && ticketCombo && ticketChild
+                ticketType.equals("TICKET", true)  && ticketChild
 
             val quantityInput = editTextTickets.text.toString().toIntOrNull() ?: 0
             val childQuantityInput = editTextChildTickets.text.toString().toIntOrNull() ?: 0
@@ -465,6 +469,7 @@ class CustomTicketPopupDialogue : DialogFragment() {
                 ticketNamePa = ticketNamePa,
                 ticketNameMr = ticketNameMr,
                 ticketNameSi = ticketNameSi,
+                ticketDesc = ticketDesc,
                 ticketCategoryId = ticketCategoryId,
                 ticketCompanyId = ticketCompanyId,
                 ticketCreatedDate = System.currentTimeMillis().toString(),
@@ -640,7 +645,7 @@ class CustomTicketPopupDialogue : DialogFragment() {
     }
 
     private fun isChildOnlyMode(): Boolean {
-        return ticketType.equals("TICKET", true) && ticketCombo && ticketChild
+        return ticketType.equals("TICKET", true) && ticketChild
     }
 
     @SuppressLint("DefaultLocale", "SetTextI18n")

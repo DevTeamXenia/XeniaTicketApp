@@ -11,6 +11,7 @@ data class ActiveItem(
     val namePa: String?,
     val nameSi: String?,
     val nameMr: String?,
+    val desc: String?,
     val category: Int,
     val companyId: Int,
     val amount: Double,

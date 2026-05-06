@@ -368,6 +368,7 @@ class BillingCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartC
             ticketNameSi = ticket.ticketNameSi ?: "",
             ticketNamePa = ticket.ticketNamePa ?: "",
             ticketNameMr = ticket.ticketNameMr ?: "",
+            ticketDesc = ticket.ticketDesc ?: "",
             ticketCategoryId = ticket.ticketCategoryId,
             ticketCompanyId = ticket.ticketCompanyId,
             ticketRate = ticket.ticketTotalAmount,

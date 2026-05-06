@@ -616,6 +616,40 @@ class PaymentActivity : AppCompatActivity() {
             }
         }
 
+
+        if (companyRepository.getTermAndPolicy() != null) {
+            val termsAndConditions = companyRepository.getTermAndPolicy()
+            if (!termsAndConditions.isNullOrEmpty()) {
+                yOffset += 30f
+
+                paint.strokeWidth = 2f
+                paint.textSize = 18f
+                paint.textAlign = Paint.Align.CENTER
+                tempCanvas.drawLine(20f, yOffset, width - 20f, yOffset, paint)
+                yOffset += 25f
+
+                paint.textSize = 20f
+                tempCanvas.drawText("TERMS & CONDITIONS", width / 2f, yOffset, paint)
+                yOffset += 20f
+
+                tempCanvas.drawLine(20f, yOffset, width - 20f, yOffset, paint)
+                yOffset += 25f
+
+                paint.textSize = 20f
+                paint.textAlign = Paint.Align.LEFT
+
+                val maxCharsPerLine = 55
+                val lines = formatTermsTextForBitmap(termsAndConditions, maxCharsPerLine)
+
+                for (line in lines) {
+                    if (line.isNotEmpty()) {
+                        tempCanvas.drawText(line, 20f, yOffset, paint)
+                    }
+                    yOffset += 20f
+                }
+            }
+        }
+
         val finalBitmap = createBitmap(width, (yOffset + 20f).toInt())
         Canvas(finalBitmap).drawBitmap(tempBitmap, 0f, 0f, null)
         tempBitmap.recycle()
@@ -866,12 +900,83 @@ class PaymentActivity : AppCompatActivity() {
 
             }
         }
+
+        if (companyRepository.getTermAndPolicy() != null) {
+            val termsAndConditions = companyRepository.getTermAndPolicy()
+            if (!termsAndConditions.isNullOrEmpty()) {
+                yOffset += 30f
+
+                paint.strokeWidth = 2f
+                paint.textSize = 18f
+                paint.textAlign = Paint.Align.CENTER
+                tempCanvas.drawLine(20f, yOffset, width - 20f, yOffset, paint)
+                yOffset += 25f
+
+                paint.textSize = 20f
+                tempCanvas.drawText("TERMS & CONDITIONS", width / 2f, yOffset, paint)
+                yOffset += 20f
+
+                tempCanvas.drawLine(20f, yOffset, width - 20f, yOffset, paint)
+                yOffset += 25f
+
+                paint.textSize = 20f
+                paint.textAlign = Paint.Align.LEFT
+
+                val maxCharsPerLine = 55
+                val lines = formatTermsTextForBitmap(termsAndConditions, maxCharsPerLine)
+
+                for (line in lines) {
+                    if (line.isNotEmpty()) {
+                        tempCanvas.drawText(line, 20f, yOffset, paint)
+                    }
+                    yOffset += 25f
+                }
+            }
+        }
+
         val finalBitmap = createBitmap(width, (yOffset + 20f).toInt())
         Canvas(finalBitmap).drawBitmap(tempBitmap, 0f, 0f, null)
         tempBitmap.recycle()
         return finalBitmap
     }
 
+    private fun formatTermsTextForBitmap(text: String, maxCharsPerLine: Int): List<String> {
+        val lines = mutableListOf<String>()
+        val paragraphs = text.split("\n")
+
+        for (paragraph in paragraphs) {
+            if (paragraph.trim().isEmpty()) {
+                lines.add("")
+                continue
+            }
+
+            val words = paragraph.trim().split(" ")
+            var currentLine = StringBuilder()
+
+            for (word in words) {
+                if (currentLine.length + word.length + 1 <= maxCharsPerLine) {
+                    if (currentLine.isNotEmpty()) {
+                        currentLine.append(" ")
+                    }
+                    currentLine.append(word)
+                } else {
+                    if (currentLine.isNotEmpty()) {
+                        lines.add(currentLine.toString())
+                    }
+                    currentLine = StringBuilder(word)
+                }
+            }
+
+            if (currentLine.isNotEmpty()) {
+                lines.add(currentLine.toString())
+            }
+
+            // Add empty line after paragraph
+            lines.add("")
+        }
+
+        return lines
+    }
     private suspend fun printLargeBitmap(printer: POSPrinter, bitmap: Bitmap) {
         val maxChunkHeight = 700
         var startY = 0

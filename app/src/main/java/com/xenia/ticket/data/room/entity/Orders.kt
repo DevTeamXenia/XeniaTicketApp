@@ -16,6 +16,7 @@ data class Orders(
     val ticketNamePa: String?,
     val ticketNameMr: String?,
     val ticketNameSi: String?,
+    val ticketDesc: String?,
     val ticketCategoryId: Int,
     val ticketCompanyId: Int,
     val ticketTotalAmount: Double,

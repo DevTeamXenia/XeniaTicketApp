@@ -47,7 +47,8 @@
     <string name="pay_phone_number">தொலைபேசி எண் :</string>
     <string name="pay_id_no">அடையாள எண் :</string>
     <string name="proceed">కதொடர</string>
-    <string name="no_of_tickets">டிக்கெட் எண்ணிக்கை</string>
+    <string name="no_of_tickets">வயது வந்தோர் டிக்கெட்டுகள்</string>
+    <string name="no_of_child_tickets">குழந்தைகள் டிக்கெட்டுகள்</string>
     <string name="click_here_to_take_photo">புகைப்படம் எடுக்க இங்கே கிளிக் செய்யவும்</string>
     <string name="pay">பணம் செலுத்து</string>
     <string name="name">பெயர்</string>

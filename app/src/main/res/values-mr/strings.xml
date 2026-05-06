@@ -56,8 +56,8 @@
     <string name="report_generated_time">अहवाल व्युत्पन्न वेळ</string>
     <string name="total_amount">एकूण रक्कम</string>
 
-
-    <string name="no_of_tickets">तिकिटांची संख्या</string>
+    <string name="no_of_tickets">प्रौढ तिकीट</string>
+    <string name="no_of_child_tickets">मुलांची तिकीट</string>
     <string name="id_no">ओळख क्रमांक</string>
     <string name="_2018xxxx989">2018XXXX989</string>
     <string name="pay_phone_number">फोन नंबर :</string>

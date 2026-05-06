@@ -55,7 +55,8 @@
     <string name="pay_phone_number">ಫೋನ್ ಸಂಖ್ಯೆ :</string>
     <string name="pay_id_no">ಐಡಿ ಸಂಖ್ಯೆ :</string>
     <string name="proceed">ಮುಂದುವರಿಯಿರಿ</string>
-    <string name="no_of_tickets">ಟಿಕೆಟ್‌ಗಳ ಸಂಖ್ಯೆ</string>
+    <string name="no_of_tickets">ವಯಸ್ಕರ ಟಿಕೆಟ್‌ಗಳು</string>
+    <string name="no_of_child_tickets">ಮಕ್ಕಳ ಟಿಕೆಟ್‌ಗಳು</string>
     <string name="click_here_to_take_photo">ಫೋಟೋ ತೆಗೆಯಲು ಇಲ್ಲಿ ಕ್ಲಿಕ್ ಮಾಡಿ</string>
 
     <string name="do_you_want_to_logout">ನೀವು ಲಾಗ್ ಔಟ್ ಮಾಡಲು ಬಯಸುತ್ತೀರಾ?</string>

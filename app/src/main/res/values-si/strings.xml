@@ -53,7 +53,8 @@
     <string name="pay_phone_number">දුරකථන අංකය :</string>
     <string name="pay_id_no">හැඳුනුම් අංකය :</string>
     <string name="proceed">ඉදිරියට</string>
-    <string name="no_of_tickets">ටිකට් ගණන</string>
+    <string name="no_of_tickets">වැඩිහිටි ටිකට්පත්</string>
+    <string name="no_of_child_tickets">ළමා ටිකට්පත්</string>
     <string name="click_here_to_take_photo">ඡායාරූපයක් ගැනීමට මෙහි ඔබන්න</string>
 
     <string name="do_you_want_to_logout">ඔබට ලොග්අවුට් වීමට අවශ්‍යද?</string>

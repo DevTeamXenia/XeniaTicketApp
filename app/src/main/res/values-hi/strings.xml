@@ -33,7 +33,8 @@
     <string name="aadhaar_no">आधार संख्या</string>
     <string name="ticket">टिकट</string>
     <string name="welcome">स्वागत है!</string>
-    <string name="no_of_tickets">टिकटों की संख्या</string>
+    <string name="no_of_tickets">वयस्क टिकट</string>
+    <string name="no_of_child_tickets">बच्चों के टिकट</string>
     <string name="transaction">लेन-देन</string>
     <string name="summary">सारांश</string>
     <string name="report">प्रतिवेदन</string>

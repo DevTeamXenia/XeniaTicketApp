@@ -113,8 +113,16 @@ class CompanySettingsRepository(
         return getString(CompanyKey.ISPRINTQR)
     }
 
+    suspend fun getTermAndPolicy(): String? {
+        return getString(CompanyKey.TERMS_AND_CONDITIONS)
+    }
+
     suspend fun getIsNameMandatoryQr(): String? {
         return getString(CompanyKey.IS_NAME_MANDATORY)
+    }
+
+    suspend fun getIsPhoneNumberMandatoryQr(): String? {
+        return getString(CompanyKey.IS_PHONE_NUMBER_MANDATORY)
     }
 
     suspend fun getIsWhatAppEnable(): String? {
