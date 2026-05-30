@@ -96,6 +96,7 @@
     <string name="item_name">ਆਈਟਮ ਦਾ ਨਾਮ</string>
     <string name="pancard_number">ਪੈਨ ਕਾਰਡ ਨੰਬਰ</string>
     <string name="combo">Combo</string>
+    <string name="no_of_ticket">No of ticket</string>
 
 
 </resources>

@@ -43,7 +43,7 @@ class SyncActivity : AppCompatActivity() {
     private fun startSyncProcess() {
         lifecycleScope.launch {
 
-            if (isSyncCompleted) return@launch  // prevent re-run
+            if (isSyncCompleted) return@launch
 
             showLoader()
 

@@ -145,8 +145,7 @@
 
                 qrCodeImageView.setImageBitmap(generateUPIQRCode(url))
 
-                startTimer()
-               // postTicketPaymentHistory("S", "Payment Success")
+               startTimer()
 
                 view.findViewById<ImageView>(R.id.btnClose).setOnClickListener {
                    safeDismiss()
@@ -228,7 +227,6 @@
         private fun checkPaymentStatus(isManualCheck: Boolean) {
             paymentStatusJob = lifecycleScope.launch {
                 if (!paymentMutex.tryLock()) {
-                    Log.d("PAYMENT_FLOW", "Skipped - another request running")
                     return@launch
                 }
                 try {
@@ -264,22 +262,16 @@
                     }
                     val finalStatus = normalizeStatus(rawStatus, rawDesc)
 
-                    Log.d("PAYMENT_FLOW", "Final Status Triggered: $finalStatus")
-
                     lastKnownStatus = finalStatus
 
                     if (isFinalStatusHandled) return@launch
 
                     when (finalStatus) {
-
                         "SUCCESS" -> {
                             isFinalStatusHandled = true
 
                             pollingTimer?.cancel()
                             stopAutoCheckCountdown()
-
-                            Log.d("PAYMENT_FLOW", "Calling SUCCESS API")
-
                             withContext(NonCancellable) {
                                 postTicketPaymentHistory("S", "Payment Success")
                             }
@@ -304,9 +296,6 @@
                     }
 
                 } catch (e: Exception) {
-
-                    Log.e("PAYMENT_ERROR", "Error", e)
-
                     if (isAdded) {
                         timerTextView.text = "Still pending..."
                     }
@@ -351,14 +340,8 @@
         }
 
         @SuppressLint("SetTextI18n")
-        private suspend fun postTicketPaymentHistory(
-            status: String,
-            statusDesc: String
-        ) {
+        private suspend fun postTicketPaymentHistory(status: String, statusDesc: String) {
             try {
-
-                Log.d("PAYMENT_FLOW", "Entered postTicketPaymentHistory")
-
                 val cartTickets = ticketRepository.getAllTicketsInCart()
 
                 if (cartTickets.isEmpty()) {
@@ -424,10 +407,6 @@
                     Items = itemsList,
                 )
 
-
-                Log.d("PAYMENT_FLOW", "API BODY → $request")
-
-
                 val response = withContext(NonCancellable) {
                     ApiResponseHandler.handleApiCall(
                         activity = requireActivity()
@@ -465,9 +444,6 @@
                 }
 
             } catch (e: Exception) {
-
-                Log.e("PAYMENT_FLOW", "FINAL ERROR", e)
-
                 val (totalAmount) = ticketRepository.getCartStatus()
 
                 handleTicketTransactionStatus(

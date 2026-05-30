@@ -86,6 +86,7 @@
     <string name="item_name">உருப்படியின் பெயர்</string>
     <string name="pancard_number">பான் கார்ட் எண்</string>
     <string name="combo">Combo</string>
+    <string name="no_of_ticket">No of ticket</string>
 
 
     <string-array name="nakshatras">

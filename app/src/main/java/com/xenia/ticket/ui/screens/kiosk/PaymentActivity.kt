@@ -468,7 +468,15 @@ class PaymentActivity : AppCompatActivity() {
         for (item in ticket) {
 
             val priceStr = String.format(Locale.ENGLISH, "%.2f", item.ticketRate)
-            val qtyStr = item.ticketQty.toString()
+            var qtyStr= "";
+            qtyStr = if(item.ticketChild)
+                item.ticketChildQty.toString()
+            else
+                item.ticketQty.toString()
+
+            val qtyChildStr = item.ticketChildQty.toString()
+            val priceChildStr = String.format("%.2f", item.ticketChildRate)
+
             val amountStr = String.format(Locale.ENGLISH, "%.2f", item.ticketTotalAmount)
             totalAmount += item.ticketTotalAmount
 
@@ -540,10 +548,10 @@ class PaymentActivity : AppCompatActivity() {
                             yOffset,
                             paint
                         )
-                        yOffset += 25f
+                        yOffset += 35f
 
                         val seats = seatMapQueue[item.scheduleId]?.take(item.ticketQty)
-
+                        paint.textSize = 30f
                         if (!seats.isNullOrEmpty()) {
 
                             val seatText = "Seats: ${seats.joinToString(", ")}"
@@ -565,28 +573,32 @@ class PaymentActivity : AppCompatActivity() {
                     yOffset,
                     paint
                 )
-                yOffset += 25f
+                yOffset += 35f
 
                 val seats = seatMapQueue[item.scheduleId]?.take(item.ticketQty)
 
                 if (!seats.isNullOrEmpty()) {
-
+                    paint.textSize = 30f
                     val seatText = "Seats: ${seats.joinToString(", ")}"
 
                     yOffset = drawMultilineText(
                         tempCanvas, seatText, 60f, yOffset, width * 0.85f, paint
                     ) + 10f
 
-                    // REMOVE USED SEATS
                     seatMapQueue[item.scheduleId]?.removeAll(seats)
                 }
             }
 
             yOffset += 35f
-
+            paint.textSize = 22f
             paint.textAlign = Paint.Align.CENTER
             tempCanvas.drawText(priceStr, width * 0.5f, yOffset, paint)
             tempCanvas.drawText(qtyStr, width * 0.65f, yOffset, paint)
+            if(qtyChildStr !="0" && priceChildStr !="0"){
+                yOffset += 35f
+                tempCanvas.drawText(priceChildStr, width * 0.5f, yOffset, paint)
+                tempCanvas.drawText(qtyChildStr, width * 0.65f, yOffset, paint)
+            }
             paint.textAlign = Paint.Align.RIGHT
             tempCanvas.drawText(amountStr, width - 40f, yOffset, paint)
 
@@ -738,7 +750,15 @@ class PaymentActivity : AppCompatActivity() {
         }
         for (item in ticket) {
             val priceStr = String.format("%.2f", item.ticketRate)
-            val qtyStr = item.ticketQty.toString()
+            var qtyStr= "";
+            qtyStr = if(item.ticketChild)
+                item.ticketChildQty.toString()
+            else
+                item.ticketQty.toString()
+
+            val qtyChildStr = item.ticketChildQty.toString()
+            val priceChildStr = String.format("%.2f", item.ticketChildRate)
+
             val amountStr = String.format("%.2f", item.ticketTotalAmount)
             totalAmount += item.ticketTotalAmount
 
@@ -814,20 +834,19 @@ class PaymentActivity : AppCompatActivity() {
                                 yOffset,
                                 paint
                             )
-                            yOffset += 25f
+                            yOffset += 35f
                         }
 
                         val seats = seatMapQueue[item.scheduleId]?.take(item.ticketQty)
 
                         if (!seats.isNullOrEmpty()) {
-
+                            paint.textSize = 30f
                             val seatText = "Seats: ${seats.joinToString(", ")}"
 
                             yOffset = drawMultilineText(
                                 tempCanvas, seatText, 20f, yOffset, width * 0.9f, paint
                             ) + 10f
 
-                            // REMOVE USED SEATS
                             seatMapQueue[item.scheduleId]?.removeAll(seats)
                         }
                     }
@@ -839,26 +858,32 @@ class PaymentActivity : AppCompatActivity() {
                     yOffset,
                     paint
                 )
-                yOffset += 25f
+                yOffset += 35f
 
                 val seats = seatMapQueue[item.scheduleId]?.take(item.ticketQty)
 
                 if (!seats.isNullOrEmpty()) {
-
+                    paint.textSize = 30f
                     val seatText = "Seats: ${seats.joinToString(", ")}"
 
                     yOffset = drawMultilineText(
                         tempCanvas, seatText, 60f, yOffset, width * 0.85f, paint
                     ) + 10f
 
-                    // REMOVE USED SEATS
                     seatMapQueue[item.scheduleId]?.removeAll(seats)
                 }
             }
             yOffset += 35f
+            paint.textSize = 22f
             paint.textAlign = Paint.Align.CENTER
             tempCanvas.drawText(priceStr, width * 0.5f, yOffset, paint)
             tempCanvas.drawText(qtyStr, width * 0.65f, yOffset, paint)
+
+            if(qtyChildStr !="0" && priceChildStr !="0"){
+                yOffset += 35f
+                tempCanvas.drawText(priceChildStr, width * 0.5f, yOffset, paint)
+                tempCanvas.drawText(qtyChildStr, width * 0.65f, yOffset, paint)
+            }
             paint.textAlign = Paint.Align.RIGHT
             tempCanvas.drawText(amountStr, width - 40f, yOffset, paint)
 
@@ -971,7 +996,6 @@ class PaymentActivity : AppCompatActivity() {
                 lines.add(currentLine.toString())
             }
 
-            // Add empty line after paragraph
             lines.add("")
         }
 

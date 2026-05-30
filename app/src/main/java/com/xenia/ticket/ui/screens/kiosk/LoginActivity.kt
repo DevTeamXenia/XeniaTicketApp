@@ -148,15 +148,6 @@ private fun validateAndLogin(userId: String, password: String): Boolean {
             }
 
             UserType.CUSTOMER -> {
-                if (!isXLargePortrait()) {
-                    dismissLoader()
-                    showSnackbar(
-                        binding.root,
-                        "User has no permission for this device/orientation!"
-                    )
-                    return
-                }
-
                 sessionManager.saveSelectedPrinter(PRINTER_KIOSK)
                 startActivity(Intent(this, LanguageActivity::class.java))
                 finish()

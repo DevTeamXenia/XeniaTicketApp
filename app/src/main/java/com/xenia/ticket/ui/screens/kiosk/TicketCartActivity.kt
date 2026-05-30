@@ -130,6 +130,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
 
             updateUIBasedOnConfig()
         }
+        
         initUI()
 
         binding.btnPay.setOnClickListener {
@@ -153,7 +154,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                     imm.showSoftInput(binding.editTextPhoneNumber, InputMethodManager.SHOW_IMPLICIT)
                 }
                 return@setOnClickListener
-            }else if (phone.length < 10) {
+            }else if (isQrPhoneNumberMandatory && phone.length < 10) {
                 binding.editTextPhoneNumber.error =
                     "Enter valid phone number with at least 10 digits"
                 binding.editTextPhoneNumber.requestFocus()
@@ -697,13 +698,6 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                 Toast.makeText(this,response?.message, Toast.LENGTH_SHORT).show()
                 binding.btnPay.isEnabled = true
                 dismissLoader()
-                /*handleTicketTransactionStatus(
-                    "F",
-                    transactionReferenceID,
-                    null,
-                    totalAmount,
-                    companyRepository.getString(CompanyKey.PREFIX) ?: "",
-                )*/
             }
 
         } catch (e: Exception) {

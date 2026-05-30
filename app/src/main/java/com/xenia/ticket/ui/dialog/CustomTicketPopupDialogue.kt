@@ -59,6 +59,8 @@ class CustomTicketPopupDialogue : DialogFragment() {
     private lateinit var txtTicketChildRate: TextView
     private lateinit var txtQty: TextView
     private lateinit var txtTotalAmount: TextView
+    private lateinit var relTicket: RelativeLayout
+    private lateinit var relChild: RelativeLayout
     private lateinit var editTextTickets: EditText
     private lateinit var editTextChildTickets: EditText
     private lateinit var backCallback: OnBackPressedCallback
@@ -179,6 +181,8 @@ class CustomTicketPopupDialogue : DialogFragment() {
         txtComboTicketName= view.findViewById(R.id.txtComboTicketName)
         txtDesc= view.findViewById(R.id.txtDesc)
         txtTicketRate = view.findViewById(R.id.txtTicketRate)
+        relTicket = view.findViewById(R.id.relTicket)
+        relChild = view.findViewById(R.id.relChild)
         txtTicketChildRate = view.findViewById(R.id.txtTicketChildRate)
         txtQty= view.findViewById(R.id.txtQty)
         txtTotalAmount = view.findViewById(R.id.totalAmount)
@@ -216,21 +220,7 @@ class CustomTicketPopupDialogue : DialogFragment() {
             maxLines = 2
         )
 
-        if(ticketCombo && ticketChild){
-            val formattedAmount = String.format(Locale.ENGLISH, "%.2f", ticketRate)
-            txtTicketRate.text = getString(R.string.no_of_tickets) +" "+ "Rs. $formattedAmount /-"
-
-            val formattedChildAmount = String.format(Locale.ENGLISH, "%.2f", ticketRate)
-            txtTicketChildRate.text = getString(R.string.no_of_child_tickets) +" "+ "Rs. $formattedChildAmount /-"
-        }else{
-            val formattedAmount = String.format(Locale.ENGLISH, "%.2f", ticketRate)
-            txtTicketRate.text = getString(R.string.no_of_tickets) +" "+ "Rs. $formattedAmount /-"
-
-            val formattedChildAmount = String.format(Locale.ENGLISH, "%.2f", ticketChildRate)
-            txtTicketChildRate.text = getString(R.string.no_of_child_tickets) +" "+ "Rs. $formattedChildAmount /-"
-        }
-
-
+        applyTicketUIRules()
 
         if (ticketType.equals("SHOW", ignoreCase = true)) {
             recyclerView.visibility = View.VISIBLE
@@ -532,23 +522,30 @@ class CustomTicketPopupDialogue : DialogFragment() {
         }
     }
 
+    @SuppressLint("SetTextI18n")
     private fun applyTicketUIRules() {
-
         val childOnlyMode = isChildOnlyMode()
 
         val showAdult = !childOnlyMode
         val showChild = childOnlyMode || ticketChildRate > 0.0
 
-        editTextTickets.visibility = if (showAdult) View.VISIBLE else View.GONE
-        txtTicketRate.visibility = if (showAdult) View.VISIBLE else View.GONE
+        relTicket.visibility = if (showAdult) View.VISIBLE else View.GONE
+        relChild.visibility = if (showChild) View.VISIBLE else View.GONE
+        if (showAdult && showChild) {
+            val formattedAmount = String.format(Locale.ENGLISH, "%.2f", ticketRate)
+            txtTicketRate.text = getString(R.string.no_of_tickets) + " " + "Rs. $formattedAmount /-"
 
-        editTextChildTickets.visibility = if (showChild) View.VISIBLE else View.GONE
-        txtTicketChildRate.visibility = if (showChild) View.VISIBLE else View.GONE
+            val formattedChildAmount = String.format(Locale.ENGLISH, "%.2f", ticketChildRate)
+            txtTicketChildRate.text = getString(R.string.no_of_child_tickets) + " " + "Rs. $formattedChildAmount /-"
+        } else if (showAdult) {
+            txtTicketRate.text = getString(R.string.no_of_ticket)
+        } else if (showChild) {
+            txtTicketChildRate.text = getString(R.string.no_of_ticket)
+        }
 
         if (childOnlyMode) {
             editTextTickets.setText("0")
             editTextChildTickets.setText("1")
-
             activeEditText = editTextChildTickets
         } else {
             if (editTextTickets.text.isNullOrEmpty()) {
@@ -557,13 +554,11 @@ class CustomTicketPopupDialogue : DialogFragment() {
             if (editTextChildTickets.text.isNullOrEmpty()) {
                 editTextChildTickets.setText("0")
             }
-
             activeEditText = editTextTickets
         }
 
         activeEditText?.requestFocus()
         updateFocusUI(activeEditText)
-
         updateAmounts()
     }
 
