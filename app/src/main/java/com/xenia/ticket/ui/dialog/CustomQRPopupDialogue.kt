@@ -345,7 +345,7 @@
                 val cartTickets = ticketRepository.getAllTicketsInCart()
 
                 if (cartTickets.isEmpty()) {
-                    handleTicketTransactionStatus("F", transactionReferenceID, null, 0.0, "")
+                    handleTicketTransactionStatus("F", transactionReferenceID, null, 0.0, "", 0)
                     return
                 }
 
@@ -428,6 +428,7 @@
                         response.ticket,
                         totalAmount,
                         companyRepository.getString(CompanyKey.PREFIX) ?: "",
+                        response.orderId,
                         response.seatAllocation
                     )
 
@@ -451,7 +452,8 @@
                     transactionReferenceID,
                     null,
                     totalAmount,
-                    ""
+                    "",
+                    0
                 )
             }
         }
@@ -463,6 +465,7 @@
             ticket: String?,
             totalAmount: Double,
             receiptPrefix: String?,
+            id :Int,
             seatAllocations: List<SeatAllocationDto>? = null
         ) {
             val seatJson = Gson().toJson(seatAllocations)
@@ -472,6 +475,7 @@
                 putExtra("orderID", orderId)
                 putExtra("ticket", ticket)
                 putExtra("prefix", receiptPrefix)
+                putExtra("id", id.toString())
                 putExtra("name", name)
                 putExtra("phno", phoneNumber)
                 putExtra("transID", transactionReferenceID)

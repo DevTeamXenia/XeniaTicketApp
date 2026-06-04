@@ -49,9 +49,9 @@ class ShowScheduleAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = list[position]
         val start = formatTime(item.StartTime)
-        val end = formatTime(item.EndTime)
 
-        holder.txtTime.text = "$start - $end"
+
+        holder.txtTime.text = start
 
         if (position == selectedPosition) {
             holder.txtTime.setBackgroundResource(R.drawable.bg_selected)
@@ -68,7 +68,6 @@ class ShowScheduleAdapter(
         notifyDataSetChanged()
     }
 
-    // ✅ Restore selection
     @SuppressLint("NotifyDataSetChanged")
     fun setSelectedByScheduleId(scheduleId: Int) {
         val index = list.indexOfFirst { it.ScheduleId == scheduleId }

@@ -3,8 +3,10 @@ package com.xenia.ticket.data.repository
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.util.Log
 import androidx.room.Transaction
 import com.xenia.ticket.data.network.model.CompanyResponse
+import com.xenia.ticket.data.network.model.WhatAppResponse
 import com.xenia.ticket.data.network.service.ApiClient
 import com.xenia.ticket.data.room.dao.CompanySettingsDao
 import com.xenia.ticket.data.room.entity.CompanySettings
@@ -79,6 +81,32 @@ class CompanySettingsRepository(
         bearerToken: String
     ): List<CompanyResponse> = withContext(Dispatchers.IO) {
         ApiClient.apiService.getCompanySettings(bearerToken)
+    }
+
+
+    suspend fun sendWhatsApp(
+        bearerToken: String,
+        orderId: Int
+    ): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            val response = ApiClient.apiService.sendWhatApp("Bearer $bearerToken", orderId)
+
+            if (response.isSuccessful) {
+                val responseBody = response.body()
+                val message = if (responseBody != null) {
+                    responseBody.message  // Extract the Message field
+                } else {
+                    "Success"
+                }
+                Result.success(message)
+            } else {
+                val errorBody = response.errorBody()?.string() ?: "Unknown error"
+                Result.failure(Exception("API Error: ${response.code()} - $errorBody"))
+            }
+        } catch (e: Exception) {
+            Log.e("PaymentActivity", "Exception in sendWhatsApp: ${e.message}")
+            Result.failure(e)
+        }
     }
 
     @Transaction

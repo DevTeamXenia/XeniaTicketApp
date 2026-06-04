@@ -7,6 +7,9 @@ data class OrderResponse(
     @SerializedName("Status")
     val status: Boolean?,
 
+    @SerializedName("OrderId")
+    val orderId: Int,
+
     @SerializedName("Message")
     val message: String?,
 

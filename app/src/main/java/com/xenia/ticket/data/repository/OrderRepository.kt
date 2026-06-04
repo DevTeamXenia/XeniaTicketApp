@@ -32,7 +32,6 @@ class OrderRepository(private val ticketDao: OrderDao) {
         }
     }
 
-
     suspend fun insertCartBookingItem(ticket: Orders, key: String) = withContext(Dispatchers.IO) {
         val existingTicket = ticketDao.getCartItemByTicketId(ticket.ticketId)
         if (existingTicket != null) {
@@ -64,11 +63,9 @@ class OrderRepository(private val ticketDao: OrderDao) {
         return ticketDao.getAllCart().associateBy { it.ticketId }
     }
 
-
     suspend fun getCartItemByTicketId(ticketId: Int): Orders? = withContext(Dispatchers.IO) {
         ticketDao.getCartItemByTicketId(ticketId)
     }
-
 
     suspend fun getCartStatus(): Pair<Double, Boolean> = withContext(Dispatchers.IO) {
         val totalAmount = ticketDao.getCartTotalAmount() ?: 0.0

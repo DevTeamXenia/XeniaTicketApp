@@ -606,7 +606,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
             val cartTickets = ticketRepository.getAllTicketsInCart()
 
             if (cartTickets.isEmpty()) {
-                handleTicketTransactionStatus("F", "", null, 0.0, "")
+                handleTicketTransactionStatus("F", "", null, 0.0, "",0)
                 return
             }
             val itemsList = cartTickets
@@ -691,7 +691,8 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                     response.ticket,
                     totalAmount,
                     companyRepository.getString(CompanyKey.PREFIX) ?: "",
-                    response.seatAllocation
+                    response.orderId,
+                    response.seatAllocation,
                 )
 
             } else {
@@ -711,7 +712,8 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                 "",
                 null,
                 totalAmount,
-                ""
+                "",
+                0
             )
         }
     }
@@ -723,7 +725,9 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
         ticket: String?,
         totalAmount: Double,
         receiptPrefix: String?,
-        seatAllocations: List<SeatAllocationDto>? = null
+        id: Int,
+        seatAllocations: List<SeatAllocationDto>? = null,
+
     ) {
         val seatJson = Gson().toJson(seatAllocations)
         val intent = Intent(this, PaymentActivity::class.java).apply {
@@ -732,6 +736,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
             putExtra("orderID", orderId)
             putExtra("ticket", ticket)
             putExtra("prefix", receiptPrefix)
+            putExtra("id", id.toString())
             putExtra("name", binding.editTextName.text.toString())
             putExtra("phno", binding.editTextPhoneNumber.text.toString())
             putExtra("transID", "")

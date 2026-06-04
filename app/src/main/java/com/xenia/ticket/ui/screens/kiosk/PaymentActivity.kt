@@ -60,6 +60,7 @@ import com.xenia.ticket.data.repository.TicketRepository
 import java.io.ByteArrayOutputStream
 import java.io.File
 import com.xenia.ticket.utils.pineLab.PlutusConstants
+import kotlinx.coroutines.CoroutineScope
 
 
 class PaymentActivity : AppCompatActivity() {
@@ -75,6 +76,7 @@ class PaymentActivity : AppCompatActivity() {
     private var name: String? = null
     private var ticket: String? = null
     private var orderID: String? = null
+    private var id: String? = null;
     private var idProof: String? = null
     private var idProofMode: String? = null
     private var phoneNo: String? = null
@@ -103,6 +105,7 @@ class PaymentActivity : AppCompatActivity() {
         idProof = intent.getStringExtra("IDNO")
         idProofMode = intent.getStringExtra("ID")
         name = intent.getStringExtra("name")
+        id = intent.getStringExtra("id")
         val seatJson = intent.getStringExtra("seatAllocations")
 
         seatAllocations = if (!seatJson.isNullOrEmpty()) {
@@ -140,6 +143,9 @@ class PaymentActivity : AppCompatActivity() {
                 binding.txtName.visibility = View.VISIBLE
                 binding.txtName.text = getString(R.string.pay_name) + " " + name
             }
+
+            sendTicketViaWhatsApp()
+
             if (sessionManager.getSelectedPrinter() == "KIOSK") {
                 configPrinter()
             } else {
@@ -155,6 +161,42 @@ class PaymentActivity : AppCompatActivity() {
             redirect()
         }
 
+    }
+
+    private fun sendTicketViaWhatsApp() {
+        val bearerToken = sessionManager.getToken()
+        if (bearerToken.isNullOrEmpty()) {
+            Log.e("PaymentActivity", "Bearer token is null or empty")
+            return
+        }
+
+        if (id.isNullOrEmpty()) {
+            Log.e("PaymentActivity", "Order ID is null or empty")
+            return
+        }
+
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                val orderIdInt = id?.toIntOrNull()
+                if (orderIdInt == null) {
+                    Log.e("PaymentActivity", "Invalid Order ID format: $orderID")
+                    return@launch
+                }
+
+                val result = companyRepository.sendWhatsApp(bearerToken, orderIdInt)
+
+                result.fold(
+                    onSuccess = { message ->
+                        Log.d("PaymentActivity", "WhatsApp response: $message")
+                    },
+                    onFailure = { error ->
+                        Log.e("PaymentActivity", "Error sending WhatsApp ticket: ${error.message}")
+                    }
+                )
+            } catch (e: Exception) {
+                Log.e("PaymentActivity", "Unexpected error: ${e.message}")
+            }
+        }
     }
 
     private fun bindPineLabsService() {
@@ -368,16 +410,19 @@ class PaymentActivity : AppCompatActivity() {
         val labelPhoneNumber = getLocalizedString("Phone No", selectedLanguage)
         val labelTotalAmount = getLocalizedString("Total Amount", selectedLanguage)
         val labelName = getLocalizedString("Name", selectedLanguage)
+        val labelAdult = getLocalizedString("Adult", selectedLanguage)
+        val labelChild = getLocalizedString("Child", selectedLanguage)
 
         val labelDReceiptNo = getLocalizedString("Receipt No", defaultLang)
         val labelDDate = getLocalizedString("Date", defaultLang)
         val labelDPhonenumber = getLocalizedString("Phone No", defaultLang)
-        val labelDTotalAmount = getLocalizedString("Total Amount", defaultLang)
         val labelDName = getLocalizedString("Name", defaultLang)
         val labelDItem = getLocalizedString("Ticket", defaultLang)
         val labelDPrice = getLocalizedString("Price", defaultLang)
         val labelDAmount = getLocalizedString("Amount", defaultLang)
         val labelDQty = getLocalizedString("Qty", defaultLang)
+        val labelDAdult = getLocalizedString("Adult", defaultLang)
+        val labelDChild = getLocalizedString("Child", defaultLang)
 
         val printDefaultLang =
             !(selectedLanguage.lowercase() == "en" && defaultLang.lowercase() == "en")
@@ -465,6 +510,7 @@ class PaymentActivity : AppCompatActivity() {
             existing.addAll(it.seats)
             seatMapQueue[it.scheduleId] = existing
         }
+
         for (item in ticket) {
 
             val priceStr = String.format(Locale.ENGLISH, "%.2f", item.ticketRate)
@@ -550,18 +596,63 @@ class PaymentActivity : AppCompatActivity() {
                         )
                         yOffset += 35f
 
-                        val seats = seatMapQueue[item.scheduleId]?.take(item.ticketQty)
-                        paint.textSize = 30f
-                        if (!seats.isNullOrEmpty()) {
+                        val adultQty = item.ticketQty
+                        val childQty = item.ticketChildQty
+                        val totalQty = adultQty + childQty
 
-                            val seatText = "Seats: ${seats.joinToString(", ")}"
+                        val allSeats = seatMapQueue[item.scheduleId] ?: emptyList()
 
-                            yOffset = drawMultilineText(
-                                tempCanvas, seatText, 20f, yOffset, width * 0.9f, paint
-                            ) + 10f
+                        var adultSeats = if (adultQty > 0) {
+                            allSeats.take(adultQty)
+                        } else emptyList()
 
-                            seatMapQueue[item.scheduleId]?.removeAll(seats)
+                        var childSeats = if (childQty > 0) {
+                            allSeats.drop(adultQty).take(childQty)
+                        } else emptyList()
+
+
+                        if (adultSeats.size < adultQty && adultSeats.isNotEmpty()) {
+                            val duplicatedSeats = mutableListOf<String>()
+                            while (duplicatedSeats.size < adultQty) {
+                                duplicatedSeats.addAll(adultSeats)
+                            }
+                            adultSeats = duplicatedSeats.take(adultQty)
                         }
+
+                        if (childSeats.size < childQty && childSeats.isNotEmpty()) {
+                            val duplicatedSeats = mutableListOf<String>()
+                            while (duplicatedSeats.size < childQty) {
+                                duplicatedSeats.addAll(childSeats)
+                            }
+                            childSeats = duplicatedSeats.take(childQty)
+                        }
+
+                        paint.textSize = 28f
+
+                        if (adultSeats.isNotEmpty()) {
+                            val adultSeatText = if (printDefaultLang) {
+                                "$labelAdult Seats: ${adultSeats.joinToString(", ")}"
+                            } else {
+                                "$labelAdult Seats: ${adultSeats.joinToString(", ")}"
+                            }
+                            yOffset = drawMultilineText(
+                                tempCanvas, adultSeatText, 20f, yOffset, width * 0.9f, paint
+                            ) + 10f
+                        }
+
+                        if (childSeats.isNotEmpty()) {
+                            val childSeatText = if (printDefaultLang) {
+                                "$labelChild Seats: ${childSeats.joinToString(", ")}"
+                            } else {
+                                "$labelChild Seats: ${childSeats.joinToString(", ")}"
+                            }
+                            yOffset = drawMultilineText(
+                                tempCanvas, childSeatText, 20f, yOffset, width * 0.9f, paint
+                            ) + 10f
+                        }
+
+                        val usedSeats = (adultSeats + childSeats).toSet().toList()
+                        seatMapQueue[item.scheduleId]?.removeAll(usedSeats)
                     }
                 }
 
@@ -575,30 +666,85 @@ class PaymentActivity : AppCompatActivity() {
                 )
                 yOffset += 35f
 
-                val seats = seatMapQueue[item.scheduleId]?.take(item.ticketQty)
+                val adultQty = item.ticketQty
+                val childQty = item.ticketChildQty
+                val totalQty = adultQty + childQty
 
-                if (!seats.isNullOrEmpty()) {
-                    paint.textSize = 30f
-                    val seatText = "Seats: ${seats.joinToString(", ")}"
+                val allSeats = seatMapQueue[item.scheduleId] ?: emptyList()
 
-                    yOffset = drawMultilineText(
-                        tempCanvas, seatText, 60f, yOffset, width * 0.85f, paint
-                    ) + 10f
+                var adultSeats = if (adultQty > 0) {
+                    allSeats.take(adultQty)
+                } else emptyList()
 
-                    seatMapQueue[item.scheduleId]?.removeAll(seats)
+                var childSeats = if (childQty > 0) {
+                    allSeats.drop(adultQty).take(childQty)
+                } else emptyList()
+
+
+                if (adultSeats.size < adultQty && adultSeats.isNotEmpty()) {
+                    val duplicatedSeats = mutableListOf<String>()
+                    while (duplicatedSeats.size < adultQty) {
+                        duplicatedSeats.addAll(adultSeats)
+                    }
+                    adultSeats = duplicatedSeats.take(adultQty)
+                }
+
+                if (childSeats.size < childQty && childSeats.isNotEmpty()) {
+                    val duplicatedSeats = mutableListOf<String>()
+                    while (duplicatedSeats.size < childQty) {
+                        duplicatedSeats.addAll(childSeats)
+                    }
+                    childSeats = duplicatedSeats.take(childQty)
+                }
+
+                if (adultSeats.isNotEmpty() || childSeats.isNotEmpty()) {
+                    paint.textSize = 28f
+
+                    if (adultSeats.isNotEmpty()) {
+                        val adultSeatText = if (printDefaultLang) {
+                            "$labelAdult($labelDAdult) Seats: ${adultSeats.joinToString(", ")}"
+                        } else {
+                            "$labelAdult Seats: ${adultSeats.joinToString(", ")}"
+                        }
+                        yOffset = drawMultilineText(
+                            tempCanvas, adultSeatText, 20f, yOffset, width * 0.9f, paint
+                        ) + 10f
+                    }
+
+                    if (childSeats.isNotEmpty()) {
+                        val childSeatText = if (printDefaultLang) {
+                            "$labelChild($labelDChild) Seats: ${childSeats.joinToString(", ")}"
+                        } else {
+                            "$labelChild Seats: ${childSeats.joinToString(", ")}"
+                        }
+                        yOffset = drawMultilineText(
+                            tempCanvas, childSeatText, 20f, yOffset, width * 0.9f, paint
+                        ) + 10f
+                    }
+
+                    // Remove used seats
+                    val usedSeats = (adultSeats + childSeats).toSet().toList()
+                    seatMapQueue[item.scheduleId]?.removeAll(usedSeats)
                 }
             }
 
             yOffset += 35f
             paint.textSize = 22f
             paint.textAlign = Paint.Align.CENTER
-            tempCanvas.drawText(priceStr, width * 0.5f, yOffset, paint)
-            tempCanvas.drawText(qtyStr, width * 0.65f, yOffset, paint)
-            if(qtyChildStr !="0" && priceChildStr !="0"){
+
+            if (item.ticketQty > 0) {
+                tempCanvas.drawText(priceStr, width * 0.5f, yOffset, paint)
+                tempCanvas.drawText(item.ticketQty.toString(), width * 0.65f, yOffset, paint)
                 yOffset += 35f
+            }
+
+            if (qtyChildStr != "0" && priceChildStr != "0" && item.ticketChildQty > 0) {
+                paint.textAlign = Paint.Align.CENTER
                 tempCanvas.drawText(priceChildStr, width * 0.5f, yOffset, paint)
                 tempCanvas.drawText(qtyChildStr, width * 0.65f, yOffset, paint)
+                yOffset += 35f
             }
+
             paint.textAlign = Paint.Align.RIGHT
             tempCanvas.drawText(amountStr, width - 40f, yOffset, paint)
 
@@ -616,18 +762,58 @@ class PaymentActivity : AppCompatActivity() {
             yOffset,
             paint
         )
+        yOffset += 25f
+
+        if (!transID.isNullOrEmpty()) {
+            paint.textSize = 18f
+            paint.textAlign = Paint.Align.RIGHT
+            tempCanvas.drawText(
+                "$labelUPI: $transID",
+                width - 20f,
+                yOffset,
+                paint
+            )
+            yOffset += 35f
+        }
 
         if (companyRepository.getPaymentQr() == "True") {
-            yOffset += 35f
+            yOffset += 45f
+            paint.strokeWidth = 2f
+            paint.color = Color.BLACK
+            paint.textAlign = Paint.Align.CENTER
+            tempCanvas.drawLine(20f, yOffset, width - 20f, yOffset, paint)
+            yOffset += 30f
+
             generateQRCode()?.let { qrBitmap ->
                 val qrSize = 300
                 val qrX = (width - qrSize) / 2f
-                tempCanvas.drawBitmap(qrBitmap, qrX, yOffset, paint)
-                yOffset += qrSize
 
+                val bgPaint = Paint().apply {
+                    color = Color.WHITE
+                    style = Paint.Style.FILL
+                }
+                tempCanvas.drawRect(qrX, yOffset, qrX + qrSize, yOffset + qrSize, bgPaint)
+                tempCanvas.drawBitmap(qrBitmap, qrX, yOffset, paint)
+
+                val borderPaint = Paint().apply {
+                    color = Color.BLACK
+                    style = Paint.Style.STROKE
+                    strokeWidth = 3f
+                }
+                tempCanvas.drawRect(qrX, yOffset, qrX + qrSize, yOffset + qrSize, borderPaint)
+
+                yOffset += qrSize + 30f
+
+                paint.textSize = 18f
+                paint.textAlign = Paint.Align.CENTER
+                val scanText = getLocalizedString("Scan QR Code", selectedLanguage)
+                tempCanvas.drawText(scanText, width / 2f, yOffset, paint)
+                yOffset += 25f
+
+                tempCanvas.drawLine(20f, yOffset, width - 20f, yOffset, paint)
+                yOffset += 25f
             }
         }
-
 
         if (companyRepository.getTermAndPolicy() != null) {
             val termsAndConditions = companyRepository.getTermAndPolicy()
@@ -662,7 +848,8 @@ class PaymentActivity : AppCompatActivity() {
             }
         }
 
-        val finalBitmap = createBitmap(width, (yOffset + 20f).toInt())
+        val extraPadding = if (companyRepository.getPaymentQr() == "True") 200 else 50
+        val finalBitmap = createBitmap(width, (yOffset + extraPadding).toInt())
         Canvas(finalBitmap).drawBitmap(tempBitmap, 0f, 0f, null)
         tempBitmap.recycle()
 
@@ -691,6 +878,8 @@ class PaymentActivity : AppCompatActivity() {
         val labelPhoneNumber = getLocalizedString("Phone No", selectedLanguage)
         val labelTotalAmount = getLocalizedString("Total Amount", selectedLanguage)
         val labelName = getLocalizedString("Name", selectedLanguage)
+        val labelAdult = getLocalizedString("Adult", selectedLanguage)
+        val labelChild = getLocalizedString("Child", selectedLanguage)
         val tempBitmap = createBitmap(width, 10000)
         val tempCanvas = Canvas(tempBitmap)
 
@@ -748,10 +937,10 @@ class PaymentActivity : AppCompatActivity() {
         seatAllocations.forEach {
             seatMapQueue[it.scheduleId] = it.seats.toMutableList()
         }
+
         for (item in ticket) {
             val priceStr = String.format("%.2f", item.ticketRate)
-            var qtyStr= "";
-            qtyStr = if(item.ticketChild)
+            val qtyStr = if(item.ticketChild)
                 item.ticketChildQty.toString()
             else
                 item.ticketQty.toString()
@@ -789,6 +978,7 @@ class PaymentActivity : AppCompatActivity() {
                 paint = paint
             ) + 10f
             paint.textSize = 22f
+
             if (item.ticketCombo) {
 
                 val comboResult = activeTicketRepository.getComboResult(item.ticketId)
@@ -837,17 +1027,69 @@ class PaymentActivity : AppCompatActivity() {
                             yOffset += 35f
                         }
 
-                        val seats = seatMapQueue[item.scheduleId]?.take(item.ticketQty)
+                        val adultQty = item.ticketQty
+                        val childQty = item.ticketChildQty
+                        val totalQty = adultQty + childQty
 
-                        if (!seats.isNullOrEmpty()) {
-                            paint.textSize = 30f
-                            val seatText = "Seats: ${seats.joinToString(", ")}"
+                        val allSeats = seatMapQueue[item.scheduleId] ?: emptyList()
 
-                            yOffset = drawMultilineText(
-                                tempCanvas, seatText, 20f, yOffset, width * 0.9f, paint
-                            ) + 10f
+                        val adultSeats = if (adultQty > 0) {
+                            allSeats.take(adultQty)
+                        } else emptyList()
 
-                            seatMapQueue[item.scheduleId]?.removeAll(seats)
+                        val childSeats = if (childQty > 0) {
+                            allSeats.drop(adultQty).take(childQty)
+                        } else emptyList()
+
+                        var finalAdultSeats = adultSeats
+                        var finalChildSeats = childSeats
+
+                        if (finalAdultSeats.size < adultQty && finalAdultSeats.isNotEmpty()) {
+                            val duplicatedSeats = mutableListOf<String>()
+                            while (duplicatedSeats.size < adultQty) {
+                                duplicatedSeats.addAll(finalAdultSeats)
+                            }
+                            finalAdultSeats = duplicatedSeats.take(adultQty)
+                        }
+
+                        if (finalChildSeats.size < childQty && finalChildSeats.isNotEmpty()) {
+                            val duplicatedSeats = mutableListOf<String>()
+                            while (duplicatedSeats.size < childQty) {
+                                duplicatedSeats.addAll(finalChildSeats)
+                            }
+                            finalChildSeats = duplicatedSeats.take(childQty)
+                        }
+
+                        if (finalAdultSeats.isNotEmpty() || finalChildSeats.isNotEmpty()) {
+                            paint.textSize = 28f
+
+                            if (finalAdultSeats.isNotEmpty()) {
+                                val adultSeatText = "$labelAdult Seats: ${finalAdultSeats.joinToString(", ")}"
+                                yOffset = drawMultilineText(
+                                    tempCanvas,
+                                    adultSeatText,
+                                    20f,
+                                    yOffset,
+                                    width * 0.9f,
+                                    paint
+                                ) + 10f
+                            }
+
+                            if (finalChildSeats.isNotEmpty()) {
+                                val childSeatText = "$labelChild Seats: ${finalChildSeats.joinToString(", ")}"
+                                yOffset = drawMultilineText(
+                                    tempCanvas,
+                                    childSeatText,
+                                    20f,
+                                    yOffset,
+                                    width * 0.9f,
+                                    paint
+                                ) + 10f
+                            }
+
+                            // Remove used seats
+                            val usedSeats = (finalAdultSeats + finalChildSeats).toSet().toList()
+                            seatMapQueue[item.scheduleId]?.removeAll(usedSeats)
                         }
                     }
                 }
@@ -860,30 +1102,85 @@ class PaymentActivity : AppCompatActivity() {
                 )
                 yOffset += 35f
 
-                val seats = seatMapQueue[item.scheduleId]?.take(item.ticketQty)
+                val adultQty = item.ticketQty
+                val childQty = item.ticketChildQty
 
-                if (!seats.isNullOrEmpty()) {
-                    paint.textSize = 30f
-                    val seatText = "Seats: ${seats.joinToString(", ")}"
+                val allSeats = seatMapQueue[item.scheduleId] ?: emptyList()
 
-                    yOffset = drawMultilineText(
-                        tempCanvas, seatText, 60f, yOffset, width * 0.85f, paint
-                    ) + 10f
+                var adultSeats = if (adultQty > 0) {
+                    allSeats.take(adultQty)
+                } else emptyList()
 
-                    seatMapQueue[item.scheduleId]?.removeAll(seats)
+                var childSeats = if (childQty > 0) {
+                    allSeats.drop(adultQty).take(childQty)
+                } else emptyList()
+
+                if (adultSeats.size < adultQty && adultSeats.isNotEmpty()) {
+                    val duplicatedSeats = mutableListOf<String>()
+                    while (duplicatedSeats.size < adultQty) {
+                        duplicatedSeats.addAll(adultSeats)
+                    }
+                    adultSeats = duplicatedSeats.take(adultQty)
+                }
+
+                if (childSeats.size < childQty && childSeats.isNotEmpty()) {
+                    val duplicatedSeats = mutableListOf<String>()
+                    while (duplicatedSeats.size < childQty) {
+                        duplicatedSeats.addAll(childSeats)
+                    }
+                    childSeats = duplicatedSeats.take(childQty)
+                }
+
+                if (adultSeats.isNotEmpty() || childSeats.isNotEmpty()) {
+                    paint.textSize = 28f
+
+                    if (adultSeats.isNotEmpty()) {
+                        val adultSeatText = "$labelAdult Seats: ${adultSeats.joinToString(", ")}"
+                        yOffset = drawMultilineText(
+                            tempCanvas,
+                            adultSeatText,
+                            20f,
+                            yOffset,
+                            width * 0.9f,
+                            paint
+                        ) + 10f
+                    }
+
+                    if (childSeats.isNotEmpty()) {
+                        val childSeatText = "$labelChild Seats: ${childSeats.joinToString(", ")}"
+                        yOffset = drawMultilineText(
+                            tempCanvas,
+                            childSeatText,
+                            20f,
+                            yOffset,
+                            width * 0.9f,
+                            paint
+                        ) + 10f
+                    }
+
+                    // Remove used seats
+                    val usedSeats = (adultSeats + childSeats).toSet().toList()
+                    seatMapQueue[item.scheduleId]?.removeAll(usedSeats)
                 }
             }
+
             yOffset += 35f
             paint.textSize = 22f
             paint.textAlign = Paint.Align.CENTER
-            tempCanvas.drawText(priceStr, width * 0.5f, yOffset, paint)
-            tempCanvas.drawText(qtyStr, width * 0.65f, yOffset, paint)
 
-            if(qtyChildStr !="0" && priceChildStr !="0"){
+            if (item.ticketQty > 0) {
+                tempCanvas.drawText(priceStr, width * 0.5f, yOffset, paint)
+                tempCanvas.drawText(item.ticketQty.toString(), width * 0.65f, yOffset, paint)
                 yOffset += 35f
+            }
+
+            if (qtyChildStr != "0" && priceChildStr != "0" && item.ticketChildQty > 0) {
+                paint.textAlign = Paint.Align.CENTER
                 tempCanvas.drawText(priceChildStr, width * 0.5f, yOffset, paint)
                 tempCanvas.drawText(qtyChildStr, width * 0.65f, yOffset, paint)
+                yOffset += 35f
             }
+
             paint.textAlign = Paint.Align.RIGHT
             tempCanvas.drawText(amountStr, width - 40f, yOffset, paint)
 
@@ -916,13 +1213,50 @@ class PaymentActivity : AppCompatActivity() {
         }
 
         if (companyRepository.getPaymentQr() == "True") {
-            yOffset += 35f
+            // Add space before QR code
+            yOffset += 45f
+
+            // Draw separator line
+            paint.strokeWidth = 2f
+            paint.color = Color.BLACK
+            paint.textAlign = Paint.Align.CENTER
+            tempCanvas.drawLine(20f, yOffset, width - 20f, yOffset, paint)
+            yOffset += 30f
+
             generateQRCode()?.let { qrBitmap ->
                 val qrSize = 300
                 val qrX = (width - qrSize) / 2f
-                tempCanvas.drawBitmap(qrBitmap, qrX, yOffset, paint)
-                yOffset += qrSize
 
+                // Draw white background for better contrast
+                val bgPaint = Paint().apply {
+                    color = Color.WHITE
+                    style = Paint.Style.FILL
+                }
+                tempCanvas.drawRect(qrX, yOffset, qrX + qrSize, yOffset + qrSize, bgPaint)
+
+                // Draw QR code
+                tempCanvas.drawBitmap(qrBitmap, qrX, yOffset, paint)
+
+                // Draw border
+                val borderPaint = Paint().apply {
+                    color = Color.BLACK
+                    style = Paint.Style.STROKE
+                    strokeWidth = 3f
+                }
+                tempCanvas.drawRect(qrX, yOffset, qrX + qrSize, yOffset + qrSize, borderPaint)
+
+                yOffset += qrSize + 30f
+
+                // Add scan instruction
+                paint.textSize = 18f
+                paint.textAlign = Paint.Align.CENTER
+                val scanText = getLocalizedString("Scan QR Code", selectedLanguage)
+                tempCanvas.drawText(scanText, width / 2f, yOffset, paint)
+                yOffset += 25f
+
+                // Draw bottom separator
+                tempCanvas.drawLine(20f, yOffset, width - 20f, yOffset, paint)
+                yOffset += 25f
             }
         }
 
@@ -959,9 +1293,11 @@ class PaymentActivity : AppCompatActivity() {
             }
         }
 
-        val finalBitmap = createBitmap(width, (yOffset + 20f).toInt())
+        val extraPadding = if (companyRepository.getPaymentQr() == "True") 200 else 50
+        val finalBitmap = createBitmap(width, (yOffset + extraPadding).toInt())
         Canvas(finalBitmap).drawBitmap(tempBitmap, 0f, 0f, null)
         tempBitmap.recycle()
+
         return finalBitmap
     }
 
@@ -1001,6 +1337,7 @@ class PaymentActivity : AppCompatActivity() {
 
         return lines
     }
+
     private suspend fun printLargeBitmap(printer: POSPrinter, bitmap: Bitmap) {
         val maxChunkHeight = 700
         var startY = 0

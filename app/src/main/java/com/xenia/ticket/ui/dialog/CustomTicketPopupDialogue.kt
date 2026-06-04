@@ -483,7 +483,7 @@ class CustomTicketPopupDialogue : DialogFragment() {
                 scheduleId = selectedSchedule?.ScheduleId ?: 0,
                 scheduleDay = selectedSchedule?.ShowDay ?: "",
                 scheduleTime = selectedSchedule?.let {
-                    "${formatTime(it.StartTime)} - ${formatTime(it.EndTime)}"
+                    "${formatTime(it.StartTime)}"
                 } ?: "",
                 screenName = selectedSchedule?.ScreenName ?: "",
                 ticketChild = ticketChild

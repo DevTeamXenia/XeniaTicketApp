@@ -27,6 +27,7 @@ import com.xenia.ticket.data.network.model.TicketPaymentRequest
 import com.xenia.ticket.data.network.model.TicketResponse
 import com.xenia.ticket.data.network.model.TransactionDetailItem
 import com.xenia.ticket.data.network.model.TransactionItem
+import com.xenia.ticket.data.network.model.WhatAppResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -53,6 +54,12 @@ interface ApiService {
     suspend fun getCompanySettings(
         @Header("Authorization") bearerToken: String
     ): List<CompanyResponse>
+
+    @POST("orders/sendticket/{orderId}")
+    suspend fun sendWhatApp(
+        @Header("Authorization") bearerToken: String,
+        @Path("orderId") orderId: Int
+    ): Response<WhatAppResponse>
 
     @GET("Company/label")
     suspend fun getCompanyLabel(
