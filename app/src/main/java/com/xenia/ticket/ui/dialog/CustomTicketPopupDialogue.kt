@@ -422,7 +422,7 @@ class CustomTicketPopupDialogue : DialogFragment() {
             }
 
             val isSeatCheckRequired =
-                ticketCombo || ticketType.equals("SHOW", ignoreCase = true)
+                ticketCombo && ticketType.equals("SHOW", ignoreCase = true)
 
             if (isSeatCheckRequired && selectedSchedule == null) {
                 Toast.makeText(requireContext(), "Please select a schedule", Toast.LENGTH_SHORT).show()

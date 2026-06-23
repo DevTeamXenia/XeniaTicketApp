@@ -61,6 +61,9 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import com.xenia.ticket.utils.pineLab.PlutusConstants
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlin.time.Duration.Companion.milliseconds
 
 
 class PaymentActivity : AppCompatActivity() {
@@ -247,7 +250,6 @@ class PaymentActivity : AppCompatActivity() {
                 } catch (_: Exception) {
                     redirect()
                 }
-
             }
 
             "PineLabs" -> {
@@ -274,12 +276,16 @@ class PaymentActivity : AppCompatActivity() {
         }
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     private val connectListener = IPOSListener { code, _ ->
         val selectedPrinter = sessionManager.getSelectedPrinter()
         when (code) {
             POSConnect.CONNECT_SUCCESS -> {
                 if (selectedPrinter == "FALCON" || selectedPrinter == "KIOSK" || selectedPrinter == null) {
-                    initReceiptPrint()
+                    GlobalScope.launch {
+                        delay(500.milliseconds)
+                        initReceiptPrint()
+                    }
                 }
             }
 
@@ -357,7 +363,7 @@ class PaymentActivity : AppCompatActivity() {
 
                 printLargeBitmap(printer, receiptBitmap)
                 printer.feedLine(2)
-                delay(300)
+                delay(300.milliseconds)
 
                 footerBitmap?.scale(550, 100)?.let { scaled ->
                     printer.printBitmap(
@@ -366,7 +372,7 @@ class PaymentActivity : AppCompatActivity() {
                         500
                     )
                     printer.feedLine(3)
-                    delay(400)
+                    delay(400.milliseconds)
                     printer.cutHalfAndFeed(1)
                     scaled.recycle()
                 } ?: printer.cutHalfAndFeed(1)
@@ -380,7 +386,7 @@ class PaymentActivity : AppCompatActivity() {
             headerBitmap?.recycle()
             footerBitmap?.recycle()
 
-            delay(2000)
+            delay(2000.milliseconds)
 
             redirect()
         }
@@ -397,8 +403,18 @@ class PaymentActivity : AppCompatActivity() {
     ): Bitmap {
 
         val width = 576
-        val paint = Paint().apply { isAntiAlias = true }
-        val defaultLang = companyRepository.getDefaultLanguage().toString()
+        val paint = Paint().apply {
+            isAntiAlias = true
+        }
+
+        val indicTypeface = try {
+            Typeface.createFromAsset(this.assets, "fonts/noto_sans_kannada_regular.ttf")
+        } catch (_: Exception) {
+            Typeface.DEFAULT
+        }
+
+        paint.typeface = indicTypeface
+        val defaultLang = companyRepository.getDefaultLanguage().toString() ?: "en"
 
         val labelReceiptNo = getLocalizedString("Receipt No", selectedLanguage)
         val labelDate = getLocalizedString("Date", selectedLanguage)
@@ -1360,13 +1376,11 @@ class PaymentActivity : AppCompatActivity() {
                 600
             )
 
-            printer.feedLine(1)
-
             chunkBitmap.recycle()
 
             startY += chunkHeight
 
-            delay(150)
+            delay(200.milliseconds)
         }
     }
 
