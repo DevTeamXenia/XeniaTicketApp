@@ -530,7 +530,7 @@ class PaymentActivity : AppCompatActivity() {
         for (item in ticket) {
 
             val priceStr = String.format(Locale.ENGLISH, "%.2f", item.ticketRate)
-            var qtyStr= "";
+            var qtyStr= ""
             qtyStr = if(item.ticketChild)
                 item.ticketChildQty.toString()
             else
@@ -1045,7 +1045,6 @@ class PaymentActivity : AppCompatActivity() {
 
                         val adultQty = item.ticketQty
                         val childQty = item.ticketChildQty
-                        val totalQty = adultQty + childQty
 
                         val allSeats = seatMapQueue[item.scheduleId] ?: emptyList()
 
@@ -1966,52 +1965,6 @@ class PaymentActivity : AppCompatActivity() {
             } catch (_: Exception) {
 
             }
-        }
-    }
-
-    private fun centeredBoldTextToBitmapHex(
-        text: String,
-        bitmapWidth: Int = 384,
-        textSize: Float = 30f
-    ): String {
-
-        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.BLACK
-            this.textSize = textSize
-            typeface = Typeface.MONOSPACE
-            isFakeBoldText = true
-        }
-
-        val fm = paint.fontMetrics
-        val height = (fm.bottom - fm.top + 20).toInt()
-
-        val bitmap = createBitmap(bitmapWidth, height)
-        val canvas = Canvas(bitmap)
-        canvas.drawColor(Color.WHITE)
-
-        val textWidth = paint.measureText(text)
-        val x = (bitmapWidth - textWidth) / 2f
-        val y = -fm.top + 10
-
-        canvas.drawText(text, x, y, paint)
-
-        return bitmapToHex(bitmap)
-    }
-
-    private fun bitmapToHex(bitmap: Bitmap): String {
-
-        val stream = ByteArrayOutputStream()
-
-        bitmap.compress(
-            Bitmap.CompressFormat.PNG,
-            100,
-            stream
-        )
-
-        val bytes = stream.toByteArray()
-
-        return bytes.joinToString("") {
-            "%02X".format(it)
         }
     }
 
