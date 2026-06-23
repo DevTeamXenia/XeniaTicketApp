@@ -79,7 +79,7 @@ class PaymentActivity : AppCompatActivity() {
     private var name: String? = null
     private var ticket: String? = null
     private var orderID: String? = null
-    private var id: String? = null;
+    private var id: String? = null
     private var idProof: String? = null
     private var idProofMode: String? = null
     private var phoneNo: String? = null
@@ -357,7 +357,7 @@ class PaymentActivity : AppCompatActivity() {
                         500
                     )
                     printer.feedLine(2)
-                    delay(300)
+                    delay(300.milliseconds)
                     scaled.recycle()
                 }
 
@@ -414,7 +414,7 @@ class PaymentActivity : AppCompatActivity() {
         }
 
         paint.typeface = indicTypeface
-        val defaultLang = companyRepository.getDefaultLanguage().toString() ?: "en"
+        val defaultLang = companyRepository.getDefaultLanguage().toString()
 
         val labelReceiptNo = getLocalizedString("Receipt No", selectedLanguage)
         val labelDate = getLocalizedString("Date", selectedLanguage)
