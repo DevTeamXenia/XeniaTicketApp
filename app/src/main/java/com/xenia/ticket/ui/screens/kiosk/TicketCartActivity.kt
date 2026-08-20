@@ -316,6 +316,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
         val dialog = CustomTicketPopupDialogue()
         dialog.setData(
             ticketId = ticket.ticketId,
+            showId = ticket.showId,
             ticketName = ticket.ticketName,
             ticketNameMa = ticket.ticketNameMa ?: "",
             ticketNameTa = ticket.ticketNameTa ?: "",

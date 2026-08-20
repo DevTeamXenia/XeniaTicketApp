@@ -126,6 +126,7 @@
     <string name="mandatory">*</string>
     <string name="combo">Combo</string>
     <string name="no_of_ticket">No of ticket</string>
+    <string name="select_your_seats">Select Your Seats</string>
 
 
     <string-array name="nakshatras">

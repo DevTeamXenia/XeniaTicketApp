@@ -81,6 +81,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".ui.dialog.CustomTicketAllocationpopupDialogue"
+            android:exported="false" />
     </application>
 
 </manifest>

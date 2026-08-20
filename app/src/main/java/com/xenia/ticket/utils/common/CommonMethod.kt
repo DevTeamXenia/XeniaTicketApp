@@ -24,6 +24,13 @@ object CommonMethod {
             return
         }
 
+        // Fix: Dismiss existing loader if any before showing a new one
+        loader?.let {
+            if (it.isShowing) {
+                it.dismiss()
+            }
+        }
+
         val builder = AlertDialog.Builder(context, R.style.TransparentAlertDialog)
         val inflater = LayoutInflater.from(context)
         val view = inflater.inflate(R.layout.custom_loader, null)

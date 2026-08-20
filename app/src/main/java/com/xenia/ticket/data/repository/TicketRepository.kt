@@ -31,6 +31,7 @@ class TicketRepository(
             val tickets = ticketDao.getTickets().map {
                 ActiveItem(
                     id = it.id,
+                    showId = 0,
                     name = it.name,
                     nameMa = it.nameMa,
                     nameTa = it.nameTa,
@@ -55,6 +56,7 @@ class TicketRepository(
             val shows = showDao.getAllShows().map {
                 ActiveItem(
                     id = it.showId,
+                    showId = it.showId,
                     name = it.showName,
                     nameMa = it.showNameMa,
                     nameTa = it.showNameTa,
@@ -86,6 +88,7 @@ class TicketRepository(
             val tickets = ticketDao.getTicketsByCategory(categoryId).map {
                 ActiveItem(
                     id = it.id,
+                    showId = 0,
                     name = it.name,
                     nameMa = it.nameMa,
                     nameTa = it.nameTa,
@@ -110,6 +113,7 @@ class TicketRepository(
             val shows = showDao.getAllShows().map {
                 ActiveItem(
                     id = it.showId,
+                    showId = it.showId,
                     name = it.showName,
                     nameMa = it.showNameMa,
                     nameTa = it.showNameTa,
@@ -314,8 +318,20 @@ class TicketRepository(
         )
     }
 
-    suspend fun getSchedules(id: Int, day: String): List<ShowScheduleResponse> {
-        return ApiClient.apiService.getSchedules(sessionManager.getToken().toString(), id, day)
-    }
+    //    suspend fun getSchedules(id: Int, day: String): List<ShowScheduleResponse> {
+//        return ApiClient.apiService.getSchedules(sessionManager.getToken().toString(), id, day, date = )
+//    }
+    suspend fun getSchedules(
+        id: Int,
+        day: String,
+        date: String
+    ): List<ShowScheduleResponse> {
 
+        return ApiClient.apiService.getSchedules(
+            sessionManager.getToken().toString(),
+            id,
+            day,
+            date
+        )
+    }
 }

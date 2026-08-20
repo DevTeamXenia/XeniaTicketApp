@@ -27,7 +27,8 @@ interface OrderDao {
         scheduleId = :scheduleId,
         scheduleDay = :scheduleDay,
         scheduleTime = :scheduleTime,
-        screenName = :screenName
+        screenName = :screenName,
+        selectedSeats = :selectedSeats
     WHERE ticketId = :ticketId
 """)
     suspend fun updateExistingTicket(
@@ -39,7 +40,8 @@ interface OrderDao {
         scheduleId: Int,
         scheduleDay: String,
         scheduleTime: String,
-        screenName: String
+        screenName: String,
+        selectedSeats: String?
     )
 
     @Query("SELECT * FROM Orders WHERE ticketId = :ticketId")
@@ -72,4 +74,6 @@ interface OrderDao {
 
     @Query("DELETE FROM Orders")
     suspend fun truncateTable()
+    @Query("SELECT * FROM Orders WHERE scheduleId = :scheduleId AND ticketId != :excludeTicketId")
+    suspend fun getOtherCartItemsForSchedule(scheduleId: Int, excludeTicketId: Int): List<Orders>
 }

@@ -13,10 +13,23 @@
     <color name="creamy_white">#FFF6EC</color>
     <color name="light_grey">#979696</color>
     <color name="black">#000000</color>
+    <color name="gray">#9E9E9E</color>
     <color name="text_grey">#979696</color>
     <color name="red">#FF0000</color>
     <color name="light_bg">#FFE9DC</color>
     <color name="pressed_button">#FF9B55</color>
     <color name="radio_grey">#B3B3B3</color>
+    <color name="light_gray">#F0F0F0</color>
+    <color name="light_green_bg">#E5F5E5</color>
+        <color name="forest">#1F6F4A</color>
+        <color name="forest_dark">#123A26</color>
+        <color name="cream">#FAF9F5</color>
+        <color name="booked">#919191</color>
+        <color name="booked_ink">#3A3F3C</color>
+        <color name="ink">#12261D</color>
+        <color name="legend_bg">#ECECEC</color>
+        <color name="chip_bg">#EAF3EE</color>
+        <color name="gray_text">#808080</color>
+
 
 </resources>

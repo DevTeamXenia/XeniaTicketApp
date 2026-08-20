@@ -20,6 +20,7 @@ import com.xenia.ticket.data.network.model.ShowResponse
 import com.xenia.ticket.data.network.model.ShowScheduleResponse
 import com.xenia.ticket.data.network.model.SibPaymentStatusResponse
 import com.xenia.ticket.data.network.model.QrResponse
+import com.xenia.ticket.data.network.model.SeatAvailability
 import com.xenia.ticket.data.network.model.StatusRequest
 import com.xenia.ticket.data.network.model.SummaryReportResponse
 import com.xenia.ticket.data.network.model.TicketComboMappingDto
@@ -166,11 +167,23 @@ interface ApiService {
         @Body request: PineLabGenerateRequest
     ): Response<PineLabGenerateResponse>
 
-    @GET("ShowSchedules/schedule/{id}")
-    suspend fun getSchedules(
-        @Header("Authorization") token: String,
-        @Path("id") id: Int,
-        @Query("day") day: String
-    ): List<ShowScheduleResponse>
+//    @GET("ShowSchedules/schedule/{id}")
+//    suspend fun getSchedules(
+//        @Header("Authorization") token: String,
+//        @Path("id") id: Int,
+//        @Query("day") day: String
+//    ): List<ShowScheduleResponse>
+@GET("ShowSchedules/schedule/{id}")
+suspend fun getSchedules(
+    @Header("Authorization") token: String,
+    @Path("id") id: Int,
+    @Query("day") day: String,
+    @Query("date") date: String
+): List<ShowScheduleResponse>
 
+    @GET("Seats/availability")
+    suspend fun getSeatAvailability(
+        @Query("scheduleId") scheduleId: Int,
+        @Query("companyId") companyId: Int
+    ): List<SeatAvailability>
 }

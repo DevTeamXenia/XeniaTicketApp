@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Save as res/color/date_chip_text.xml, referenced as @color/date_chip_text -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="@color/black" android:state_selected="true" />
+    <item android:color="@color/black" />
+</selector>

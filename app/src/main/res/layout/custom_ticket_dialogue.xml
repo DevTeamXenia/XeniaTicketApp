@@ -4,541 +4,746 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
-    android:orientation="vertical">
+    android:background="@android:color/transparent">
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="10dp"
-        android:layout_marginEnd="15dp"
-        android:orientation="vertical">
+        android:layout_gravity="center"
+        android:layout_margin="24dp"
+        android:background="@drawable/bg_dialog_rounded"
+        android:padding="30dp">
 
-        <TextView
-            android:id="@+id/txtTicketName"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:layout_marginEnd="3dp"
-            android:fontFamily="@font/poppins_regular"
-            android:layout_toStartOf="@+id/imgClose"
-            android:maxLines="3"
-            android:text=""
-            android:textAlignment="center"
-            android:textColor="@color/secondaryColor"
-            android:textSize="16sp" />
-
+        <!-- ================= HEADER ================= -->
         <RelativeLayout
-            android:id="@+id/imgClose"
-            android:layout_width="60dp"
-            android:layout_height="50dp"
-            android:layout_alignParentEnd="true">
+            android:id="@+id/linHeader"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
             <ImageView
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:layout_centerInParent="true"
-                android:layout_marginTop="15dp"
-                android:src="@drawable/ic_close"
-                android:textStyle="bold" />
+                android:id="@+id/imgTicketThumb"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_alignParentStart="true"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_placeholder" />
+
+            <RelativeLayout
+                android:id="@+id/imgClose"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_alignParentEnd="true"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_centerInParent="true"
+                    android:src="@drawable/ic_closenew" />
+
+            </RelativeLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_toStartOf="@+id/imgClose"
+                android:layout_toEndOf="@+id/imgTicketThumb"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/txtTicketName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/poppins_regular"
+                    android:maxLines="2"
+                    android:layout_marginTop="5dp"
+                    android:text="SeatName"
+                    android:textColor="@color/black"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    tools:text="Elephant Bathing" />
+
+                <TextView
+                    android:id="@+id/txtDesc"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:fontFamily="@font/poppins_regular"
+                    android:maxLines="2"
+                    android:text="Seat numbers may change upon arrival for improved seating management and visitor experience."
+                    android:textColor="@color/gray"
+                    android:textSize="11sp" />
+
+            </LinearLayout>
 
         </RelativeLayout>
 
+        <TextView
+            android:id="@+id/txtComboTicketName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/linHeader"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_combo_badge"
+            android:fontFamily="@font/poppins_regular"
+            android:paddingStart="8dp"
+            android:paddingTop="3dp"
+            android:paddingEnd="8dp"
+            android:paddingBottom="3dp"
+            android:text=""
+            android:textColor="@color/primaryColor"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+        <!-- ================= DATE SLOTS ================= -->
         <LinearLayout
-            android:id="@+id/linTop"
+            android:id="@+id/linDateSection"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/imgClose"
+            android:layout_below="@+id/txtComboTicketName"
+            android:layout_marginTop="14dp"
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/txtComboTicketName"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:layout_marginEnd="3dp"
-                android:visibility="gone"
                 android:fontFamily="@font/poppins_regular"
-                android:maxLines="3"
-                android:text=""
-                android:textAlignment="center"
-                android:textColor="@color/secondaryColor"
-                android:textSize="12sp" />
-
-
-            <TextView
-                android:id="@+id/txtDesc"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:layout_marginBottom="5dp"
-                android:layout_marginEnd="3dp"
-                android:visibility="gone"
-                android:fontFamily="@font/poppins_regular"
-                android:maxLines="3"
-                android:text=""
-                android:textAlignment="center"
-                android:textColor="@color/secondaryColor"
-                android:textSize="12sp" />
+                android:text="Select Date"
+                android:textColor="@color/black"
+                android:textSize="13sp"
+                android:textStyle="bold" />
 
             <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/showSchedule"
+                android:id="@+id/rvDateSlots"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:clipToPadding="false"
+                android:orientation="horizontal"
+                tools:listitem="@layout/item_date_chip" />
 
         </LinearLayout>
 
+        <!-- ================= TIME SLOTS ================= -->
+        <LinearLayout
+            android:id="@+id/linTimeSection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/linDateSection"
+            android:layout_marginTop="14dp"
+            android:orientation="vertical">
 
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/poppins_regular"
+                    android:text="Select Time Slot"
+                    android:textColor="@color/black"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:orientation="horizontal">
+
+                    <View
+                        android:layout_width="8dp"
+                        android:layout_height="8dp"
+                        android:layout_gravity="center_vertical"
+                        android:background="@drawable/dot_available" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_marginEnd="10dp"
+                        android:text="Available"
+                        android:textColor="@color/gray"
+                        android:textSize="10sp" />
+
+                    <View
+                        android:layout_width="8dp"
+                        android:layout_height="8dp"
+                        android:layout_gravity="center_vertical"
+                        android:background="@drawable/dot_few_seats" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_marginEnd="10dp"
+                        android:text="Few Seats"
+                        android:textColor="@color/gray"
+                        android:textSize="10sp" />
+
+                    <View
+                        android:layout_width="8dp"
+                        android:layout_height="8dp"
+                        android:layout_gravity="center_vertical"
+                        android:background="@drawable/dot_full" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:text="Full"
+                        android:textColor="@color/gray"
+                        android:textSize="10sp" />
+
+                </LinearLayout>
+
+            </RelativeLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvTimeSlots"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                tools:listitem="@layout/item_time_chip" />
+
+            <TextView
+                android:id="@+id/txtNoSlotsMessage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:gravity="center"
+                android:text="No time slots available for this date"
+                android:textColor="@color/red"
+                android:textSize="12sp"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+        </LinearLayout>
+
+        <!-- ================= ADD TICKETS ================= -->
         <LinearLayout
             android:id="@+id/linTopTicket"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_below="@+id/linTop">
+            android:layout_below="@+id/linTimeSection"
+            android:layout_marginTop="16dp"
+            android:orientation="vertical">
 
-            <RelativeLayout
-                android:id="@+id/relTicket"
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:fontFamily="@font/poppins_regular"
+                android:text="Add Tickets"
+                android:textColor="@color/black"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="2.5dp"
-                android:layout_weight="1">
+                android:orientation="horizontal">
 
-                <TextView
-                    android:id="@+id/txtTicketRate"
-                    android:layout_width="wrap_content"
+                <!-- ===== ADULT CARD ===== -->
+                <LinearLayout
+                    android:id="@+id/relTicket"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="20dp"
-                    android:fontFamily="@font/roboto"
-                    android:text="Adult Ticket"
-                    android:textAlignment="center"
-                    android:textColor="@color/black"
-                    android:textSize="20sp"
-                    android:textStyle="bold" />
+                    android:layout_marginEnd="4dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_card_adult"
+                    android:orientation="vertical"
+                    android:padding="12dp">
 
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
 
-                <EditText
-                    android:id="@+id/editTextTickets"
-                    android:layout_width="match_parent"
-                    android:layout_height="50dp"
-                    android:layout_below="@+id/txtTicketRate"
-                    android:layout_marginTop="5dp"
-                    android:layout_marginBottom="10dp"
-                    android:background="@drawable/edittext_bg"
-                    android:focusable="true"
-                    android:focusableInTouchMode="true"
-                    android:hint="@string/no_of_tickets"
-                    android:imeOptions="actionNext"
-                    android:inputType="number"
-                    android:maxLength="7"
-                    android:paddingEnd="7dp"
-                    android:textAlignment="center"
-                    android:textColor="@color/black"
-                    android:textSize="30sp"
-                    tools:ignore="RtlSymmetry" />
+                        <ImageView
+                            android:id="@+id/imgAdultIcon"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:background="@drawable/bg_circle_green_light"
+                            android:padding="4dp"
+                            android:src="@drawable/ic_person1" />
 
+                        <TextView
+                            android:id="@+id/txtAdultAge"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:layout_alignParentTop="true"
+                            android:text="Age 13+"
+                            android:textColor="@color/gray"
+                            android:textSize="10sp" />
+                    </RelativeLayout>
 
-            </RelativeLayout>
+                    <TextView
+                        android:id="@+id/txtTicketRate"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:fontFamily="@font/roboto"
+                        android:text="Adult Tickets"
+                        android:textColor="@color/black"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
 
+                    <TextView
+                        android:id="@+id/txtTicketRateAmount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/roboto"
+                        android:textColor="@color/gray"
+                        android:textSize="11sp" />
 
-            <RelativeLayout
-                android:id="@+id/relChild"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="2.5dp"
-                android:layout_weight="1">
+                    <TextView
+                        android:id="@+id/nooftickets"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:text="Enter Quantity"
+                        android:textColor="@color/gray"
+                        android:textSize="11sp" />
 
-                <TextView
-                    android:id="@+id/txtTicketChildRate"
-                    android:layout_width="wrap_content"
+                    <!-- Stepper -->
+                    <LinearLayout
+                        android:id="@+id/linAdultStepper"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:background="@drawable/edittext_bg"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:padding="4dp">
+
+                        <ImageView
+                            android:id="@+id/btnAdultMinus"
+                            android:layout_width="26dp"
+                            android:layout_height="26dp"
+                            android:background="@drawable/bg_circle_green"
+                            android:padding="6dp"
+                            android:src="@drawable/ic_minus" />
+
+                        <EditText
+                            android:id="@+id/editTextTickets"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:background="@null"
+                            android:focusable="false"
+                            android:gravity="center"
+                            android:inputType="none"
+                            android:text="0"
+                            android:textColor="@color/black"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/btnAdultPlus"
+                            android:layout_width="26dp"
+                            android:layout_height="26dp"
+                            android:background="@drawable/bg_circle_green"
+                            android:padding="6dp"
+                            android:src="@drawable/ic_plus" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <!-- SECTION 1: Keypad grid — fixed width, does not stretch -->
+                        <LinearLayout
+                            android:id="@+id/gridAdultKeypad"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal">
+                                <TextView android:id="@+id/btnSevenAdult" style="@style/MiniKeyStyle" android:text="7" />
+                                <TextView android:id="@+id/btnEightAdult" style="@style/MiniKeyStyle" android:text="8" />
+                                <TextView android:id="@+id/btnNineAdult" style="@style/MiniKeyStyle" android:text="9" />
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal">
+                                <TextView android:id="@+id/btnFourAdult" style="@style/MiniKeyStyle" android:text="4" />
+                                <TextView android:id="@+id/btnFiveAdult" style="@style/MiniKeyStyle" android:text="5" />
+                                <TextView android:id="@+id/btnSixAdult" style="@style/MiniKeyStyle" android:text="6" />
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal">
+                                <TextView android:id="@+id/btnOneAdult" style="@style/MiniKeyStyle" android:text="1" />
+                                <TextView android:id="@+id/btnTwoAdult" style="@style/MiniKeyStyle" android:text="2" />
+                                <TextView android:id="@+id/btnThreeAdult" style="@style/MiniKeyStyle" android:text="3" />
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal">
+                                <TextView android:id="@+id/btnPlusTenAdult" style="@style/MiniKeyStyle" android:text="10" android:textSize="17sp" />
+                                <TextView android:id="@+id/btnZeroAdult" style="@style/MiniKeyStyle" android:text="0" />
+                                <ImageView android:id="@+id/btnBackAdult" style="@style/MiniKeyStyle" android:padding="12dp" android:src="@drawable/ic_cancel" app:tint="#103B5B" />
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+                        <!-- SECTION 2: Flexible spacer — absorbs extra width from a wider popup -->
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="1dp"
+                            android:layout_weight="1" />
+
+                        <!-- SECTION 3: Per-card total — fixed, stays anchored to the end -->
+                        <LinearLayout
+                            android:id="@+id/linAdultTotal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_total_box"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:padding="18dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Total"
+                                android:textColor="@color/gray"
+                                android:textSize="9sp" />
+
+                            <TextView
+                                android:id="@+id/txtAdultCardTotal"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textColor="@color/black"
+                                android:textSize="11sp"
+                                android:textStyle="bold"
+                                tools:text="Rs. 0.00/-" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="Tickets"
+                                android:textColor="@color/gray"
+                                android:textSize="9sp" />
+
+                            <TextView
+                                android:id="@+id/txtAdultCardQty"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textColor="@color/black"
+                                android:textSize="11sp"
+                                android:textStyle="bold"
+                                tools:text="0" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- ===== CHILD CARD ===== -->
+                <LinearLayout
+                    android:id="@+id/relChild"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="20dp"
-                    android:fontFamily="@font/roboto"
-                    android:text="Child Ticket"
-                    android:textAlignment="center"
-                    android:textColor="@color/black"
-                    android:textSize="20sp"
-                    android:textStyle="bold" />
+                    android:layout_marginStart="4dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_card_child"
+                    android:orientation="vertical"
+                    android:padding="12dp">
 
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
 
-                <EditText
-                    android:id="@+id/editTextChildTickets"
-                    android:layout_width="match_parent"
-                    android:layout_height="50dp"
-                    android:layout_below="@+id/txtTicketChildRate"
-                    android:layout_marginTop="5dp"
-                    android:layout_marginBottom="10dp"
-                    android:background="@drawable/edittext_bg"
-                    android:focusable="true"
-                    android:focusableInTouchMode="true"
-                    android:hint="@string/no_of_child_tickets"
-                    android:imeOptions="actionNext"
-                    android:inputType="number"
-                    android:maxLength="7"
-                    android:paddingEnd="7dp"
-                    android:textAlignment="center"
-                    android:textColor="@color/black"
-                    android:textSize="30sp"
-                    tools:ignore="RtlSymmetry" />
+                        <ImageView
+                            android:id="@+id/imgChildIcon"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:background="@drawable/bg_circle_blue_light"
+                            android:padding="4dp"
+                            android:src="@drawable/ic_person1" />
 
+                        <TextView
+                            android:id="@+id/txtChildAge"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:layout_alignParentTop="true"
+                            android:text="Age 5–12"
+                            android:textColor="@color/gray"
+                            android:textSize="10sp" />
+                    </RelativeLayout>
 
-            </RelativeLayout>
+                    <TextView
+                        android:id="@+id/txtTicketChildRate"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:fontFamily="@font/roboto"
+                        android:text="Child Tickets"
+                        android:textColor="@color/black"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
 
+                    <TextView
+                        android:id="@+id/txtTicketChildRateAmount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/roboto"
+                        android:textColor="@color/gray"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/nooftodChild"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:text="Enter Quantity"
+                        android:textColor="@color/gray"
+                        android:textSize="11sp" />
+
+                    <!-- Stepper -->
+                    <LinearLayout
+                        android:id="@+id/linChildStepper"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:background="@drawable/edittext_bg"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:padding="4dp">
+
+                        <ImageView
+                            android:id="@+id/btnChildMinus"
+                            android:layout_width="26dp"
+                            android:layout_height="26dp"
+                            android:background="@drawable/bg_circle_blue"
+                            android:padding="6dp"
+                            android:src="@drawable/ic_minus" />
+
+                        <EditText
+                            android:id="@+id/editTextChildTickets"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:background="@null"
+                            android:focusable="false"
+                            android:gravity="center"
+                            android:inputType="none"
+                            android:text="0"
+                            android:textColor="@color/black"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/btnChildPlus"
+                            android:layout_width="26dp"
+                            android:layout_height="26dp"
+                            android:background="@drawable/bg_circle_blue"
+                            android:padding="6dp"
+                            android:src="@drawable/ic_plus" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <!-- SECTION 1: Keypad grid — fixed width, does not stretch -->
+                        <LinearLayout
+                            android:id="@+id/gridChildKeypad"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal">
+                                <TextView android:id="@+id/btnSevenChild" style="@style/MiniKeyStyle" android:text="7" />
+                                <TextView android:id="@+id/btnEightChild" style="@style/MiniKeyStyle" android:text="8" />
+                                <TextView android:id="@+id/btnNineChild" style="@style/MiniKeyStyle" android:text="9" />
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal">
+                                <TextView android:id="@+id/btnFourChild" style="@style/MiniKeyStyle" android:text="4" />
+                                <TextView android:id="@+id/btnFiveChild" style="@style/MiniKeyStyle" android:text="5" />
+                                <TextView android:id="@+id/btnSixChild" style="@style/MiniKeyStyle" android:text="6" />
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal">
+                                <TextView android:id="@+id/btnOneChild" style="@style/MiniKeyStyle" android:text="1" />
+                                <TextView android:id="@+id/btnTwoChild" style="@style/MiniKeyStyle" android:text="2" />
+                                <TextView android:id="@+id/btnThreeChild" style="@style/MiniKeyStyle" android:text="3" />
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal">
+                                <TextView android:id="@+id/btnPlusTenChild" style="@style/MiniKeyStyle" android:text="10" android:textSize="17sp" />
+                                <TextView android:id="@+id/btnZeroChild" style="@style/MiniKeyStyle" android:text="0" />
+                                <ImageView android:id="@+id/btnBackChild" style="@style/MiniKeyStyle" android:padding="12dp" android:src="@drawable/ic_cancel" app:tint="#103B5B" />
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+                        <!-- SECTION 2: Flexible spacer — absorbs extra width from a wider popup -->
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="1dp"
+                            android:layout_weight="1" />
+
+                        <!-- SECTION 3: Per-card total — fixed, stays anchored to the end -->
+                        <LinearLayout
+                            android:id="@+id/linChildTotal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_total_box"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:padding="18dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Total"
+                                android:textColor="@color/gray"
+                                android:textSize="10sp" />
+
+                            <TextView
+                                android:id="@+id/txtChildCardTotal"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textColor="@color/black"
+                                android:textSize="11sp"
+                                android:textStyle="bold"
+                                tools:text="Rs. 0.00/-" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="6dp"
+                                android:text="Tickets"
+                                android:textColor="@color/gray"
+                                android:textSize="10sp" />
+
+                            <TextView
+                                android:id="@+id/txtChildCardQty"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textColor="@color/black"
+                                android:textSize="11sp"
+                                android:textStyle="bold"
+                                tools:text="0" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
 
         </LinearLayout>
 
-
-
-        <ScrollView
-            android:id="@+id/scrollkeybord"
+        <!-- ================= SUMMARY ================= -->
+        <RelativeLayout
+            android:id="@+id/linSummary"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@+id/linTopTicket"
-            android:fillViewport="true">
+            android:layout_marginTop="14dp"
+            android:background="@drawable/bg_summary_box"
+            android:padding="10dp">
 
-            <LinearLayout
-                android:id="@+id/linKeyboard"
-                android:layout_width="match_parent"
+            <TextView
+                android:id="@+id/txtSummaryTitle"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/editTextTickets"
-                android:layout_marginBottom="30dp"
-                android:orientation="vertical">
+                android:text="Summary"
+                android:textColor="@color/black"
+                android:textSize="12sp"
+                android:textStyle="bold" />
 
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:layout_marginTop="20dp"
-                    android:orientation="horizontal">
+            <TextView
+                android:id="@+id/txtQty"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/txtSummaryTitle"
+                android:layout_marginTop="2dp"
+                android:fontFamily="@font/roboto"
+                android:textColor="@color/gray"
+                android:textSize="11sp"
+                tools:text="Adult (06 x ₹200.00) \nChild (25 x ₹150.00)" />
 
-                    <RelativeLayout
-                        android:layout_width="60dp"
-                        android:layout_height="60dp"
-                        android:background="@drawable/text_gray_background">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentTop="true"
+                android:text="Total Amount"
+                android:textColor="@color/gray"
+                android:textSize="11sp" />
 
-                        <TextView
-                            android:id="@+id/btnOne"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:fontFamily="@font/arial_bold"
-                            android:gravity="center"
-                            android:padding="10dp"
-                            android:text="1"
-                            android:textColor="@color/black"
-                            android:textSize="30sp" />
+            <TextView
+                android:id="@+id/totalAmount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_below="@+id/txtSummaryTitle"
+                android:fontFamily="@font/roboto"
+                android:textColor="@color/primaryColor"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                tools:text="₹4,950.00/-" />
 
-                    </RelativeLayout>
+        </RelativeLayout>
 
-                    <RelativeLayout
-                        android:layout_width="60dp"
-                        android:layout_height="60dp"
-                        android:layout_marginStart="50dp"
-                        android:background="@drawable/text_gray_background">
-
-                        <TextView
-                            android:id="@+id/btnTwo"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:fontFamily="@font/arial_bold"
-                            android:gravity="center"
-                            android:padding="10dp"
-                            android:text="2"
-                            android:textColor="@color/black"
-                            android:textSize="30sp" />
-
-
-                    </RelativeLayout>
-
-                    <RelativeLayout
-                        android:layout_width="60dp"
-                        android:layout_height="60dp"
-                        android:layout_marginStart="50dp"
-                        android:background="@drawable/text_gray_background">
-
-                        <TextView
-                            android:id="@+id/btnThree"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:fontFamily="@font/arial_bold"
-                            android:gravity="center"
-                            android:padding="10dp"
-                            android:text="3"
-                            android:textColor="@color/black"
-                            android:textSize="30sp" />
-
-
-                    </RelativeLayout>
-
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:layout_marginTop="20dp"
-                    android:orientation="horizontal">
-
-                    <RelativeLayout
-                        android:layout_width="60dp"
-                        android:layout_height="60dp"
-                        android:background="@drawable/text_gray_background">
-
-                        <TextView
-                            android:id="@+id/btnFour"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:fontFamily="@font/arial_bold"
-                            android:gravity="center"
-                            android:padding="10dp"
-                            android:text="4"
-                            android:textColor="@color/black"
-                            android:textSize="30sp" />
-
-                    </RelativeLayout>
-
-                    <RelativeLayout
-                        android:layout_width="60dp"
-                        android:layout_height="60dp"
-                        android:layout_marginStart="50dp"
-                        android:background="@drawable/text_gray_background">
-
-                        <TextView
-                            android:id="@+id/btnFive"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:fontFamily="@font/arial_bold"
-                            android:gravity="center"
-                            android:padding="10dp"
-                            android:text="5"
-                            android:textColor="@color/black"
-                            android:textSize="30sp" />
-
-
-                    </RelativeLayout>
-
-                    <RelativeLayout
-                        android:layout_width="60dp"
-                        android:layout_height="60dp"
-                        android:layout_marginStart="50dp"
-                        android:background="@drawable/text_gray_background">
-
-                        <TextView
-                            android:id="@+id/btnSix"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:fontFamily="@font/arial_bold"
-                            android:gravity="center"
-                            android:padding="10dp"
-                            android:text="6"
-                            android:textColor="@color/black"
-                            android:textSize="30sp" />
-
-
-                    </RelativeLayout>
-
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:layout_marginTop="20dp"
-                    android:orientation="horizontal">
-
-                    <RelativeLayout
-                        android:layout_width="60dp"
-                        android:layout_height="60dp"
-                        android:background="@drawable/text_gray_background">
-
-                        <TextView
-                            android:id="@+id/btnSeven"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:fontFamily="@font/arial_bold"
-                            android:gravity="center"
-                            android:padding="10dp"
-                            android:text="7"
-                            android:textColor="@color/black"
-                            android:textSize="30sp" />
-
-                    </RelativeLayout>
-
-                    <RelativeLayout
-                        android:layout_width="60dp"
-                        android:layout_height="60dp"
-                        android:layout_marginStart="50dp"
-                        android:background="@drawable/text_gray_background">
-
-                        <TextView
-                            android:id="@+id/btnEight"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:fontFamily="@font/arial_bold"
-                            android:gravity="center"
-                            android:padding="10dp"
-                            android:text="8"
-                            android:textColor="@color/black"
-                            android:textSize="30sp" />
-
-
-                    </RelativeLayout>
-
-                    <RelativeLayout
-                        android:layout_width="60dp"
-                        android:layout_height="60dp"
-                        android:layout_marginStart="50dp"
-                        android:background="@drawable/text_gray_background">
-
-                        <TextView
-                            android:id="@+id/btnNine"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:fontFamily="@font/arial_bold"
-                            android:gravity="center"
-                            android:padding="10dp"
-                            android:text="9"
-                            android:textColor="@color/black"
-                            android:textSize="30sp" />
-
-
-                    </RelativeLayout>
-
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:layout_marginTop="20dp"
-                    android:orientation="horizontal">
-
-                    <RelativeLayout
-                        android:layout_width="60dp"
-                        android:layout_height="60dp"
-                        android:background="@drawable/text_gray_background">
-
-                        <ImageView
-                            android:id="@+id/btnClear"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:layout_centerInParent="true"
-                            android:contentDescription="@string/todo"
-                            android:padding="10dp"
-                            android:src="@drawable/ic_reset" />
-
-
-                    </RelativeLayout>
-
-                    <RelativeLayout
-                        android:layout_width="60dp"
-                        android:layout_height="60dp"
-                        android:layout_marginStart="50dp"
-                        android:background="@drawable/text_gray_background">
-
-                        <TextView
-                            android:id="@+id/btnZero"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_centerInParent="true"
-                            android:fontFamily="@font/arial_bold"
-                            android:padding="10dp"
-                            android:text="@string/_0"
-                            android:textColor="@color/black"
-                            android:textSize="30sp" />
-
-
-                    </RelativeLayout>
-
-                    <RelativeLayout
-                        android:id="@+id/btnBack"
-                        android:layout_width="60dp"
-                        android:layout_height="60dp"
-                        android:layout_marginStart="50dp"
-                        android:background="@drawable/text_gray_background">
-
-                        <ImageView
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:layout_centerInParent="true"
-                            android:contentDescription="@string/todo"
-                            android:padding="10dp"
-                            android:src="@drawable/ic_cancel" />
-
-
-                    </RelativeLayout>
-
-
-                </LinearLayout>
-
-
-            </LinearLayout>
-        </ScrollView>
-
-        <LinearLayout
+        <!-- ================= CONFIRM BUTTON ================= -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnDones"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:layout_below="@+id/scrollkeybord"
-            android:layout_marginBottom="25dp"
-            android:orientation="horizontal">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="55dp"
-                android:layout_marginTop="4dp"
-                android:layout_weight="1"
-                android:background="@drawable/edittext_bg"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/txtQty"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
-                    android:layout_marginTop="5dp"
-                    android:fontFamily="@font/roboto"
-                    android:textColor="@color/black"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:id="@+id/totalAmount"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:layout_marginEnd="10dp"
-                    android:fontFamily="@font/roboto"
-                    android:text="2000"
-                    android:textColor="@color/black"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-
-            </LinearLayout>
-
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:layout_weight="1">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnDone"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_marginStart="10dp"
-                    android:backgroundTint="@color/primaryColor"
-                    android:text="Done"
-                    android:textColor="@color/white"
-                    android:textSize="16dp"
-                    app:cornerRadius="10dp"
-                    tools:ignore="RtlSymmetry" />
-
-            </RelativeLayout>
-
-
-        </LinearLayout>
-
+            android:layout_height="52dp"
+            android:layout_below="@+id/linSummary"
+            android:layout_marginTop="12dp"
+            android:backgroundTint="@color/primaryColor"
+            android:text="Confirm &amp; Continue  "
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            app:cornerRadius="10dp" />
 
     </RelativeLayout>
-
 
 </ScrollView>

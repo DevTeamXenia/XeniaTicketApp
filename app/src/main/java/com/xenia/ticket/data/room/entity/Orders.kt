@@ -7,6 +7,7 @@ import androidx.room.PrimaryKey
 data class Orders(
     @PrimaryKey(autoGenerate = true) var id: Long = 0,
     val ticketId: Int,
+    val showId: Int,
     val ticketName: String,
     val ticketNameMa: String?,
     val ticketNameTa: String?,
@@ -42,6 +43,7 @@ data class Orders(
     val scheduleDay: String,
     val scheduleTime: String,
     val screenName: String,
+    val selectedSeats: String? = null
 )
 
 

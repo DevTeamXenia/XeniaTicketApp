@@ -6,6 +6,7 @@ import com.xenia.ticket.data.room.dao.OrderDao
 import com.xenia.ticket.data.room.entity.Orders
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import android.util.Log
 
 
 class OrderRepository(private val ticketDao: OrderDao) {
@@ -16,6 +17,7 @@ class OrderRepository(private val ticketDao: OrderDao) {
         val existing = ticketDao.getCartItemByTicketId(ticket.ticketId)
 
         if (existing != null) {
+            Log.d("REPO_CART", "Updating existing item in cart: ticketId=${ticket.ticketId}")
             ticketDao.updateExistingTicket(
                 ticketId = ticket.ticketId,
                 newQty = ticket.ticketQty,
@@ -25,9 +27,11 @@ class OrderRepository(private val ticketDao: OrderDao) {
                 scheduleId = ticket.scheduleId,
                 scheduleDay = ticket.scheduleDay,
                 scheduleTime = ticket.scheduleTime,
-                screenName = ticket.screenName
+                screenName = ticket.screenName,
+                selectedSeats = ticket.selectedSeats
             )
         } else {
+            Log.d("REPO_CART", "Inserting new item to cart: ticketId=${ticket.ticketId}")
             ticketDao.insertCartItem(ticket)
         }
     }
@@ -51,7 +55,8 @@ class OrderRepository(private val ticketDao: OrderDao) {
                     scheduleId = ticket.scheduleId,
                     scheduleDay = ticket.scheduleDay,
                     scheduleTime = ticket.scheduleTime,
-                    screenName = ticket.screenName
+                    screenName = ticket.screenName,
+                    selectedSeats = ticket.selectedSeats
                 )
             }
         } else {
@@ -94,6 +99,10 @@ class OrderRepository(private val ticketDao: OrderDao) {
         )
     }
 
+
+    suspend fun getOtherCartItemsForSchedule(scheduleId: Int, excludeTicketId: Int): List<Orders> = withContext(Dispatchers.IO) {
+        ticketDao.getOtherCartItemsForSchedule(scheduleId, excludeTicketId)
+    }
 
     suspend fun deleteTicketById(ticketId: Int) {
         ticketDao.deleteByTicketId(ticketId)

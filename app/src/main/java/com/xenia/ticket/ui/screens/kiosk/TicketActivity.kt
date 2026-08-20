@@ -1,8 +1,10 @@
 package com.xenia.ticket.ui.screens.kiosk
 
 import android.annotation.SuppressLint
+import android.content.ContentValues.TAG
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import androidx.appcompat.app.AlertDialog
@@ -250,12 +252,17 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
 
 
     override fun onTicketClick(item: ActiveItem) {
+        Log.d(TAG, "onTicketClick: id=${item.id}, name=${item.name}, type=${item.type}, combo=${item.combo}, child=${item.child}")
 
-        if (ticketDialog?.isVisible == true) return
+        if (ticketDialog?.isVisible == true) {
+            Log.d(TAG, "onTicketClick: dialog already visible, ignoring tap for ticketId=${item.id}")
+            return
+        }
 
         ticketDialog = CustomTicketPopupDialogue().apply {
             setData(
                 ticketId = item.id,
+                showId = item.showId,
                 ticketName = item.name,
                 ticketNameMa = item.nameMa ?: "",
                 ticketNameTa = item.nameTa ?: "",
@@ -277,6 +284,7 @@ class TicketActivity : AppCompatActivity(), OnTicketClickListener,
             setListener(this@TicketActivity)
         }
 
+        Log.d(TAG, "onTicketClick: showing dialog for ticketId=${item.id}")
         ticketDialog?.show(supportFragmentManager, "CustomPopup")
     }
 

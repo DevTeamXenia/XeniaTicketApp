@@ -1,0 +1,7 @@
+<resources>
+
+    <!-- Seat spacing -->
+    <dimen name="seat_horizontal_gap">12dp</dimen>
+    <dimen name="seat_vertical_gap">12dp</dimen>
+
+</resources>

@@ -524,6 +524,7 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
                     val cartItem = Orders(
                         id = existingItem?.id ?: 0L,
                         ticketId = ticketItem.ticketId,
+                        showId = 0,
                         ticketName = ticketItem.ticketName,
                         ticketNameMa = ticketItem.ticketNameMa,
                         ticketNameTa = ticketItem.ticketNameTa,
@@ -616,6 +617,7 @@ class BillingTicketActivity : AppCompatActivity(), OnTicketClickListener,
         lifecycleScope.launch {
             val cartItem = Orders(
                 ticketId = ticketItem.ticketId,
+                showId = 0,
                 ticketName = ticketItem.ticketName,
                 ticketNameMa = ticketItem.ticketNameMa,
                 ticketNameTa = ticketItem.ticketNameTa,

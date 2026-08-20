@@ -437,8 +437,6 @@ class PaymentActivity : AppCompatActivity() {
         val labelDPrice = getLocalizedString("Price", defaultLang)
         val labelDAmount = getLocalizedString("Amount", defaultLang)
         val labelDQty = getLocalizedString("Qty", defaultLang)
-        val labelDAdult = getLocalizedString("Adult", defaultLang)
-        val labelDChild = getLocalizedString("Child", defaultLang)
 
         val printDefaultLang =
             !(selectedLanguage.lowercase() == "en" && defaultLang.lowercase() == "en")
@@ -468,7 +466,7 @@ class PaymentActivity : AppCompatActivity() {
             "ta" -> "நுழைவு டிக்கெட்"
             "te" -> "ప్రవేశ టికెట్"
             "hi" -> "प्रवेश टिकट"
-            "pa" -> "ਪ੍ਰਵੇਸ਼ ਟਿਕਟ"
+            "pa" -> "ਪ੍ਰਵੇശ ടിക്കറ്റ്"
             "mr" -> "प्रवेश तिकीट"
             "si" -> "ප්‍රවේශ ටිකට්"
             else -> "Entry Ticket"
@@ -519,31 +517,14 @@ class PaymentActivity : AppCompatActivity() {
         yOffset += 40f
 
         var totalAmount = 0.0
-        val seatMapQueue = mutableMapOf<Int, MutableList<String>>()
-
-        seatAllocations.forEach {
-            val existing = seatMapQueue[it.scheduleId] ?: mutableListOf()
-            existing.addAll(it.seats)
-            seatMapQueue[it.scheduleId] = existing
-        }
+        val showDetailsList = mutableListOf<String>()
 
         for (item in ticket) {
-
             val priceStr = String.format(Locale.ENGLISH, "%.2f", item.ticketRate)
-            var qtyStr= ""
-            qtyStr = if(item.ticketChild)
-                item.ticketChildQty.toString()
-            else
-                item.ticketQty.toString()
-
-            val qtyChildStr = item.ticketChildQty.toString()
-            val priceChildStr = String.format("%.2f", item.ticketChildRate)
-
             val amountStr = String.format(Locale.ENGLISH, "%.2f", item.ticketTotalAmount)
             totalAmount += item.ticketTotalAmount
 
             paint.textAlign = Paint.Align.LEFT
-
             val itemName = when (selectedLanguage.lowercase()) {
                 "ml" -> item.ticketNameMa
                 "hi" -> item.ticketNameHi
@@ -556,220 +537,110 @@ class PaymentActivity : AppCompatActivity() {
                 else -> item.ticketName
             }
 
-            val maxWidth = width * 0.95f
+            // 1. Draw Main Item Line
+            val maxWidth = width * 0.45f
+            val currentLineY = yOffset
+            val nextY = drawMultilineText(tempCanvas, itemName ?: "", 20f, yOffset, maxWidth, paint)
+            
+            paint.textAlign = Paint.Align.CENTER
+            tempCanvas.drawText(priceStr, width * 0.55f, currentLineY + 22f, paint)
+            tempCanvas.drawText(item.ticketQty.toString(), width * 0.75f, currentLineY + 22f, paint)
+            paint.textAlign = Paint.Align.RIGHT
+            tempCanvas.drawText(amountStr, width - 20f, currentLineY + 22f, paint)
+            
+            yOffset = nextY + 10f
+            paint.textAlign = Paint.Align.LEFT
 
-            yOffset = drawMultilineText(
-                tempCanvas,
-                itemName ?: "",
-                20f,
-                yOffset,
-                maxWidth,
-                paint
-            ) + 10f
-
-            paint.textSize = 22f
-
+            // 2. Handle Combo/Show Details
             if (item.ticketCombo) {
-
                 val comboResult = activeTicketRepository.getComboResult(item.ticketId)
-
                 val showName = comboResult.names.lastOrNull()
                 val subTickets = comboResult.names.dropLast(1)
 
-                subTickets.forEach {
-
-                    val cleanText = it
-                        .replace("\\s+".toRegex(), " ")
-                        .trim()
-
-                    if (cleanText.isNotEmpty()) {
-
-                        val newY = drawMultilineText(
-                            tempCanvas,
-                            cleanText,
-                            40f,
-                            yOffset,
-                            width * 0.9f,
-                            paint
-                        )
-
-                        yOffset = newY + 2f
-                    }
+                subTickets.forEach { subItemName ->
+                    val subY = yOffset
+                    yOffset = drawMultilineText(tempCanvas, "+ ${subItemName.trim()}", 40f, yOffset, width * 0.5f, paint)
+                    paint.textAlign = Paint.Align.CENTER
+                    tempCanvas.drawText("0.00", width * 0.55f, subY + 22f, paint)
+                    tempCanvas.drawText(item.ticketQty.toString(), width * 0.75f, subY + 22f, paint)
+                    paint.textAlign = Paint.Align.RIGHT
+                    tempCanvas.drawText("0.00", width - 20f, subY + 22f, paint)
+                    paint.textAlign = Paint.Align.LEFT
+                    yOffset += 2f
                 }
 
-                showName?.let {
-                    yOffset = drawMultilineText(
-                        tempCanvas, it, 40f, yOffset, width * 0.9f, paint
-                    )
-                    yOffset += 10f
+                showName?.let { name ->
+                    val subY = yOffset
+                    yOffset = drawMultilineText(tempCanvas, "+ ${name.trim()}", 40f, yOffset, width * 0.5f, paint)
+                    paint.textAlign = Paint.Align.CENTER
+                    tempCanvas.drawText("0.00", width * 0.55f, subY + 22f, paint)
+                    tempCanvas.drawText(item.ticketQty.toString(), width * 0.75f, subY + 22f, paint)
+                    paint.textAlign = Paint.Align.RIGHT
+                    tempCanvas.drawText("0.00", width - 20f, subY + 22f, paint)
+                    paint.textAlign = Paint.Align.LEFT
+                    yOffset += 5f
+
                     if (item.scheduleId != 0) {
+                        showDetailsList.add("${item.screenName} - ${item.scheduleTime}")
+                        
+                        val allSelectedSeats = item.selectedSeats?.split(",") ?: emptyList()
+                        val adultSeatsList = allSelectedSeats.take(item.ticketQty)
+                        val childSeatsList = allSelectedSeats.drop(item.ticketQty).take(item.ticketChildQty)
 
-                        tempCanvas.drawText(
-                            item.screenName + " - " + item.scheduleTime,
-                            60f,
-                            yOffset,
-                            paint
-                        )
-                        yOffset += 35f
-
-                        val adultQty = item.ticketQty
-                        val childQty = item.ticketChildQty
-                        val totalQty = adultQty + childQty
-
-                        val allSeats = seatMapQueue[item.scheduleId] ?: emptyList()
-
-                        var adultSeats = if (adultQty > 0) {
-                            allSeats.take(adultQty)
-                        } else emptyList()
-
-                        var childSeats = if (childQty > 0) {
-                            allSeats.drop(adultQty).take(childQty)
-                        } else emptyList()
-
-
-                        if (adultSeats.size < adultQty && adultSeats.isNotEmpty()) {
-                            val duplicatedSeats = mutableListOf<String>()
-                            while (duplicatedSeats.size < adultQty) {
-                                duplicatedSeats.addAll(adultSeats)
-                            }
-                            adultSeats = duplicatedSeats.take(adultQty)
+                        if (adultSeatsList.isNotEmpty()) {
+                            showDetailsList.add("$labelAdult Seats: ${adultSeatsList.joinToString(", ")}")
                         }
-
-                        if (childSeats.size < childQty && childSeats.isNotEmpty()) {
-                            val duplicatedSeats = mutableListOf<String>()
-                            while (duplicatedSeats.size < childQty) {
-                                duplicatedSeats.addAll(childSeats)
-                            }
-                            childSeats = duplicatedSeats.take(childQty)
+                        if (childSeatsList.isNotEmpty()) {
+                            showDetailsList.add("$labelChild Seats: ${childSeatsList.joinToString(", ")}")
                         }
-
-                        paint.textSize = 28f
-
-                        if (adultSeats.isNotEmpty()) {
-                            val adultSeatText = if (printDefaultLang) {
-                                "$labelAdult Seats: ${adultSeats.joinToString(", ")}"
-                            } else {
-                                "$labelAdult Seats: ${adultSeats.joinToString(", ")}"
-                            }
-                            yOffset = drawMultilineText(
-                                tempCanvas, adultSeatText, 20f, yOffset, width * 0.9f, paint
-                            ) + 10f
-                        }
-
-                        if (childSeats.isNotEmpty()) {
-                            val childSeatText = if (printDefaultLang) {
-                                "$labelChild Seats: ${childSeats.joinToString(", ")}"
-                            } else {
-                                "$labelChild Seats: ${childSeats.joinToString(", ")}"
-                            }
-                            yOffset = drawMultilineText(
-                                tempCanvas, childSeatText, 20f, yOffset, width * 0.9f, paint
-                            ) + 10f
-                        }
-
-                        val usedSeats = (adultSeats + childSeats).toSet().toList()
-                        seatMapQueue[item.scheduleId]?.removeAll(usedSeats)
                     }
                 }
-
             } else if (item.ticketType == "SHOW") {
+                if (item.scheduleId != 0) {
+                    showDetailsList.add("${item.screenName} - ${item.scheduleTime}")
+                    
+                    val allSelectedSeats = item.selectedSeats?.split(",") ?: emptyList()
+                    val adultSeatsList = allSelectedSeats.take(item.ticketQty)
+                    val childSeatsList = allSelectedSeats.drop(item.ticketQty).take(item.ticketChildQty)
 
-                tempCanvas.drawText(
-                    item.screenName + " - " + item.scheduleTime,
-                    20f,
-                    yOffset,
-                    paint
-                )
-                yOffset += 35f
-
-                val adultQty = item.ticketQty
-                val childQty = item.ticketChildQty
-                val totalQty = adultQty + childQty
-
-                val allSeats = seatMapQueue[item.scheduleId] ?: emptyList()
-
-                var adultSeats = if (adultQty > 0) {
-                    allSeats.take(adultQty)
-                } else emptyList()
-
-                var childSeats = if (childQty > 0) {
-                    allSeats.drop(adultQty).take(childQty)
-                } else emptyList()
-
-
-                if (adultSeats.size < adultQty && adultSeats.isNotEmpty()) {
-                    val duplicatedSeats = mutableListOf<String>()
-                    while (duplicatedSeats.size < adultQty) {
-                        duplicatedSeats.addAll(adultSeats)
+                    if (adultSeatsList.isNotEmpty()) {
+                        showDetailsList.add("$labelAdult Seats: ${adultSeatsList.joinToString(", ")}")
                     }
-                    adultSeats = duplicatedSeats.take(adultQty)
-                }
-
-                if (childSeats.size < childQty && childSeats.isNotEmpty()) {
-                    val duplicatedSeats = mutableListOf<String>()
-                    while (duplicatedSeats.size < childQty) {
-                        duplicatedSeats.addAll(childSeats)
+                    if (childSeatsList.isNotEmpty()) {
+                        showDetailsList.add("$labelChild Seats: ${childSeatsList.joinToString(", ")}")
                     }
-                    childSeats = duplicatedSeats.take(childQty)
-                }
-
-                if (adultSeats.isNotEmpty() || childSeats.isNotEmpty()) {
-                    paint.textSize = 28f
-
-                    if (adultSeats.isNotEmpty()) {
-                        val adultSeatText = if (printDefaultLang) {
-                            "$labelAdult($labelDAdult) Seats: ${adultSeats.joinToString(", ")}"
-                        } else {
-                            "$labelAdult Seats: ${adultSeats.joinToString(", ")}"
-                        }
-                        yOffset = drawMultilineText(
-                            tempCanvas, adultSeatText, 20f, yOffset, width * 0.9f, paint
-                        ) + 10f
-                    }
-
-                    if (childSeats.isNotEmpty()) {
-                        val childSeatText = if (printDefaultLang) {
-                            "$labelChild($labelDChild) Seats: ${childSeats.joinToString(", ")}"
-                        } else {
-                            "$labelChild Seats: ${childSeats.joinToString(", ")}"
-                        }
-                        yOffset = drawMultilineText(
-                            tempCanvas, childSeatText, 20f, yOffset, width * 0.9f, paint
-                        ) + 10f
-                    }
-
-                    // Remove used seats
-                    val usedSeats = (adultSeats + childSeats).toSet().toList()
-                    seatMapQueue[item.scheduleId]?.removeAll(usedSeats)
                 }
             }
 
-            yOffset += 35f
-            paint.textSize = 22f
-            paint.textAlign = Paint.Align.CENTER
-
-            if (item.ticketQty > 0) {
-                tempCanvas.drawText(priceStr, width * 0.5f, yOffset, paint)
-                tempCanvas.drawText(item.ticketQty.toString(), width * 0.65f, yOffset, paint)
-                yOffset += 35f
-            }
-
-            if (qtyChildStr != "0" && priceChildStr != "0" && item.ticketChildQty > 0) {
+            // Draw Child row if applicable
+            if (item.ticketChildQty > 0 && item.ticketChildRate > 0) {
+                val cY = yOffset
+                yOffset = drawMultilineText(tempCanvas, "$labelChild Tickets", 30f, yOffset, maxWidth, paint)
                 paint.textAlign = Paint.Align.CENTER
-                tempCanvas.drawText(priceChildStr, width * 0.5f, yOffset, paint)
-                tempCanvas.drawText(qtyChildStr, width * 0.65f, yOffset, paint)
-                yOffset += 35f
+                tempCanvas.drawText(String.format("%.2f", item.ticketChildRate), width * 0.55f, cY + 22f, paint)
+                tempCanvas.drawText(item.ticketChildQty.toString(), width * 0.75f, cY + 22f, paint)
+                paint.textAlign = Paint.Align.LEFT
+                yOffset += 5f
             }
-
-            paint.textAlign = Paint.Align.RIGHT
-            tempCanvas.drawText(amountStr, width - 40f, yOffset, paint)
-
-            yOffset += 45f
+            yOffset += 15f
         }
 
         paint.strokeWidth = 2f
         tempCanvas.drawLine(20f, yOffset, width - 20f, yOffset, paint)
-        yOffset += 60f
+        yOffset += 40f
+
+        // Draw Show Details (Screen, Time, Seats) below the line
+        if (showDetailsList.isNotEmpty()) {
+            paint.textSize = 22f
+            paint.textAlign = Paint.Align.LEFT
+            showDetailsList.forEach { detail ->
+                yOffset = drawMultilineText(tempCanvas, detail, 30f, yOffset, width * 0.9f, paint) + 2f
+            }
+            yOffset += 10f
+            // Another line after details? The photo shows it above Total.
+            tempCanvas.drawLine(20f, yOffset, width - 20f, yOffset, paint)
+            yOffset += 40f
+        }
 
         paint.textAlign = Paint.Align.RIGHT
         tempCanvas.drawText(
@@ -904,7 +775,6 @@ class PaymentActivity : AppCompatActivity() {
         paint.textAlign = Paint.Align.CENTER
 
         val receiptTitle = when (selectedLanguage) {
-
             "ml" -> "പ്രവേശന ടിക്കറ്റ്"
             "kn" -> "ಪ್ರವೇಶ ಟಿಕೆಟ್"
             "ta" -> "நுழைவு டிக்கெட்"
@@ -941,270 +811,126 @@ class PaymentActivity : AppCompatActivity() {
         paint.textAlign = Paint.Align.RIGHT
         tempCanvas.drawText(labelAmount, width - 30f, yOffset, paint)
 
-
         yOffset += 30f
         paint.strokeWidth = 2f
         tempCanvas.drawLine(20f, yOffset, width - 20f, yOffset, paint)
         yOffset += 40f
 
         var totalAmount = 0.0
-        val seatMapQueue = mutableMapOf<Int, MutableList<String>>()
-
-        seatAllocations.forEach {
-            seatMapQueue[it.scheduleId] = it.seats.toMutableList()
-        }
+        val showDetailsList = mutableListOf<String>()
 
         for (item in ticket) {
-            val priceStr = String.format("%.2f", item.ticketRate)
-            val qtyStr = if(item.ticketChild)
-                item.ticketChildQty.toString()
-            else
-                item.ticketQty.toString()
-
-            val qtyChildStr = item.ticketChildQty.toString()
-            val priceChildStr = String.format("%.2f", item.ticketChildRate)
-
-            val amountStr = String.format("%.2f", item.ticketTotalAmount)
+            val priceStr = String.format(Locale.ENGLISH, "%.2f", item.ticketRate)
+            val amountStr = String.format(Locale.ENGLISH, "%.2f", item.ticketTotalAmount)
             totalAmount += item.ticketTotalAmount
 
             paint.textAlign = Paint.Align.LEFT
-            paint.isAntiAlias = true
-            paint.textSize = 28f
+            val itemName = item.ticketName
 
-            val itemName = when (selectedLanguage.lowercase()) {
-                "ml" -> item.ticketNameMa
-                "hi" -> item.ticketNameHi
-                "ta" -> item.ticketNameTa
-                "kn" -> item.ticketNameKa
-                "te" -> item.ticketNameTe
-                "si" -> item.ticketNameSi!!
-                "pa" -> item.ticketNamePa
-                "mr" -> item.ticketNameMr
-                else -> item.ticketName
-            }
+            // 1. Draw Main Item Line
+            val maxWidth = width * 0.45f
+            val currentLineY = yOffset
+            val nextY = drawMultilineText(tempCanvas, itemName, 20f, yOffset, maxWidth, paint)
+            
+            paint.textAlign = Paint.Align.CENTER
+            tempCanvas.drawText(priceStr, width * 0.55f, currentLineY + 22f, paint)
+            tempCanvas.drawText(item.ticketQty.toString(), width * 0.75f, currentLineY + 22f, paint)
+            paint.textAlign = Paint.Align.RIGHT
+            tempCanvas.drawText(amountStr, width - 20f, currentLineY + 22f, paint)
+            
+            yOffset = nextY + 10f
+            paint.textAlign = Paint.Align.LEFT
 
-            val maxItemNameWidth = width * 0.95f
-
-            yOffset = drawMultilineText(
-                canvas = tempCanvas,
-                text = itemName ?: "",
-                x = 20f,
-                startY = yOffset,
-                maxWidth = maxItemNameWidth,
-                paint = paint
-            ) + 10f
-            paint.textSize = 22f
-
+            // 2. Handle Combo/Show Details
             if (item.ticketCombo) {
-
                 val comboResult = activeTicketRepository.getComboResult(item.ticketId)
-
                 val showName = comboResult.names.lastOrNull()
                 val subTickets = comboResult.names.dropLast(1)
-                subTickets.forEach {
 
-                    val cleanText = it
-                        .replace("\\s+".toRegex(), " ")
-                        .trim()
-
-                    if (cleanText.isNotEmpty()) {
-
-                        val newY = drawMultilineText(
-                            tempCanvas,
-                            cleanText,
-                            40f,
-                            yOffset,
-                            width * 0.9f,
-                            paint
-                        )
-
-                        yOffset = newY + 2f
-                    }
+                subTickets.forEach { subItemName ->
+                    val subY = yOffset
+                    yOffset = drawMultilineText(tempCanvas, "+ ${subItemName.trim()}", 40f, yOffset, width * 0.5f, paint)
+                    paint.textAlign = Paint.Align.CENTER
+                    tempCanvas.drawText("0.00", width * 0.55f, subY + 22f, paint)
+                    tempCanvas.drawText(item.ticketQty.toString(), width * 0.75f, subY + 22f, paint)
+                    paint.textAlign = Paint.Align.RIGHT
+                    tempCanvas.drawText("0.00", width - 20f, subY + 22f, paint)
+                    paint.textAlign = Paint.Align.LEFT
+                    yOffset += 2f
                 }
-                showName?.let { show ->
-                    yOffset = drawMultilineText(
-                        canvas = tempCanvas,
-                        text = show,
-                        x = 40f,
-                        startY = yOffset,
-                        maxWidth = width * 0.9f,
-                        paint = paint
-                    ) + 10f
+
+                showName?.let { name ->
+                    val subY = yOffset
+                    yOffset = drawMultilineText(tempCanvas, "+ ${name.trim()}", 40f, yOffset, width * 0.5f, paint)
+                    paint.textAlign = Paint.Align.CENTER
+                    tempCanvas.drawText("0.00", width * 0.55f, subY + 22f, paint)
+                    tempCanvas.drawText(item.ticketQty.toString(), width * 0.75f, subY + 22f, paint)
+                    paint.textAlign = Paint.Align.RIGHT
+                    tempCanvas.drawText("0.00", width - 20f, subY + 22f, paint)
+                    paint.textAlign = Paint.Align.LEFT
+                    yOffset += 5f
 
                     if (item.scheduleId != 0) {
+                        showDetailsList.add("${item.screenName} - ${item.scheduleTime}")
+                        
+                        val allSelectedSeats = item.selectedSeats?.split(",") ?: emptyList()
+                        val adultSeatsList = allSelectedSeats.take(item.ticketQty)
+                        val childSeatsList = allSelectedSeats.drop(item.ticketQty).take(item.ticketChildQty)
 
-                        if (item.screenName.isNotEmpty() && item.scheduleTime.isNotEmpty()) {
-                            tempCanvas.drawText(
-                                item.screenName + " - " + item.scheduleTime,
-                                60f,
-                                yOffset,
-                                paint
-                            )
-                            yOffset += 35f
+                        if (adultSeatsList.isNotEmpty()) {
+                            showDetailsList.add("$labelAdult Seats: ${adultSeatsList.joinToString(", ")}")
                         }
-
-                        val adultQty = item.ticketQty
-                        val childQty = item.ticketChildQty
-
-                        val allSeats = seatMapQueue[item.scheduleId] ?: emptyList()
-
-                        val adultSeats = if (adultQty > 0) {
-                            allSeats.take(adultQty)
-                        } else emptyList()
-
-                        val childSeats = if (childQty > 0) {
-                            allSeats.drop(adultQty).take(childQty)
-                        } else emptyList()
-
-                        var finalAdultSeats = adultSeats
-                        var finalChildSeats = childSeats
-
-                        if (finalAdultSeats.size < adultQty && finalAdultSeats.isNotEmpty()) {
-                            val duplicatedSeats = mutableListOf<String>()
-                            while (duplicatedSeats.size < adultQty) {
-                                duplicatedSeats.addAll(finalAdultSeats)
-                            }
-                            finalAdultSeats = duplicatedSeats.take(adultQty)
-                        }
-
-                        if (finalChildSeats.size < childQty && finalChildSeats.isNotEmpty()) {
-                            val duplicatedSeats = mutableListOf<String>()
-                            while (duplicatedSeats.size < childQty) {
-                                duplicatedSeats.addAll(finalChildSeats)
-                            }
-                            finalChildSeats = duplicatedSeats.take(childQty)
-                        }
-
-                        if (finalAdultSeats.isNotEmpty() || finalChildSeats.isNotEmpty()) {
-                            paint.textSize = 28f
-
-                            if (finalAdultSeats.isNotEmpty()) {
-                                val adultSeatText = "$labelAdult Seats: ${finalAdultSeats.joinToString(", ")}"
-                                yOffset = drawMultilineText(
-                                    tempCanvas,
-                                    adultSeatText,
-                                    20f,
-                                    yOffset,
-                                    width * 0.9f,
-                                    paint
-                                ) + 10f
-                            }
-
-                            if (finalChildSeats.isNotEmpty()) {
-                                val childSeatText = "$labelChild Seats: ${finalChildSeats.joinToString(", ")}"
-                                yOffset = drawMultilineText(
-                                    tempCanvas,
-                                    childSeatText,
-                                    20f,
-                                    yOffset,
-                                    width * 0.9f,
-                                    paint
-                                ) + 10f
-                            }
-
-                            // Remove used seats
-                            val usedSeats = (finalAdultSeats + finalChildSeats).toSet().toList()
-                            seatMapQueue[item.scheduleId]?.removeAll(usedSeats)
+                        if (childSeatsList.isNotEmpty()) {
+                            showDetailsList.add("$labelChild Seats: ${childSeatsList.joinToString(", ")}")
                         }
                     }
                 }
             } else if (item.ticketType == "SHOW") {
-                tempCanvas.drawText(
-                    item.screenName + " - " + item.scheduleTime,
-                    20f,
-                    yOffset,
-                    paint
-                )
-                yOffset += 35f
+                if (item.scheduleId != 0) {
+                    showDetailsList.add("${item.screenName} - ${item.scheduleTime}")
+                    
+                    val allSelectedSeats = item.selectedSeats?.split(",") ?: emptyList()
+                    val adultSeatsList = allSelectedSeats.take(item.ticketQty)
+                    val childSeatsList = allSelectedSeats.drop(item.ticketQty).take(item.ticketChildQty)
 
-                val adultQty = item.ticketQty
-                val childQty = item.ticketChildQty
-
-                val allSeats = seatMapQueue[item.scheduleId] ?: emptyList()
-
-                var adultSeats = if (adultQty > 0) {
-                    allSeats.take(adultQty)
-                } else emptyList()
-
-                var childSeats = if (childQty > 0) {
-                    allSeats.drop(adultQty).take(childQty)
-                } else emptyList()
-
-                if (adultSeats.size < adultQty && adultSeats.isNotEmpty()) {
-                    val duplicatedSeats = mutableListOf<String>()
-                    while (duplicatedSeats.size < adultQty) {
-                        duplicatedSeats.addAll(adultSeats)
+                    if (adultSeatsList.isNotEmpty()) {
+                        showDetailsList.add("$labelAdult Seats: ${adultSeatsList.joinToString(", ")}")
                     }
-                    adultSeats = duplicatedSeats.take(adultQty)
-                }
-
-                if (childSeats.size < childQty && childSeats.isNotEmpty()) {
-                    val duplicatedSeats = mutableListOf<String>()
-                    while (duplicatedSeats.size < childQty) {
-                        duplicatedSeats.addAll(childSeats)
+                    if (childSeatsList.isNotEmpty()) {
+                        showDetailsList.add("$labelChild Seats: ${childSeatsList.joinToString(", ")}")
                     }
-                    childSeats = duplicatedSeats.take(childQty)
-                }
-
-                if (adultSeats.isNotEmpty() || childSeats.isNotEmpty()) {
-                    paint.textSize = 28f
-
-                    if (adultSeats.isNotEmpty()) {
-                        val adultSeatText = "$labelAdult Seats: ${adultSeats.joinToString(", ")}"
-                        yOffset = drawMultilineText(
-                            tempCanvas,
-                            adultSeatText,
-                            20f,
-                            yOffset,
-                            width * 0.9f,
-                            paint
-                        ) + 10f
-                    }
-
-                    if (childSeats.isNotEmpty()) {
-                        val childSeatText = "$labelChild Seats: ${childSeats.joinToString(", ")}"
-                        yOffset = drawMultilineText(
-                            tempCanvas,
-                            childSeatText,
-                            20f,
-                            yOffset,
-                            width * 0.9f,
-                            paint
-                        ) + 10f
-                    }
-
-                    // Remove used seats
-                    val usedSeats = (adultSeats + childSeats).toSet().toList()
-                    seatMapQueue[item.scheduleId]?.removeAll(usedSeats)
                 }
             }
 
-            yOffset += 35f
-            paint.textSize = 22f
-            paint.textAlign = Paint.Align.CENTER
-
-            if (item.ticketQty > 0) {
-                tempCanvas.drawText(priceStr, width * 0.5f, yOffset, paint)
-                tempCanvas.drawText(item.ticketQty.toString(), width * 0.65f, yOffset, paint)
-                yOffset += 35f
-            }
-
-            if (qtyChildStr != "0" && priceChildStr != "0" && item.ticketChildQty > 0) {
+            // Draw Child row if applicable
+            if (item.ticketChildQty > 0 && item.ticketChildRate > 0) {
+                val cY = yOffset
+                yOffset = drawMultilineText(tempCanvas, "$labelChild Tickets", 30f, yOffset, maxWidth, paint)
                 paint.textAlign = Paint.Align.CENTER
-                tempCanvas.drawText(priceChildStr, width * 0.5f, yOffset, paint)
-                tempCanvas.drawText(qtyChildStr, width * 0.65f, yOffset, paint)
-                yOffset += 35f
+                tempCanvas.drawText(String.format("%.2f", item.ticketChildRate), width * 0.55f, cY + 22f, paint)
+                tempCanvas.drawText(item.ticketChildQty.toString(), width * 0.75f, cY + 22f, paint)
+                paint.textAlign = Paint.Align.LEFT
+                yOffset += 5f
             }
-
-            paint.textAlign = Paint.Align.RIGHT
-            tempCanvas.drawText(amountStr, width - 40f, yOffset, paint)
-
-            yOffset += 45f
+            yOffset += 15f
         }
 
         paint.strokeWidth = 2f
         tempCanvas.drawLine(20f, yOffset, width - 20f, yOffset, paint)
-        yOffset += 60f
+        yOffset += 40f
+
+        // Draw Show Details (Screen, Time, Seats) below the line
+        if (showDetailsList.isNotEmpty()) {
+            paint.textSize = 22f
+            paint.textAlign = Paint.Align.LEFT
+            showDetailsList.forEach { detail ->
+                yOffset = drawMultilineText(tempCanvas, detail, 30f, yOffset, width * 0.9f, paint) + 2f
+            }
+            yOffset += 10f
+            tempCanvas.drawLine(20f, yOffset, width - 20f, yOffset, paint)
+            yOffset += 40f
+        }
+
         paint.textSize = 24f
         paint.textAlign = Paint.Align.RIGHT
         tempCanvas.drawText(
@@ -1448,10 +1174,10 @@ class PaymentActivity : AppCompatActivity() {
             "ml" -> "പ്രവേശന ടിക്കറ്റ്"
             "kn" -> "ಪ್ರವೇಶ ಟಿಕೆಟ್"
             "ta" -> "நுழைவு டிக்கெட்"
-            "te" -> "ప్రవేశ టికెట్"
+            "te" -> "ప్రవేశ టిಕೆట్"
             "hi" -> "प्रवेश टिकट"
             "pa" -> "ਪ੍ਰਵੇਸ਼ ਟਿਕਟ"
-            "mr" -> "प्रवेश तिकीट"
+            "mr" -> "പ്രवेश तिकीट"
             "si" -> "ප්‍රවේශ ටිකට්"
             else -> "Entry Ticket"
         }
@@ -1460,10 +1186,10 @@ class PaymentActivity : AppCompatActivity() {
             "ml" -> "പ്രവേശന ടിക്കറ്റ്"
             "kn" -> "ಪ್ರವೇಶ ಟಿಕೆಟ್"
             "ta" -> "நுழைவு டிக்கெட்"
-            "te" -> "ప్రవేశ టికెట్"
+            "te" -> "പ്രవేశ టిಕೆಟ್"
             "hi" -> "प्रवेश टिकट"
-            "pa" -> "ਪ੍ਰਵੇස਼ ਟਿਕਟ"
-            "mr" -> "प्रवेश तिकीट"
+            "pa" -> "ਪ੍ਰਵੇസ਼ ടിക്കറ്റ്"
+            "mr" -> "പ്രवेश तिकीट"
             "si" -> "ප්‍රවේශ ටිකට්"
             else -> "Entry Ticket"
         }
@@ -1577,7 +1303,7 @@ class PaymentActivity : AppCompatActivity() {
             "te" -> "ప్రవేశ టికెట్"
             "hi" -> "प्रवेश टिकट"
             "pa" -> "ਪ੍ਰਵੇਸ਼ ਟਿਕਟ"
-            "mr" -> "प्रवेश तिकीट"
+            "mr" -> "പ്രवेश तिकीट"
             "si" -> "ප්‍රවේශ ටිකට්"
             else -> "Entry Ticket"
         }
@@ -1703,7 +1429,7 @@ class PaymentActivity : AppCompatActivity() {
             }
 
             "si" -> when (key) {
-                "Receipt No" -> "රිසිට්පත අංකය"
+                "Receipt No" -> "රිසිට්පත അංකය"
                 "Date" -> "දිනය"
                 "Ticket" -> "ටිකට්"
                 "Name" -> "නම"
@@ -1749,7 +1475,7 @@ class PaymentActivity : AppCompatActivity() {
                 "Amount" -> "மொத்த தொகை"
                 "Total Amount" -> "மொத்த தொகை"
                 "UPI Reference No" -> "UPI Reference No"
-                "There is NO Prasadam for Sheeghra Darshan" -> "சீக்கிர தரிசனத்திற்கு பிரசாதம் இல்லை"
+                "There is NO Prasadam for Sheeghra Darshan" -> "சீக்கிர தரிசனத்திற்கு பிரசாதം இல்லை"
                 else -> key
             }
 
@@ -1759,12 +1485,12 @@ class PaymentActivity : AppCompatActivity() {
                 "Ticket" -> "టికెట్"
                 "Name" -> "పేరు"
                 "Phone No" -> "ఫోన్ నంబర్"
-                "ID No" -> "ఐడి నంబర్"
-                "Price" -> "ధర"
-                "Devotees Details" -> "భక్తుల వివరాలు"
+                "ID No" -> "ಐಡಿ ನಂಬರ್"
+                "Price" -> "ధರ"
+                "Devotees Details" -> "ಭక్తుల వివరాలు"
                 "Qty" -> "పరిమాణం"
-                "Amount" -> "మొత్తం"
-                "Total Amount" -> "మొత్తం మొత్తం"
+                "Amount" -> "ಮೊತ್ತಂ"
+                "Total Amount" -> "ಮೊತ್ತಂ మొత్తం"
                 "UPI Reference No" -> "UPI Reference No"
                 "There is NO Prasadam for Sheeghra Darshan" -> "శీఘ్ర దర్శనానికి ప్రసాదం లేదు"
                 else -> key
@@ -1781,7 +1507,7 @@ class PaymentActivity : AppCompatActivity() {
                 "Devotees Details" -> "ਭਗਤਾਂ ਦੇ ਵੇਰਵੇ"
                 "Qty" -> "ਮਾਤਰਾ"
                 "Amount" -> "ਕੁੱਲ ਰਕਮ"
-                "Total Amount" -> "ਕੁੱਲ ਰਕਮ"
+                "Total Amount" -> "ਕੁੱಲ್ ਰਕਮ"
                 "UPI Reference No" -> "UPI Reference No"
                 "There is NO Prasadam for Sheeghra Darshan" -> "ਸ਼ੀਘਰ ਦਰਸ਼ਨ ਲਈ ਪ੍ਰਸਾਦ ਨਹੀਂ ਹੈ"
                 else -> key
@@ -1833,25 +1559,6 @@ class PaymentActivity : AppCompatActivity() {
         val headerBitmap = bitmapFileToHex("company_header.png", cacheDir) ?: ""
         val footerBitmap = bitmapFileToHex("company_footer.png", cacheDir) ?: ""
 
-        val receiptLines =
-            if (companyRepository.getDefaultLanguage() == selectedLanguage) {
-                generateReceiptTextDefault(
-                    currentDate,
-                    transID,
-                    orderID.toString(),
-                    ticketItems,
-                    selectedLanguage!!
-                )
-            } else {
-                generateReceiptText(
-                    currentDate,
-                    transID,
-                    orderID.toString(),
-                    ticketItems,
-                    selectedLanguage!!
-                )
-            }
-
         val header = JSONObject().apply {
             put("ApplicationId", "d585cf57dc5f4dab9e99fc1d37fa1333")
             put("UserId", "admin")
@@ -1888,41 +1595,6 @@ class PaymentActivity : AppCompatActivity() {
 
         val dataArray = JSONArray().apply {
             put(headerImageLine)
-            /*    receiptLines.forEach { line ->
-
-                    val cleanLine = line.replace("*", "").trim()
-
-                    when {
-                        cleanLine.equals("REPRINTED COPY", ignoreCase = true) ||
-                                cleanLine.equals("Entry Ticket", ignoreCase = true) -> {
-
-                            val bitmapText = line.trim()
-
-                            val boldBitmapHex = centeredBoldTextToBitmapHex(bitmapText)
-
-                            put(JSONObject().apply {
-                                put("PrintDataType", 2)
-                                put("PrinterWidth", 24)
-                                put("IsCenterAligned", true)
-                                put("DataToPrint",
-                                    line.ifBlank { " " })
-                                put("ImagePath", "")
-                                put("ImageData", boldBitmapHex)
-                            })
-                        }
-
-                        else -> {
-                            put(JSONObject().apply {
-                                put("PrintDataType", 0)
-                                put("PrinterWidth", 200)
-                                put("IsCenterAligned", false)
-                                put("DataToPrint", line)
-                                put("ImagePath", "")
-                                put("ImageData", "")
-                            })
-                        }
-                    }
-                }*/
             put(smallSpaceLine)
             put(footerImageLine)
             put(smallSpaceLine)
@@ -2038,6 +1710,7 @@ class PaymentActivity : AppCompatActivity() {
 
         return y   // ✅ always return NEXT SAFE Y
     }
+
 
     private fun redirect() {
         Handler(mainLooper).postDelayed({

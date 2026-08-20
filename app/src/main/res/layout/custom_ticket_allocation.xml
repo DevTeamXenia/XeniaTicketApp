@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+
+    android:background="@color/cream">
+
+
+
+    <ImageButton
+        android:id="@+id/backButton"
+
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="20dp"
+
+        android:background="@drawable/bg_back_button"
+
+        android:src="@drawable/ic_arrow_back"
+
+        android:contentDescription="Back"
+
+        app:tint="@color/white"
+
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+
+    <TextView
+        android:id="@+id/titleText"
+
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:layout_marginStart="16dp"
+
+        android:text="Select Your Seats"
+
+        android:textSize="20sp"
+        android:textStyle="bold"
+
+        android:textColor="@color/ink"
+
+        app:layout_constraintTop_toTopOf="@id/backButton"
+        app:layout_constraintStart_toEndOf="@id/backButton" />
+
+
+
+
+    <LinearLayout
+        android:id="@+id/pillRow"
+
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:layout_marginTop="6dp"
+
+        android:orientation="horizontal"
+
+        app:layout_constraintTop_toBottomOf="@id/titleText"
+        app:layout_constraintStart_toStartOf="@id/titleText">
+
+
+        <TextView
+            android:id="@+id/screenPill"
+
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:background="@drawable/bg_pill_forest"
+
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+
+            android:text="SCREEN 1"
+
+            android:textColor="@color/white"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
+
+        <TextView
+            android:id="@+id/timePill"
+
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:layout_marginStart="8dp"
+
+            android:background="@drawable/bg_pill_dark"
+
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+
+            android:text="Aug, 17 Mon | 12:00 PM - 01:00 PM"
+
+            android:textColor="@color/white"
+
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+
+
+
+    <View
+        android:id="@+id/screenArc"
+
+        android:layout_width="0dp"
+        android:layout_height="28dp"
+
+        android:layout_marginStart="40dp"
+        android:layout_marginEnd="40dp"
+
+        android:layout_marginTop="18dp"
+
+        android:background="@drawable/bg_screen_arc1"
+
+        app:layout_constraintTop_toBottomOf="@id/pillRow"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+
+
+    <TextView
+        android:id="@+id/screenLabel"
+
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:layout_marginTop="4dp"
+
+        android:text="SCREEN THIS WAY"
+
+        android:textStyle="bold"
+        android:textSize="12sp"
+
+        android:letterSpacing="0.05"
+
+        android:textColor="@color/ink"
+
+        app:layout_constraintTop_toBottomOf="@id/screenArc"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+
+
+    <HorizontalScrollView
+        android:id="@+id/horizontalScrollMap"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="8dp"
+        android:fillViewport="true"
+        android:scrollbars="none"
+        app:layout_constraintTop_toBottomOf="@id/screenLabel"
+        app:layout_constraintBottom_toTopOf="@id/legendCard"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/seatMapRecyclerView"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:clipToPadding="false" />
+
+    </HorizontalScrollView>
+
+
+
+    <LinearLayout
+        android:id="@+id/legendCard"
+
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+
+        android:layout_marginBottom="10dp"
+
+        android:background="@drawable/bg_legend_card"
+
+        android:orientation="horizontal"
+
+        android:gravity="center"
+
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp"
+
+        app:layout_constraintBottom_toTopOf="@id/bottomBar"
+
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+
+        <include
+            layout="@layout/item_legend_available" />
+
+
+        <include
+            layout="@layout/item_legend_selected" />
+
+
+        <include
+            layout="@layout/item_legend_booked" />
+
+    </LinearLayout>
+
+
+
+
+    <LinearLayout
+        android:id="@+id/bottomBar"
+
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+
+        android:background="@color/white"
+
+        android:elevation="8dp"
+
+        android:orientation="horizontal"
+
+        android:gravity="center_vertical"
+
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp"
+
+        android:visibility="gone"
+
+        tools:visibility="visible"
+
+        app:layout_constraintBottom_toBottomOf="parent"
+
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+
+            android:layout_weight="1"
+
+            android:orientation="vertical">
+
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:text="Seats selected"
+
+                android:textSize="13sp"
+
+                android:textColor="@color/gray_text" />
+
+
+            <TextView
+                android:id="@+id/seatCountText"
+
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:text="0"
+
+                android:textSize="18sp"
+                android:textStyle="bold"
+
+                android:textColor="@color/ink" />
+
+        </LinearLayout>
+
+
+
+        <Button
+            android:id="@+id/proceedButton"
+
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:background="@drawable/bg_btn_filled"
+
+            android:text="Proceed to Pay"
+
+            android:textAllCaps="false"
+
+            android:textColor="@color/white"
+
+            android:textStyle="bold"
+
+            android:paddingStart="26dp"
+            android:paddingEnd="26dp"
+
+            android:paddingTop="12dp"
+            android:paddingBottom="12dp" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

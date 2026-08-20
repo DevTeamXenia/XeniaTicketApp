@@ -52,4 +52,19 @@
         <item name="android:textSize">12sp</item>
         <item name="android:textColor">@color/text_green</item>
     </style>
+    <style name="MiniKeyStyle">
+        <item name="android:layout_width">64dp</item>
+        <item name="android:layout_height">56dp</item>
+        <item name="android:layout_margin">4dp</item>
+
+        <item name="android:gravity">center</item>
+
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">@color/black</item>
+
+        <item name="android:background">@drawable/bg_key_box</item>
+
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
 </resources>

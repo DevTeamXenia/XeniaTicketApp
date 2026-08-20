@@ -2,6 +2,7 @@ package com.xenia.ticket.data.network.model
 
 data class ActiveItem(
     val id: Int,
+    val showId: Int,
     val name: String,
     val nameMa: String?,
     val nameTa: String?,
