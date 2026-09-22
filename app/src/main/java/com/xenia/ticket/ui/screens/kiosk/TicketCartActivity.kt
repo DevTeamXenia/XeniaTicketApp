@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Intent
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.util.Base64
 import android.util.Log
@@ -12,6 +13,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -60,6 +62,8 @@ import com.xenia.ticket.data.network.model.ActiveItem
 import com.xenia.ticket.data.network.model.SeatAllocationDto
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
+import java.text.SimpleDateFormat
+import java.util.TimeZone
 
 
 class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartClickListener,
@@ -89,6 +93,7 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
     private var isQrPhoneNumberMandatory = false
     private var isWhatsappEnabled = false
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -358,7 +363,9 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
                     when {
                         totalAmount == 0.0 -> {
                             dismissLoader()
-                            postTicketPaymentHistory(status = "S", statusDesc = "ZERO AMOUNT PAYMENT")
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                postTicketPaymentHistory(status = "S", statusDesc = "ZERO AMOUNT PAYMENT")
+                            }
                             return@launch
                         }
                         totalAmount == 1.0 -> {
@@ -597,129 +604,272 @@ class TicketCartActivity : AppCompatActivity(), TicketCartAdapter.OnTicketCartCl
         }
     }
 
-    @SuppressLint("SetTextI18n")
-    private suspend fun postTicketPaymentHistory(
-        status: String,
-        statusDesc: String
-    ) {
-        try {
+//    @SuppressLint("SetTextI18n")
+//    private suspend fun postTicketPaymentHistory(
+//        status: String,
+//        statusDesc: String
+//    ) {
+//        try {
+//
+//            val cartTickets = ticketRepository.getAllTicketsInCart()
+//
+//            if (cartTickets.isEmpty()) {
+//                handleTicketTransactionStatus("F", "", null, 0.0, "",0)
+//                return
+//            }
+//            val itemsList = cartTickets
+//                .groupBy { it.ticketId }
+//                .map { (_, items) ->
+//
+//                    val first = items.first()
+//
+//                    val schedules = items
+//                        .map {
+//                            TicketPaymentRequest.Schedule(
+//                                scheduleId = it.scheduleId,
+//                                screenId = it.screenId,
+//                                tsScheduleDay = it.scheduleDay,
+//                                tsScheduleTime = it.scheduleTime,
+//                                tsScheduleScreen = it.screenName
+//                            )
+//                        }
+//                        .distinctBy { it.scheduleId }
+//
+//                    TicketPaymentRequest.Item(
+//                        taCategoryId = first.ticketCategoryId,
+//                        TicketId = first.ticketId,
+//                        Quantity = items.sumOf { it.ticketQty },
+//                        ChildQuantity = items.sumOf { it.ticketChildQty },
+//                        Rate = first.ticketRate,
+//                        ChildRate = first.ticketChildRate,
+//                        IsCombo = first.ticketCombo,
+//                        taType = first.ticketType,
+//                        Schedules = schedules
+//                    )
+//                }
+//
+//
+//            val firstTicket = cartTickets.first()
+//
+//            val imageBase64String = Base64.encodeToString(
+//                firstTicket.daImg,
+//                Base64.NO_WRAP
+//            )
+//
+//            val token = sessionManager.getToken().toString()
+//            val companyId = JwtUtils.getCompanyId(token)
+//
+//            val request = TicketPaymentRequest(
+//                CompanyId = companyId!!,
+//                UserId = sessionManager.getUserId(),
+//                Name = binding.editTextName.text.toString(),
+//                tTranscationId = "",
+//                tCustRefNo = "",
+//                tNpciTransId = "",
+//                tIdProofNo = "",
+//                tImage = imageBase64String,
+//                PhoneNumber = binding.editTextPhoneNumber.text.toString(),
+//                tPaymentStatus = status,
+//                tPaymentMode = "UPI",
+//                tPaymentDes = statusDesc,
+//                Items = itemsList,
+//            )
+//
+//            Log.d("PAYMENT_FLOW", "API BODY → $request")
+//
+//
+//            val response = withContext(NonCancellable) {
+//                ApiResponseHandler.handleApiCall(
+//                    activity = this@TicketCartActivity
+//                ) {
+//                    paymentRepository.postTicket(
+//                        bearerToken = "Bearer $token",
+//                        request = request
+//                    )
+//                }
+//            }
+//
+//            val (totalAmount) = ticketRepository.getCartStatus()
+//
+//            if (response != null && response.status == true) {
+//
+//                handleTicketTransactionStatus(
+//                    "S",
+//                    response.receipt ?: "",
+//                    response.ticket,
+//                    totalAmount,
+//                    companyRepository.getString(CompanyKey.PREFIX) ?: "",
+//                    response.orderId,
+//                    response.seatAllocation,
+//                )
+//
+//            } else {
+//                Toast.makeText(this,response?.message, Toast.LENGTH_SHORT).show()
+//                binding.btnPay.isEnabled = true
+//                dismissLoader()
+//            }
+//
+//        } catch (e: Exception) {
+//
+//            Log.e("PAYMENT_FLOW", "FINAL ERROR", e)
+//
+//            val (totalAmount) = ticketRepository.getCartStatus()
+//
+//            handleTicketTransactionStatus(
+//                "F",
+//                "",
+//                null,
+//                totalAmount,
+//                "",
+//                0
+//            )
+//        }
+//    }
+@RequiresApi(Build.VERSION_CODES.O)
+@SuppressLint("SetTextI18n")
+private suspend fun postTicketPaymentHistory(
+    status: String,
+    statusDesc: String
+) {
+    try {
 
-            val cartTickets = ticketRepository.getAllTicketsInCart()
+        val cartTickets = ticketRepository.getAllTicketsInCart()
 
-            if (cartTickets.isEmpty()) {
-                handleTicketTransactionStatus("F", "", null, 0.0, "",0)
-                return
-            }
-            val itemsList = cartTickets
-                .groupBy { it.ticketId }
-                .map { (_, items) ->
+        if (cartTickets.isEmpty()) {
+            handleTicketTransactionStatus("F", "", null, 0.0, "", 0)
+            return
+        }
+        val itemsList = cartTickets
+            .groupBy { it.ticketId }
+            .map { (_, items) ->
 
-                    val first = items.first()
+                val first = items.first()
 
-                    val schedules = items
-                        .map {
-                            TicketPaymentRequest.Schedule(
-                                scheduleId = it.scheduleId,
-                                screenId = it.screenId,
-                                tsScheduleDay = it.scheduleDay,
-                                tsScheduleTime = it.scheduleTime,
-                                tsScheduleScreen = it.screenName
-                            )
+                val schedules = items
+                    .groupBy { it.scheduleId }
+                    .map { (_, group) ->
+                        val first = group.first()
+                        val allSeatIds = group.flatMap {
+                            it.selectedSeatIds?.split(",")?.mapNotNull { id -> id.trim().toIntOrNull() } ?: emptyList()
                         }
-                        .distinctBy { it.scheduleId }
+                        TicketPaymentRequest.Schedule(
+                            scheduleId = first.scheduleId,
+                            screenId = first.screenId,
+                            tsScheduleDay = first.scheduleDay,
+                            tsScheduleTime = first.scheduleTime,
+                            tsScheduleScreen = first.screenName,
+                          SeatIds = allSeatIds   // NEW
+                        )
+                    }
+                    .distinctBy { it.scheduleId }
 
-                    TicketPaymentRequest.Item(
-                        taCategoryId = first.ticketCategoryId,
-                        TicketId = first.ticketId,
-                        Quantity = items.sumOf { it.ticketQty },
-                        ChildQuantity = items.sumOf { it.ticketChildQty },
-                        Rate = first.ticketRate,
-                        ChildRate = first.ticketChildRate,
-                        IsCombo = first.ticketCombo,
-                        taType = first.ticketType,
-                        Schedules = schedules
-                    )
-                }
-
-
-            val firstTicket = cartTickets.first()
-
-            val imageBase64String = Base64.encodeToString(
-                firstTicket.daImg,
-                Base64.NO_WRAP
-            )
-
-            val token = sessionManager.getToken().toString()
-            val companyId = JwtUtils.getCompanyId(token)
-
-            val request = TicketPaymentRequest(
-                CompanyId = companyId!!,
-                UserId = sessionManager.getUserId(),
-                Name = binding.editTextName.text.toString(),
-                tTranscationId = "",
-                tCustRefNo = "",
-                tNpciTransId = "",
-                tIdProofNo = "",
-                tImage = imageBase64String,
-                PhoneNumber = binding.editTextPhoneNumber.text.toString(),
-                tPaymentStatus = status,
-                tPaymentMode = "UPI",
-                tPaymentDes = statusDesc,
-                Items = itemsList,
-            )
-
-            Log.d("PAYMENT_FLOW", "API BODY → $request")
-
-
-            val response = withContext(NonCancellable) {
-                ApiResponseHandler.handleApiCall(
-                    activity = this@TicketCartActivity
-                ) {
-                    paymentRepository.postTicket(
-                        bearerToken = "Bearer $token",
-                        request = request
-                    )
-                }
-            }
-
-            val (totalAmount) = ticketRepository.getCartStatus()
-
-            if (response != null && response.status == true) {
-
-                handleTicketTransactionStatus(
-                    "S",
-                    response.receipt ?: "",
-                    response.ticket,
-                    totalAmount,
-                    companyRepository.getString(CompanyKey.PREFIX) ?: "",
-                    response.orderId,
-                    response.seatAllocation,
+                TicketPaymentRequest.Item(
+                    taCategoryId = first.ticketCategoryId,
+                    TicketId = first.ticketId,
+                    Quantity = items.sumOf { it.ticketQty },
+                    ChildQuantity = items.sumOf { it.ticketChildQty },
+                    Rate = first.ticketRate,
+                    ChildRate = first.ticketChildRate,
+                    IsCombo = first.ticketCombo,
+                    taType = first.ticketType,
+                    Schedules = schedules
                 )
-
-            } else {
-                Toast.makeText(this,response?.message, Toast.LENGTH_SHORT).show()
-                binding.btnPay.isEnabled = true
-                dismissLoader()
             }
 
+
+        val firstTicket = cartTickets.first()
+
+        val imageBase64String = Base64.encodeToString(
+            firstTicket.daImg,
+            Base64.NO_WRAP
+        )
+
+        val token = sessionManager.getToken().toString()
+        val companyId = JwtUtils.getCompanyId(token)
+
+        val generatedDateValue = try {
+            val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).apply {
+                timeZone = TimeZone.getTimeZone("UTC")
+            }
+            val parsedDate = inputFormat.parse(firstTicket.scheduleDate)
+
+            val outputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.ENGLISH).apply {
+                timeZone = TimeZone.getTimeZone("UTC")
+            }
+            outputFormat.format(parsedDate!!)
         } catch (e: Exception) {
+            Log.e("PAYMENT_FLOW", "Failed to parse scheduleDate='${firstTicket.scheduleDate}'", e)
+            firstTicket.scheduleDate
+        }
 
-            Log.e("PAYMENT_FLOW", "FINAL ERROR", e)
+        val request = TicketPaymentRequest(
+            CompanyId = companyId!!,
+            UserId = sessionManager.getUserId(),
+            Name = binding.editTextName.text.toString(),
+            tTranscationId = "",
+            tGeneratedDate = generatedDateValue,
+            tCustRefNo = "",
+            tNpciTransId = "",
+            tIdProofNo = "",
+            tImage = imageBase64String,
+            PhoneNumber = binding.editTextPhoneNumber.text.toString(),
+            tPaymentStatus = status,
+            tPaymentMode = "UPI",
+            tPaymentDes = statusDesc,
+            Items = itemsList,
+        )
+        Log.d("PAYMENT_FLOW", "API BODY → $request")
 
-            val (totalAmount) = ticketRepository.getCartStatus()
+
+        val response = withContext(NonCancellable) {
+            ApiResponseHandler.handleApiCall(
+                activity = this@TicketCartActivity
+            ) {
+                paymentRepository.postTicket(
+                    bearerToken = "Bearer $token",
+                    request = request
+                )
+            }
+        }
+
+        val (totalAmount) = ticketRepository.getCartStatus()
+
+        if (response != null && response.status == true) {
+            ticketRepository.clearAllData()
 
             handleTicketTransactionStatus(
-                "F",
-                "",
-                null,
+
+                "S",
+                response.receipt ?: "",
+                response.ticket,
                 totalAmount,
-                "",
-                0
+                companyRepository.getString(CompanyKey.PREFIX) ?: "",
+                response.orderId,
+                response.seatAllocation,
             )
+
+        } else {
+            Toast.makeText(this, response?.message, Toast.LENGTH_SHORT).show()
+            binding.btnPay.isEnabled = true
+            dismissLoader()
         }
+
+    } catch (e: Exception) {
+
+        Log.e("PAYMENT_FLOW", "FINAL ERROR", e)
+
+        val (totalAmount) = ticketRepository.getCartStatus()
+
+        handleTicketTransactionStatus(
+            "F",
+            "",
+            null,
+            totalAmount,
+            "",
+            0
+        )
     }
-
-
+}
     private fun handleTicketTransactionStatus(
         status: String,
         orderId: String,

@@ -42,8 +42,10 @@ data class Orders(
     val scheduleId: Int,
     val scheduleDay: String,
     val scheduleTime: String,
+    val scheduleDate: String = "",
     val screenName: String,
-    val selectedSeats: String? = null
+    val selectedSeats: String? = null,
+    val selectedSeatIds: String? = null
 )
 
 

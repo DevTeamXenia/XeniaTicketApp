@@ -6,6 +6,7 @@
     import android.content.Intent
     import android.graphics.Bitmap
     import android.graphics.Color
+    import android.os.Build
     import android.os.Bundle
     import android.os.CountDownTimer
     import android.os.Handler
@@ -356,13 +357,19 @@
                         val first = items.first()
 
                         val schedules = items
-                            .map {
+                            .groupBy { it.scheduleId }
+                            .map { (_, group) ->
+                                val first = group.first()
+                                val allSeatIds = group.flatMap {
+                                    it.selectedSeatIds?.split(",")?.mapNotNull { id -> id.trim().toIntOrNull() } ?: emptyList()
+                                }
                                 TicketPaymentRequest.Schedule(
-                                    scheduleId = it.scheduleId,
-                                    screenId = it.screenId,
-                                    tsScheduleDay = it.scheduleDay,
-                                    tsScheduleTime = it.scheduleTime,
-                                    tsScheduleScreen = it.screenName
+                                    scheduleId = first.scheduleId,
+                                    screenId = first.screenId,
+                                    tsScheduleDay = first.scheduleDay,
+                                    tsScheduleTime = first.scheduleTime,
+                                    tsScheduleScreen = first.screenName,
+                                   SeatIds = allSeatIds   // NEW
                                 )
                             }
                             .distinctBy { it.scheduleId }
@@ -390,23 +397,42 @@
                 val token = sessionManager.getToken().toString()
                 val companyId = JwtUtils.getCompanyId(token)
 
+// NEW: use the selected schedule date instead of current time
+                val generatedDateValue = try {
+                    val inputFormat = java.text.SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).apply {
+                        timeZone = java.util.TimeZone.getTimeZone("UTC")
+                    }
+                    val parsedDate = inputFormat.parse(firstTicket.scheduleDate)
 
-                val request = TicketPaymentRequest(
-                    CompanyId = companyId!!,
-                    UserId = sessionManager.getUserId(),
-                    Name = name,
-                    tTranscationId = "",
-                    tCustRefNo = "",
-                    tNpciTransId = "",
-                    tIdProofNo = "",
-                    tImage = imageBase64String,
-                    PhoneNumber = phoneNumber,
-                    tPaymentStatus = status,
-                    tPaymentMode = "UPI",
-                    tPaymentDes = statusDesc,
-                    Items = itemsList,
-                )
+                    val outputFormat = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.ENGLISH).apply {
+                        timeZone = java.util.TimeZone.getTimeZone("UTC")
+                    }
+                    outputFormat.format(parsedDate!!)
+                } catch (e: Exception) {
+                    Log.e("PAYMENT_FLOW", "Failed to parse scheduleDate='${firstTicket.scheduleDate}'", e)
+                    firstTicket.scheduleDate
+                }
 
+                val request = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    TicketPaymentRequest(
+                        CompanyId = companyId!!,
+                        UserId = sessionManager.getUserId(),
+                        Name = name,
+                        tTranscationId = "",
+                        tCustRefNo = "",
+                        tNpciTransId = "",
+                        tIdProofNo = "",
+                        tImage = imageBase64String,
+                        PhoneNumber = phoneNumber,
+                        tPaymentStatus = status,
+                        tPaymentMode = "UPI",
+                        tPaymentDes = statusDesc,
+                        tGeneratedDate = generatedDateValue,   // ← current time-ന് പകരം selected date
+                        Items = itemsList,
+                    )
+                } else {
+                    TODO("VERSION.SDK_INT < O")
+                }
                 val response = withContext(NonCancellable) {
                     ApiResponseHandler.handleApiCall(
                         activity = requireActivity()
@@ -421,6 +447,7 @@
                 val (totalAmount) = ticketRepository.getCartStatus()
 
                 if (response != null && response.status == true) {
+                    ticketRepository.clearAllData()
 
                     handleTicketTransactionStatus(
                         "S",

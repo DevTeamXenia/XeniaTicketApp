@@ -64,6 +64,7 @@ class CustomTicketAllocationpopupDialogue : DialogFragment() {
 
     // User selected seats
     private val selectedSeats = linkedSetOf<String>()
+    private val seatIdMap = mutableMapOf<String, Int>()
 
 
     // ARGUMENTS
@@ -315,6 +316,7 @@ class CustomTicketAllocationpopupDialogue : DialogFragment() {
                 val seatsAlreadyInCart = otherCartItems.flatMap { it.selectedSeats?.split(",") ?: emptyList() }.toSet()
 
                 // 2. Filter by ScreenId, remove duplicates, and mark seats as booked if already in cart
+                // 2. Filter by ScreenId, remove duplicates, and mark seats as booked if already in cart
                 val processedSeats = seats.filter { it.ScreenId == screenId }
                     .map { seat ->
                         val seatId = "${seat.RowName}-${seat.SeatNumber}"
@@ -325,6 +327,12 @@ class CustomTicketAllocationpopupDialogue : DialogFragment() {
                         }
                     }.filter { it.Price > 0 }
 
+
+                seatIdMap.clear()
+                processedSeats.forEach { seat ->
+                    val label = "${seat.RowName}-${seat.SeatNumber}"
+                    seatIdMap[label] = seat.SeatId   // ⚠️ confirm this field name matches your SeatAvailability model
+                }
                 // 3. Group by Row and build flat list with Labels and Spacers
                 val mapItems = mutableListOf<SeatMapItem>()
                 val rows = processedSeats.groupBy { it.RowName }.toSortedMap()
@@ -435,10 +443,14 @@ class CustomTicketAllocationpopupDialogue : DialogFragment() {
 
     private fun returnSelectedSeats() {
 
+        // NEW: resolve numeric seat IDs from the selected labels
+        val selectedSeatIds = selectedSeats.mapNotNull { label -> seatIdMap[label] }
+
         setFragmentResult(
             REQUEST_KEY,
             bundleOf(
                 EXTRA_SELECTED_SEATS to ArrayList(selectedSeats),
+                EXTRA_SELECTED_SEAT_IDS to ArrayList(selectedSeatIds),   // NEW
                 EXTRA_SCHEDULE_ID to scheduleId
             )
         )
@@ -502,6 +514,9 @@ class CustomTicketAllocationpopupDialogue : DialogFragment() {
 
         const val EXTRA_SELECTED_SEATS =
             "extra_selected_seats"
+
+        const val EXTRA_SELECTED_SEAT_IDS =
+            "extra_selected_seat_ids"
 
         const val EXTRA_REQUESTED_QUANTITY =
             "extra_requested_quantity"

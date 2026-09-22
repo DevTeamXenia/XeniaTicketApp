@@ -1,9 +1,6 @@
 
 
 
-
-
-
 package com.xenia.ticket.ui.dialog
 
 import android.annotation.SuppressLint
@@ -134,6 +131,7 @@ class CustomTicketPopupDialogue : DialogFragment() {
     private var ticketChild: Boolean = false
     private var listener: OnTicketClickListener? = null
     var selectedSchedule: ShowScheduleResponse? = null
+    private var selectedScheduleDate: String = ""   // NEW: tracks the date of the currently selected schedule
     private var comboShowId: Int? = null
 
     // ---- Pending values held while SeatSelectionActivity is open, consumed once it returns ----
@@ -249,6 +247,9 @@ class CustomTicketPopupDialogue : DialogFragment() {
     ): View? {
         return inflater.inflate(R.layout.custom_ticket_dialogue, container, false)
     }
+
+    private var currentlySelectedSeatIds: String? = null   // NEW
+
     private fun setupSeatAllocationResultListener() {
         childFragmentManager.setFragmentResultListener(
             CustomTicketAllocationpopupDialogue.REQUEST_KEY,
@@ -256,42 +257,38 @@ class CustomTicketPopupDialogue : DialogFragment() {
         ) { _, result ->
 
             val cancelled = result.getBoolean(
-                CustomTicketAllocationpopupDialogue.EXTRA_CANCELLED,
-                false
+                CustomTicketAllocationpopupDialogue.EXTRA_CANCELLED, false
             )
-
             if (cancelled) {
                 Log.d("SEAT_RESULT", "Seat allocation cancelled")
                 return@setFragmentResultListener
             }
 
             val selectedSeats =
-                result.getStringArrayList(
-                    CustomTicketAllocationpopupDialogue.EXTRA_SELECTED_SEATS
-                ) ?: arrayListOf()
+                result.getStringArrayList(CustomTicketAllocationpopupDialogue.EXTRA_SELECTED_SEATS)
+                    ?: arrayListOf()
 
-            Log.d("SEAT_RESULT", "Seats received: $selectedSeats")
-            currentlySelectedSeats = selectedSeats.joinToString(",")
+            val selectedSeatIds =
+                result.getIntegerArrayList(CustomTicketAllocationpopupDialogue.EXTRA_SELECTED_SEAT_IDS)   // NEW
+                    ?: arrayListOf()
 
             val returnedScheduleId =
-                result.getInt(
-                    CustomTicketAllocationpopupDialogue.EXTRA_SCHEDULE_ID,
-                    0
-                )
+                result.getInt(CustomTicketAllocationpopupDialogue.EXTRA_SCHEDULE_ID, 0)
 
-            Log.d("SEAT_RESULT", "Seats received: $selectedSeats")
-            Log.d("SEAT_RESULT", "Returned scheduleId=$returnedScheduleId")
-            Log.d("SEAT_RESULT", "Saving cart -> quantity=$pendingQuantity, childQuantity=$pendingChildQuantity, childRate=$pendingFinalChildRate")
+            Log.d("SEAT_RESULT", "Seats=$selectedSeats, SeatIds=$selectedSeatIds, scheduleId=$returnedScheduleId")
+
+            currentlySelectedSeats = selectedSeats.joinToString(",")
+            currentlySelectedSeatIds = selectedSeatIds.joinToString(",")   // NEW
 
             saveCartItem(
                 quantity = pendingQuantity,
                 childQuantity = pendingChildQuantity,
                 finalChildRate = pendingFinalChildRate,
-                selectedSeatNumbers = selectedSeats
+                selectedSeatNumbers = selectedSeats,
+                selectedSeatIdList = selectedSeatIds   // NEW
             )
         }
     }
-
 
     @SuppressLint("SetTextI18n", "DefaultLocale", "ClickableViewAccessibility")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -344,7 +341,6 @@ class CustomTicketPopupDialogue : DialogFragment() {
 
         icClose = view.findViewById(R.id.imgClose)
         btnDone = view.findViewById(R.id.btnDones)
-//        btnDone.text = getString(R.string.done)
 
         val displayTicketName = when (currentLang) {
             LANGUAGE_ENGLISH -> ticketName
@@ -376,8 +372,7 @@ class CustomTicketPopupDialogue : DialogFragment() {
         if (ticketType.equals("SHOW", ignoreCase = true)) {
             txtComboTicketName.visibility = View.GONE
             txtDesc.visibility = View.VISIBLE
-//            txtDesc.text = ticketDesc
-            txtTicketName.text=ticketName
+            txtTicketName.text = ticketName
 
             lifecycleScope.launch {
                 try {
@@ -452,10 +447,7 @@ class CustomTicketPopupDialogue : DialogFragment() {
 
                     if (result.showId != null) {
                         txtDesc.visibility = View.VISIBLE
-//                        txtDesc.text = ticketDesc
-                        txtTicketName.text=ticketName
-
-
+                        txtTicketName.text = ticketName
 
                         val today = Calendar.getInstance()
 
@@ -603,80 +595,6 @@ class CustomTicketPopupDialogue : DialogFragment() {
             dismiss()
         }
 
-//        btnDone.setOnClickListener {
-//            val childOnlyMode = ticketType.equals("TICKET", true) && ticketChild
-//
-//            val quantityInput = editTextTickets.text.toString().toIntOrNull() ?: 0
-//            val childQuantityInput = editTextChildTickets.text.toString().toIntOrNull() ?: 0
-//
-//            val quantity = if (childOnlyMode) 0 else quantityInput
-//            val totalQty = if (childOnlyMode) childQuantityInput else (quantity + childQuantityInput)
-//
-//            if (childOnlyMode) {
-//                if (childQuantityInput <= 0) {
-//                    Toast.makeText(requireContext(), "Please enter child quantity", Toast.LENGTH_SHORT).show()
-//                    return@setOnClickListener
-//                }
-//            } else {
-//                if (quantity <= 0) {
-//                    Toast.makeText(requireContext(), "Please enter a valid quantity", Toast.LENGTH_SHORT).show()
-//                    return@setOnClickListener
-//                }
-//            }
-//
-//            val isSeatCheckRequired = ticketCombo && ticketType.equals("SHOW", ignoreCase = true)
-//
-//            if (isSeatCheckRequired && selectedSchedule == null) {
-//                Toast.makeText(requireContext(), "Please select a schedule", Toast.LENGTH_SHORT).show()
-//                return@setOnClickListener
-//            }
-//
-//            if (isSeatCheckRequired) {
-//                val availableSeats = selectedSchedule?.AvailableSeats ?: 0
-//
-//                if (totalQty > availableSeats) {
-//                    Toast.makeText(
-//                        requireContext(),
-//                        "Only $availableSeats seats available",
-//                        Toast.LENGTH_SHORT
-//                    ).show()
-//                    return@setOnClickListener
-//                }
-//            }
-//
-//            val finalChildRate = if (childOnlyMode) ticketRate else ticketChildRate
-//
-//            // ---- Redirect to seat allocation instead of saving directly ----
-//            if (isSeatCheckRequired) {
-//                pendingQuantity = quantity
-//                pendingChildQuantity = childQuantityInput
-//                pendingFinalChildRate = finalChildRate
-//
-//                val schedule = selectedSchedule!! // already null-checked above
-//                val intent = CustomTicketAllocationpopupDialogue.newIntent(
-//                    context = requireContext(),
-//                    scheduleId = schedule.ScheduleId,
-//                    screenId = schedule.ScreenId,
-//                    screenName = schedule.ScreenName,
-//                    availableSeats = schedule.AvailableSeats,
-//                    showDay = schedule.ShowDay,
-//                    startTime = formatTime(schedule.StartTime),
-//                    pricePerSeat = ticketRate
-//                )
-//                seatAllocationLauncher.launch(intent)
-//                return@setOnClickListener
-//            }
-//
-//            // no seat allocation needed -> save straight away, same as before
-//            saveCartItem(
-//                quantity = quantity,
-//                childQuantity = childQuantityInput,
-//                finalChildRate = finalChildRate,
-//                selectedSeatNumbers = emptyList()
-//            )
-//        }
-
-
         btnDone.setOnClickListener {
             val childOnlyMode = ticketType.equals("TICKET", true) && ticketChild
 
@@ -699,8 +617,6 @@ class CustomTicketPopupDialogue : DialogFragment() {
             }
 
             // ---- Check if seat allocation is required ----
-            // 1. If it's a SHOW type
-            // 2. If it's a COMBO and has a mapped show (comboShowId != null)
             val isSeatCheckRequired = ticketType.equals("SHOW", ignoreCase = true) || (ticketCombo && comboShowId != null)
 
             Log.d(
@@ -788,7 +704,8 @@ class CustomTicketPopupDialogue : DialogFragment() {
         quantity: Int,
         childQuantity: Int,
         finalChildRate: Double,
-        selectedSeatNumbers: List<String>
+        selectedSeatNumbers: List<String>,
+        selectedSeatIdList: List<Int> = emptyList()
     ) {
         val adultTotal = ticketRate * quantity
         val childTotal = finalChildRate * childQuantity
@@ -830,13 +747,15 @@ class CustomTicketPopupDialogue : DialogFragment() {
             scheduleId = selectedSchedule?.ScheduleId ?: 0,
             scheduleDay = selectedSchedule?.ShowDay ?: "",
             scheduleTime = selectedSchedule?.let { formatTime(it.StartTime) } ?: "",
+            scheduleDate = selectedScheduleDate,   // NEW: date of the selected schedule
             screenName = selectedSchedule?.ScreenName ?: "",
             ticketChild = ticketChild,
-            selectedSeats = selectedSeatNumbers.joinToString(",")
+            selectedSeats = selectedSeatNumbers.joinToString(","),
+            selectedSeatIds = selectedSeatIdList.joinToString(",")
         )
 
         lifecycleScope.launch {
-            Log.d("CART_ACTION", "Inserting item to cart: ticketId=$ticketId, seats=${cartItem.selectedSeats}")
+            Log.d("CART_ACTION", "Inserting item to cart: ticketId=$ticketId, seats=${cartItem.selectedSeats}, scheduleDate=${cartItem.scheduleDate}")
             ticketRepository.insertCartItem(cartItem)
             Log.d("CART_ACTION", "Cart insertion successful for ticketId=$ticketId")
             listener?.onTicketAdded(ticketId)
@@ -883,6 +802,8 @@ class CustomTicketPopupDialogue : DialogFragment() {
             DateChipAdapter(fiveDates) { selectedDate ->
 
                 try {
+
+                    selectedScheduleDate = selectedDate   // NEW: remember the date this chip represents
 
                     Log.d(
                         "SCHEDULE_API",
@@ -1096,6 +1017,8 @@ class CustomTicketPopupDialogue : DialogFragment() {
         val currentDay =
             dayFormat.format(today.time)
 
+        selectedScheduleDate = currentDate   // NEW: default to today's date until user picks a chip
+
         Log.d(
             "SCHEDULE_API",
             "========================================"
@@ -1200,6 +1123,7 @@ class CustomTicketPopupDialogue : DialogFragment() {
                     "SCHEDULE_API",
                     "Final selectedAvailableSeats = ${selectedSchedule?.AvailableSeats}"
                 )
+
 
 
                 timeAdapter.updateData(

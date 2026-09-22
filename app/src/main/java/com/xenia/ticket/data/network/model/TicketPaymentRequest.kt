@@ -1,4 +1,47 @@
 package com.xenia.ticket.data.network.model
+//data class TicketPaymentRequest(
+//    val CompanyId: Int,
+//    val UserId: Int,
+//    val Name: String,
+//    val tTranscationId: String,
+//    val tCustRefNo: String,
+//    val tNpciTransId: String,
+//    val tIdProofNo: String,
+//    val tImage: String,
+//    val PhoneNumber: String,
+//    val tPaymentStatus: String,
+//    val tPaymentMode: String,
+//    val tPaymentDes: String,
+//    val tGeneratedDate: String,
+//    val Items: List<Item>,
+//
+//
+//
+//) {
+//    data class Item(
+//        val taCategoryId: Int,
+//        val TicketId: Int,
+//        val Quantity: Int,
+//        val ChildQuantity: Int,
+//        val Rate: Double,
+//        val ChildRate: Double,
+//        val IsCombo: Boolean,
+//        val taType: String,
+//        val Schedules: List<Schedule>
+//    )
+//
+//    data class Schedule(
+//        val scheduleId: Int,
+//        val screenId: Int,
+//        val tsScheduleDay: String,
+//        val tsScheduleTime: String,
+//        val tsScheduleScreen: String,
+//
+//    )
+//}
+
+import com.google.gson.annotations.SerializedName
+
 data class TicketPaymentRequest(
     val CompanyId: Int,
     val UserId: Int,
@@ -12,7 +55,8 @@ data class TicketPaymentRequest(
     val tPaymentStatus: String,
     val tPaymentMode: String,
     val tPaymentDes: String,
-    val Items: List<Item>
+    val tGeneratedDate: String,
+    val Items: List<Item>,
 ) {
     data class Item(
         val taCategoryId: Int,
@@ -31,6 +75,7 @@ data class TicketPaymentRequest(
         val screenId: Int,
         val tsScheduleDay: String,
         val tsScheduleTime: String,
-        val tsScheduleScreen: String
+        val tsScheduleScreen: String,
+        val SeatIds: List<Int>
     )
 }
