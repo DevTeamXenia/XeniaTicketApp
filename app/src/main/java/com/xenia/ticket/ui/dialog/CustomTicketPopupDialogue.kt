@@ -399,8 +399,7 @@ class CustomTicketPopupDialogue : DialogFragment() {
         }
 
         btnDone.setOnClickListener {
-            val childOnlyMode =
-                ticketType.equals("TICKET", true)  && ticketChild
+            val childOnlyMode = isChildOnlyMode()
 
             val quantityInput = editTextTickets.text.toString().toIntOrNull() ?: 0
             val childQuantityInput = editTextChildTickets.text.toString().toIntOrNull() ?: 0
@@ -640,7 +639,7 @@ class CustomTicketPopupDialogue : DialogFragment() {
     }
 
     private fun isChildOnlyMode(): Boolean {
-        return ticketType.equals("TICKET", true) && ticketChild
+        return ticketType.equals("TICKET", true) && (ticketChild || ticketName.contains("Child", ignoreCase = true))
     }
 
     @SuppressLint("DefaultLocale", "SetTextI18n")

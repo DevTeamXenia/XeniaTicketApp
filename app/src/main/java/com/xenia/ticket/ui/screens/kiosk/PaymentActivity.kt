@@ -160,7 +160,6 @@ class PaymentActivity : AppCompatActivity() {
             binding.linFailed.visibility = View.VISIBLE
             binding.lottiefail.visibility = View.VISIBLE
             binding.lottiefail.playAnimation()
-
             redirect()
         }
 
@@ -251,7 +250,6 @@ class PaymentActivity : AppCompatActivity() {
                     redirect()
                 }
             }
-
             "PineLabs" -> {
                 binding.progressBar.visibility = View.VISIBLE
                 binding.txtPrinting.visibility = View.VISIBLE
@@ -350,11 +348,13 @@ class PaymentActivity : AppCompatActivity() {
             val printer = POSPrinter(curConnect)
 
             try {
-                headerBitmap?.scale(550, 200)?.let { scaled ->
+                printer.initializePrinter()
+
+                headerBitmap?.scale(576, 200)?.let { scaled ->
                     printer.printBitmap(
                         scaled,
                         POSConst.ALIGNMENT_CENTER,
-                        500
+                        576
                     )
                     printer.feedLine(2)
                     delay(300.milliseconds)
@@ -365,11 +365,11 @@ class PaymentActivity : AppCompatActivity() {
                 printer.feedLine(2)
                 delay(300.milliseconds)
 
-                footerBitmap?.scale(550, 100)?.let { scaled ->
+                footerBitmap?.scale(576, 100)?.let { scaled ->
                     printer.printBitmap(
                         scaled,
                         POSConst.ALIGNMENT_CENTER,
-                        500
+                        576
                     )
                     printer.feedLine(3)
                     delay(400.milliseconds)
@@ -530,8 +530,7 @@ class PaymentActivity : AppCompatActivity() {
         for (item in ticket) {
 
             val priceStr = String.format(Locale.ENGLISH, "%.2f", item.ticketRate)
-            var qtyStr= ""
-            qtyStr = if(item.ticketChild)
+            if(item.ticketChild)
                 item.ticketChildQty.toString()
             else
                 item.ticketQty.toString()
@@ -614,7 +613,6 @@ class PaymentActivity : AppCompatActivity() {
 
                         val adultQty = item.ticketQty
                         val childQty = item.ticketChildQty
-                        val totalQty = adultQty + childQty
 
                         val allSeats = seatMapQueue[item.scheduleId] ?: emptyList()
 
@@ -684,7 +682,6 @@ class PaymentActivity : AppCompatActivity() {
 
                 val adultQty = item.ticketQty
                 val childQty = item.ticketChildQty
-                val totalQty = adultQty + childQty
 
                 val allSeats = seatMapQueue[item.scheduleId] ?: emptyList()
 
@@ -956,10 +953,6 @@ class PaymentActivity : AppCompatActivity() {
 
         for (item in ticket) {
             val priceStr = String.format("%.2f", item.ticketRate)
-            val qtyStr = if(item.ticketChild)
-                item.ticketChildQty.toString()
-            else
-                item.ticketQty.toString()
 
             val qtyChildStr = item.ticketChildQty.toString()
             val priceChildStr = String.format("%.2f", item.ticketChildRate)
@@ -1372,7 +1365,7 @@ class PaymentActivity : AppCompatActivity() {
             printer.printBitmap(
                 chunkBitmap,
                 POSConst.ALIGNMENT_CENTER,
-                600
+                576
             )
 
             chunkBitmap.recycle()

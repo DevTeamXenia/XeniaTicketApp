@@ -105,6 +105,8 @@ class TicketCartAdapter(
             val adultRate = ticketItem.ticketRate
             val childRate = ticketItem.ticketChildRate
 
+            val isChildTicket = ticketItem.ticketChild || ticketItem.ticketName.contains("Child", ignoreCase = true)
+
             val adultText = if (adultQty > 0) {
                 "Adult: $adultQty x ${String.format(Locale.ENGLISH, "%.2f", adultRate)}"
             } else ""
@@ -114,6 +116,13 @@ class TicketCartAdapter(
             } else ""
 
             val finalText = when {
+                isChildTicket -> {
+                    val qty = if (childQty > 0 && adultQty == 0) childQty else adultQty
+                    val rate = if (childQty > 0 && adultQty == 0) childRate else adultRate
+                    if (qty > 0) {
+                        "Child: $qty x ${String.format(Locale.ENGLISH, "%.2f", rate)}"
+                    } else ""
+                }
                 adultQty > 0 && childQty > 0 -> "$adultText\n$childText"
                 adultQty > 0 -> adultText
                 childQty > 0 -> childText

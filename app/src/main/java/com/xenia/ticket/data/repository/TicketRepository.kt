@@ -137,7 +137,7 @@ class TicketRepository(
     suspend fun loadTickets(bearerToken: String): Boolean {
         return try {
             val apiResponse = fetchTickets(bearerToken)
-            if (apiResponse.isEmpty()) return false
+            if (apiResponse.isEmpty()) return true
 
             val entities = apiResponse.map { it.toEntity() }
             refreshTickets(entities)

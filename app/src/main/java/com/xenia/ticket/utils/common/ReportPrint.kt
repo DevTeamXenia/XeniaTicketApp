@@ -214,27 +214,28 @@ class ReportPrint(
 
                     curConnect?.let { conn ->
                         val printer = POSPrinter(conn)
+                        printer.initializePrinter()
 
                         headerBitmap?.let { bmp ->
-                            val scaled = bmp.scaleToWidth(550)
+                            val scaled = bmp.scaleToWidth(576)
 
-                            printer.printBitmap(scaled, POSConst.ALIGNMENT_CENTER, 500)
+                            printer.printBitmap(scaled, POSConst.ALIGNMENT_CENTER, 576)
                                 .feedLine(1)
                             scaled.recycle()
                         }
 
 
-                        printer.printBitmap(summaryBitmap, POSConst.ALIGNMENT_CENTER, 600)
+                        printer.printBitmap(summaryBitmap, POSConst.ALIGNMENT_CENTER, 576)
                             .feedLine(1)
                         delay(100)
 
 
                         try {
                             footerBitmap?.let { bmp ->
-                                val scaledFooter = bmp.scale(500, 120)
+                                val scaledFooter = bmp.scale(576, 120)
 
                                 delay(300)
-                                printer.printBitmap(scaledFooter, POSConst.ALIGNMENT_CENTER, 500)
+                                printer.printBitmap(scaledFooter, POSConst.ALIGNMENT_CENTER, 576)
                                     .cutHalfAndFeed(1)
                                 scaledFooter.recycle()
                             } ?: run {
@@ -375,22 +376,23 @@ class ReportPrint(
 
                     curConnect?.let { conn ->
                         val printer = POSPrinter(conn)
+                        printer.initializePrinter()
 
                         headerBitmap?.let { bmp ->
-                            val scaled = bmp.scaleToWidth(550)
-                            printer.printBitmap(scaled, POSConst.ALIGNMENT_CENTER, 500)
+                            val scaled = bmp.scaleToWidth(576)
+                            printer.printBitmap(scaled, POSConst.ALIGNMENT_CENTER, 576)
                                 .feedLine(1)
                             scaled.recycle()
                         }
 
-                        printer.printBitmap(reportBitmap, POSConst.ALIGNMENT_CENTER, 600)
+                        printer.printBitmap(reportBitmap, POSConst.ALIGNMENT_CENTER, 576)
                             .feedLine(1)
 
                         try {
                             footerBitmap?.let { bmp ->
-                                val scaledFooter = bmp.scale(500, 120)
+                                val scaledFooter = bmp.scale(576, 120)
                                 delay(300)
-                                printer.printBitmap(scaledFooter, POSConst.ALIGNMENT_CENTER, 500)
+                                printer.printBitmap(scaledFooter, POSConst.ALIGNMENT_CENTER, 576)
                                     .cutHalfAndFeed(1)
                                 scaledFooter.recycle()
                             } ?: run {
