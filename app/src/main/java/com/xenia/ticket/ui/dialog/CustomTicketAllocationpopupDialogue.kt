@@ -28,6 +28,8 @@ import org.koin.android.ext.android.inject
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
+import com.xenia.ticket.utils.common.SessionManager
+import com.xenia.ticket.utils.common.JwtUtils
 
 
 // SEAT MAP ITEMS
@@ -58,6 +60,7 @@ class CustomTicketAllocationpopupDialogue : DialogFragment() {
     private val binding get() = _binding!!
 
     private val orderRepository: com.xenia.ticket.data.repository.OrderRepository by inject()
+    private val sessionManager: SessionManager by inject()
 
     private lateinit var backCallback: OnBackPressedCallback
     private lateinit var seatAdapter: SeatAdapter
@@ -82,6 +85,7 @@ class CustomTicketAllocationpopupDialogue : DialogFragment() {
 
     // API available seat count
     private var availableSeatCount: Int = 0
+    private var showDate: String = ""
 
 
     // DIALOG
@@ -175,7 +179,7 @@ class CustomTicketAllocationpopupDialogue : DialogFragment() {
     private fun initializePreviousSelection() {
         val args = arguments ?: return
         val initial = args.getString(EXTRA_INITIAL_SELECTED_SEATS) ?: return
-        
+
         if (initial.isNotEmpty()) {
             val seats = initial.split(",")
             selectedSeats.clear()
@@ -215,6 +219,9 @@ class CustomTicketAllocationpopupDialogue : DialogFragment() {
 
         availableSeatsFromArgs =
             args.getInt(EXTRA_AVAILABLE_SEATS)
+
+        showDate =
+            args.getString(EXTRA_SHOW_DATE).orEmpty()
     }
 
 
@@ -287,23 +294,35 @@ class CustomTicketAllocationpopupDialogue : DialogFragment() {
 
     private fun loadSeatAvailability() {
 
-        Log.d(
-            TAG,
-            "Loading seats: scheduleId=$scheduleId, companyId=1"
-        )
-
         showSeatLoading(true)
 
         viewLifecycleOwner.lifecycleScope.launch {
 
             try {
 
-                val companyId = 1
+                val token = sessionManager.getToken()
+                val companyId = token?.let { JwtUtils.getCompanyId(it) }
+
+                if (companyId == null) {
+                    Log.e(TAG, "Unable to resolve companyId from token")
+                    showSeatLoading(false)
+                    Toast.makeText(
+                        requireContext(),
+                        "Session error. Please login again.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return@launch
+                }
+                Log.d(
+                    TAG,
+                    "Loading seats: scheduleId=$scheduleId, companyId=$companyId,date=$showDate"
+                )
 
                 val seats =
                     ApiClient.apiService.getSeatAvailability(
                         scheduleId = scheduleId,
-                        companyId = companyId
+                        companyId = companyId,
+                        date = showDate
                     )
 
                 Log.d(
@@ -315,7 +334,6 @@ class CustomTicketAllocationpopupDialogue : DialogFragment() {
                 val otherCartItems = orderRepository.getOtherCartItemsForSchedule(scheduleId, ticketId)
                 val seatsAlreadyInCart = otherCartItems.flatMap { it.selectedSeats?.split(",") ?: emptyList() }.toSet()
 
-                // 2. Filter by ScreenId, remove duplicates, and mark seats as booked if already in cart
                 // 2. Filter by ScreenId, remove duplicates, and mark seats as booked if already in cart
                 val processedSeats = seats.filter { it.ScreenId == screenId }
                     .map { seat ->
@@ -508,6 +526,8 @@ class CustomTicketAllocationpopupDialogue : DialogFragment() {
 
         const val EXTRA_START_TIME =
             "extra_start_time"
+        const val EXTRA_SHOW_DATE =
+            "extra_show_date"
 
         const val EXTRA_PRICE_PER_SEAT =
             "extra_price_per_seat"
@@ -536,6 +556,7 @@ class CustomTicketAllocationpopupDialogue : DialogFragment() {
             requestedQuantity: Int,
             showDay: String,
             startTime: String,
+            showDate: String,
             pricePerSeat: Double,
             initialSelectedSeats: String? = null
         ): CustomTicketAllocationpopupDialogue {
@@ -567,6 +588,8 @@ class CustomTicketAllocationpopupDialogue : DialogFragment() {
 
                     EXTRA_START_TIME to
                             startTime,
+                    EXTRA_SHOW_DATE to
+                            showDate,
 
                     EXTRA_PRICE_PER_SEAT to
                             pricePerSeat,

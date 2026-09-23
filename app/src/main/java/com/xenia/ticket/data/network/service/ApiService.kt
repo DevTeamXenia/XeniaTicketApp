@@ -184,6 +184,7 @@ suspend fun getSchedules(
     @GET("Seats/availability")
     suspend fun getSeatAvailability(
         @Query("scheduleId") scheduleId: Int,
-        @Query("companyId") companyId: Int
+        @Query("companyId") companyId: Int,
+        @Query("date") date: String
     ): List<SeatAvailability>
 }

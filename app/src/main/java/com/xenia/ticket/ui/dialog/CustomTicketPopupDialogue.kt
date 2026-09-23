@@ -674,6 +674,7 @@ class CustomTicketPopupDialogue : DialogFragment() {
                     availableSeats = schedule.AvailableSeats,
                     requestedQuantity = totalQty,
                     showDay = schedule.ShowDay,
+                    showDate = selectedScheduleDate,
                     startTime = formatTime(schedule.StartTime),
                     pricePerSeat = ticketRate,
                     initialSelectedSeats = currentlySelectedSeats

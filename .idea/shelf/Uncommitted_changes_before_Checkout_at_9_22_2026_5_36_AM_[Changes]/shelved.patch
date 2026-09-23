@@ -1,0 +1,18 @@
+Index: app/src/main/java/com/xenia/ticket/data/network/service/ApiClient.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.xenia.ticket.data.network.service\r\nimport okhttp3.OkHttpClient\r\nimport retrofit2.Retrofit\r\nimport retrofit2.converter.gson.GsonConverterFactory\r\nimport java.util.concurrent.TimeUnit\r\n\r\n\r\nobject ApiClient {\r\n  private const val BASE_URL = \"https://eticketapitest.xeniapos.com/api/\"\r\n // private const val BASE_URL = \"https://eticketapi.xeniapos.com/api/\"\r\n\r\n    val okHttpClient = OkHttpClient.Builder()\r\n        .connectTimeout(60, TimeUnit.SECONDS)\r\n        .readTimeout(90, TimeUnit.SECONDS)\r\n        .writeTimeout(60, TimeUnit.SECONDS)\r\n        .retryOnConnectionFailure(true)\r\n        .build()\r\n\r\n\r\n    private val retrofit: Retrofit by lazy {\r\n        Retrofit.Builder()\r\n            .baseUrl(BASE_URL)\r\n             .client(okHttpClient)\r\n            .addConverterFactory(GsonConverterFactory.create())\r\n            .build()\r\n    }\r\n\r\n    val apiService: ApiService by lazy {\r\n        retrofit.create(ApiService::class.java)\r\n    }\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/xenia/ticket/data/network/service/ApiClient.kt b/app/src/main/java/com/xenia/ticket/data/network/service/ApiClient.kt
+--- a/app/src/main/java/com/xenia/ticket/data/network/service/ApiClient.kt	(revision c2076edd3285836f67215d5763bc0081174dc171)
++++ b/app/src/main/java/com/xenia/ticket/data/network/service/ApiClient.kt	(date 1790080544792)
+@@ -7,6 +7,7 @@
+ 
+ object ApiClient {
+   private const val BASE_URL = "https://eticketapitest.xeniapos.com/api/"
++//  private const val BASE_URL = "http://192.168.1.35:8087/api/"
+  // private const val BASE_URL = "https://eticketapi.xeniapos.com/api/"
+ 
+     val okHttpClient = OkHttpClient.Builder()
