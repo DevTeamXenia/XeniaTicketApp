@@ -314,8 +314,8 @@ class TicketRepository(
         )
     }
 
-    suspend fun getSchedules(id: Int, day: String): List<ShowScheduleResponse> {
-        return ApiClient.apiService.getSchedules(sessionManager.getToken().toString(), id, day)
+    suspend fun getSchedules(id: Int, date: String): List<ShowScheduleResponse> {
+        return ApiClient.apiService.getSchedules(sessionManager.getToken().toString(), id, date)
     }
 
 }

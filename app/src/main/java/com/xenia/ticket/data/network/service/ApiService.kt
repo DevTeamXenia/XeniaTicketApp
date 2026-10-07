@@ -170,7 +170,7 @@ interface ApiService {
     suspend fun getSchedules(
         @Header("Authorization") token: String,
         @Path("id") id: Int,
-        @Query("day") day: String
+        @Query("date") date: String
     ): List<ShowScheduleResponse>
 
 }

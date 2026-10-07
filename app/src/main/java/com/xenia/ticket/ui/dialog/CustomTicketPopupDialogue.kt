@@ -13,6 +13,7 @@ import android.view.Window
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -42,7 +43,8 @@ import com.xenia.ticket.data.repository.TicketRepository
 import com.xenia.ticket.ui.adapter.ShowScheduleAdapter
 import com.xenia.ticket.utils.common.CommonMethod.dismissLoader
 import com.xenia.ticket.utils.common.CommonMethod.formatTime
-import com.xenia.ticket.utils.common.CommonMethod.getTodayDay
+import com.xenia.ticket.utils.common.CommonMethod.getTodayDate
+
 import com.xenia.ticket.utils.common.CommonMethod.showLoader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -220,10 +222,11 @@ class CustomTicketPopupDialogue : DialogFragment() {
             maxLines = 2
         )
 
-        applyTicketUIRules()
+        val progressBarSchedule = view.findViewById<ProgressBar>(R.id.progressBarSchedule)
 
         if (ticketType.equals("SHOW", ignoreCase = true)) {
-            recyclerView.visibility = View.VISIBLE
+            recyclerView.visibility = View.GONE
+            progressBarSchedule.visibility = View.VISIBLE
             txtComboTicketName.visibility = View.GONE
             txtDesc.visibility = View.VISIBLE
             txtDesc.text = ticketDesc
@@ -236,18 +239,18 @@ class CustomTicketPopupDialogue : DialogFragment() {
             recyclerView.adapter = adapter
 
             lifecycleScope.launch {
+                val loaderContext = dialog?.context ?: requireContext()
                 try {
-                    showLoader(requireContext(), "Loading schedules...")
-                    val day = getTodayDay()
+                    showLoader(loaderContext, "Loading schedules...")
+                    val date = getTodayDate()
 
                     val schedules = withContext(Dispatchers.IO) {
-                        activeTicketRepository.getSchedules(ticketId, day)
+                        activeTicketRepository.getSchedules(ticketId, date)
                     }
 
                     val existingItem = withContext(Dispatchers.IO) {
                         ticketRepository.getCartItemByTicketId(ticketId)
                     }
-                    dismissLoader()
                     if (schedules.isNotEmpty()) {
                         adapter.updateData(schedules)
 
@@ -261,22 +264,27 @@ class CustomTicketPopupDialogue : DialogFragment() {
                         selectedSchedule?.let {
                             adapter.setSelectedByScheduleId(it.ScheduleId)
                         }
+                        recyclerView.visibility = View.VISIBLE
 
                     } else {
                         recyclerView.visibility = View.GONE
                     }
 
                 } catch (_: Exception) {
-                    dismissLoader()
                     recyclerView.visibility = View.GONE
+                } finally {
+                    progressBarSchedule.visibility = View.GONE
+                    dismissLoader()
                 }
             }
         }
 
         if (ticketCombo) {
             lifecycleScope.launch {
+                val loaderContext = dialog?.context ?: requireContext()
                 try {
-                    showLoader(requireContext(), "Loading schedules...")
+                    showLoader(loaderContext, "Loading schedules...")
+                    progressBarSchedule.visibility = View.VISIBLE
 
                     val result = withContext(Dispatchers.IO) {
                         activeTicketRepository.getComboResult(ticketId)
@@ -286,7 +294,7 @@ class CustomTicketPopupDialogue : DialogFragment() {
                     txtComboTicketName.text = result.names.joinToString(" | ")
 
                     if (result.showId != null) {
-                        recyclerView.visibility = View.VISIBLE
+                        recyclerView.visibility = View.GONE
                         txtDesc.visibility = View.VISIBLE
                         txtDesc.text = ticketDesc
                         val adapter = ShowScheduleAdapter(emptyList()) { selectedItem ->
@@ -296,10 +304,10 @@ class CustomTicketPopupDialogue : DialogFragment() {
                         recyclerView.layoutManager = GridLayoutManager(requireContext(), 4)
                         recyclerView.adapter = adapter
 
-                        val day = getTodayDay()
+                        val date = getTodayDate()
 
                         val schedules = withContext(Dispatchers.IO) {
-                            activeTicketRepository.getSchedules(result.showId, day)
+                            activeTicketRepository.getSchedules(result.showId, date)
                         }
 
                         val existingItem = withContext(Dispatchers.IO) {
@@ -319,6 +327,7 @@ class CustomTicketPopupDialogue : DialogFragment() {
                             selectedSchedule?.let {
                                 adapter.setSelectedByScheduleId(it.ScheduleId)
                             }
+                            recyclerView.visibility = View.VISIBLE
 
                         } else {
                             recyclerView.visibility = View.GONE
@@ -331,6 +340,7 @@ class CustomTicketPopupDialogue : DialogFragment() {
                 } catch (_: Exception) {
                     recyclerView.visibility = View.GONE
                 } finally {
+                    progressBarSchedule.visibility = View.GONE
                     dismissLoader()
                 }
             }
@@ -421,7 +431,7 @@ class CustomTicketPopupDialogue : DialogFragment() {
             }
 
             val isSeatCheckRequired =
-                ticketCombo && ticketType.equals("SHOW", ignoreCase = true)
+                ticketType.equals("SHOW", ignoreCase = true) || (ticketCombo && comboShowId != null)
 
             if (isSeatCheckRequired && selectedSchedule == null) {
                 Toast.makeText(requireContext(), "Please select a schedule", Toast.LENGTH_SHORT).show()

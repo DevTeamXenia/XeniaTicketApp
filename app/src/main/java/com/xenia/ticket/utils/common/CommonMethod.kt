@@ -45,15 +45,16 @@ object CommonMethod {
         Snackbar.make(view, message, Snackbar.LENGTH_LONG).show()
     }
 
-    fun getTodayDay(): String {
-        return java.text.SimpleDateFormat("EEEE", Locale.ENGLISH)
+
+    fun getTodayDate(): String {
+        return java.text.SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH)
             .format(java.util.Date())
     }
 
     fun formatTime(time: String): String {
         return try {
-            val inputFormat = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
-            val outputFormat = java.text.SimpleDateFormat("h:mm a", java.util.Locale.getDefault())
+            val inputFormat = java.text.SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+            val outputFormat = java.text.SimpleDateFormat("h:mm a", Locale.getDefault())
 
             val date = inputFormat.parse(time)
             outputFormat.format(date!!)
