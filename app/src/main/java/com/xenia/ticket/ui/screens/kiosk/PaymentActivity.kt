@@ -1932,7 +1932,7 @@ class PaymentActivity : AppCompatActivity() {
             put("PrintDataType", 2)
             put("PrinterWidth", 24)
             put("IsCenterAligned", true)
-            put("DataToPrint", " ")
+            put("DataToPrint", "")
             put("ImagePath", "")
             put("ImageData", headerBitmap)
         }
@@ -1941,11 +1941,11 @@ class PaymentActivity : AppCompatActivity() {
             put("PrintDataType", 2)
             put("PrinterWidth", 24)
             put("IsCenterAligned", true)
-            put("DataToPrint", " ")
+            put("DataToPrint", "")
             put("ImagePath", "")
             put("ImageData", footerBitmap)
-
         }
+
         val smallSpaceLine = JSONObject().apply {
             put("PrintDataType", 0)
             put("PrinterWidth", 24)
@@ -1957,45 +1957,43 @@ class PaymentActivity : AppCompatActivity() {
 
         val dataArray = JSONArray().apply {
             put(headerImageLine)
-            /*    receiptLines.forEach { line ->
+            receiptLines.forEach { line ->
 
-                    val cleanLine = line.replace("*", "").trim()
+                val cleanLine = line.replace("*", "").trim()
 
-                    when {
-                        cleanLine.equals("REPRINTED COPY", ignoreCase = true) ||
-                                cleanLine.equals("Entry Ticket", ignoreCase = true) -> {
+                when {
+                    cleanLine.equals("REPRINTED COPY", ignoreCase = true) ||
+                            cleanLine.equals("Entry Ticket", ignoreCase = true) -> {
 
-                            val bitmapText = line.trim()
+                        val bitmapText = line.trim()
 
-                            val boldBitmapHex = centeredBoldTextToBitmapHex(bitmapText)
+                        val boldBitmapHex = centeredBoldTextToBitmapHex(bitmapText)
 
-                            put(JSONObject().apply {
-                                put("PrintDataType", 2)
-                                put("PrinterWidth", 24)
-                                put("IsCenterAligned", true)
-                                put("DataToPrint",
-                                    line.ifBlank { " " })
-                                put("ImagePath", "")
-                                put("ImageData", boldBitmapHex)
-                            })
-                        }
-
-                        else -> {
-                            put(JSONObject().apply {
-                                put("PrintDataType", 0)
-                                put("PrinterWidth", 200)
-                                put("IsCenterAligned", false)
-                                put("DataToPrint", line)
-                                put("ImagePath", "")
-                                put("ImageData", "")
-                            })
-                        }
+                        put(JSONObject().apply {
+                            put("PrintDataType", 2)
+                            put("PrinterWidth", 24)
+                            put("IsCenterAligned", true)
+                            put("DataToPrint", "")
+                            put("ImagePath", "")
+                            put("ImageData", boldBitmapHex)
+                        })
                     }
-                }*/
+
+                    else -> {
+                        put(JSONObject().apply {
+                            put("PrintDataType", 0)
+                            put("PrinterWidth", 200)
+                            put("IsCenterAligned", false)
+                            put("DataToPrint", line)
+                            put("ImagePath", "")
+                            put("ImageData", "")
+                        })
+                    }
+                }
+            }
             put(smallSpaceLine)
             put(footerImageLine)
             put(smallSpaceLine)
-
         }
 
         val detail = JSONObject().apply {
@@ -2071,6 +2069,44 @@ class PaymentActivity : AppCompatActivity() {
                 e.printStackTrace()
                 null
             }
+        }
+    }
+
+    private fun centeredBoldTextToBitmapHex(
+        text: String,
+        bitmapWidth: Int = 384,
+        textSize: Float = 30f
+    ): String {
+
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.BLACK
+            this.textSize = textSize
+            typeface = Typeface.MONOSPACE
+            isFakeBoldText = true
+        }
+
+        val fm = paint.fontMetrics
+        val height = (fm.bottom - fm.top + 20).toInt()
+
+        val bitmap = Bitmap.createBitmap(bitmapWidth, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        canvas.drawColor(Color.WHITE)
+
+        val textWidth = paint.measureText(text)
+        val x = (bitmapWidth - textWidth) / 2f   // 🔥 CENTERING
+        val y = -fm.top + 10
+
+        canvas.drawText(text, x, y, paint)
+
+        return bitmapToHex(bitmap)
+    }
+
+    private fun bitmapToHex(bitmap: Bitmap): String {
+        val stream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+        val byteArray = stream.toByteArray()
+        return byteArray.joinToString(separator = "") {
+            String.format("%02X", it)
         }
     }
 
