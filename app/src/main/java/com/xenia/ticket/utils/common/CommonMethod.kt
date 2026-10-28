@@ -133,12 +133,5 @@ object CommonMethod {
             else -> "Undefined"
         }
     }
-    fun isLandscapeScreen(context: Context): Boolean {
-        val orientation = context.resources.configuration.orientation
-        return orientation == Configuration.ORIENTATION_LANDSCAPE
-    }
-
-
-
 
 }

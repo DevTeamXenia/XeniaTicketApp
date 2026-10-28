@@ -26,7 +26,14 @@ import net.posprinter.IDeviceConnection
 import net.posprinter.POSConnect
 import net.posprinter.POSConst
 import net.posprinter.POSPrinter
-import net.posprinter.utils.DataForSendToPrinterTSC.delay
+import kotlinx.coroutines.delay
+import android.hardware.usb.UsbManager
+import com.xenia.ticket.utils.common.Constants.PRINTER_B200MAX
+import com.xenia.ticket.utils.common.Constants.PRINTER_FALCON
+import com.xenia.ticket.utils.common.Constants.PRINTER_KIOSK
+import com.xenia.ticket.utils.common.Constants.PRINTER_PINELABS
+import net.posprinter.utils.BitmapToByteData
+import net.posprinter.utils.DataForSendToPrinterPos58
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -215,31 +222,22 @@ class ReportPrint(
                     curConnect?.let { conn ->
                         val printer = POSPrinter(conn)
                         printer.initializePrinter()
+                        val targetWidth = getPrinterWidth()
 
                         headerBitmap?.let { bmp ->
-                            val scaled = bmp.scaleToWidth(576)
-
-                            printer.printBitmap(scaled, POSConst.ALIGNMENT_CENTER, 576)
-                                .feedLine(1)
-                            scaled.recycle()
+                            printLargeBitmap(printer, bmp, targetWidth)
+                            printer.feedLine(1)
                         }
 
-
-                        printer.printBitmap(summaryBitmap, POSConst.ALIGNMENT_CENTER, 576)
-                            .feedLine(1)
+                        printLargeBitmap(printer, summaryBitmap, targetWidth)
+                        printer.feedLine(1)
                         delay(100)
-
 
                         try {
                             footerBitmap?.let { bmp ->
-                                val scaledFooter = bmp.scale(576, 120)
-
-                                delay(300)
-                                printer.printBitmap(scaledFooter, POSConst.ALIGNMENT_CENTER, 576)
-                                    .cutHalfAndFeed(1)
-                                scaledFooter.recycle()
+                                printLargeBitmap(printer, bmp, targetWidth)
+                                printer.cutHalfAndFeed(1)
                             } ?: run {
-
                                 printer.cutHalfAndFeed(1)
                             }
                         } catch (e: Exception) {
@@ -377,24 +375,20 @@ class ReportPrint(
                     curConnect?.let { conn ->
                         val printer = POSPrinter(conn)
                         printer.initializePrinter()
+                        val targetWidth = getPrinterWidth()
 
                         headerBitmap?.let { bmp ->
-                            val scaled = bmp.scaleToWidth(576)
-                            printer.printBitmap(scaled, POSConst.ALIGNMENT_CENTER, 576)
-                                .feedLine(1)
-                            scaled.recycle()
+                            printLargeBitmap(printer, bmp, targetWidth)
+                            printer.feedLine(1)
                         }
 
-                        printer.printBitmap(reportBitmap, POSConst.ALIGNMENT_CENTER, 576)
-                            .feedLine(1)
+                        printLargeBitmap(printer, reportBitmap, targetWidth)
+                        printer.feedLine(1)
 
                         try {
                             footerBitmap?.let { bmp ->
-                                val scaledFooter = bmp.scale(576, 120)
-                                delay(300)
-                                printer.printBitmap(scaledFooter, POSConst.ALIGNMENT_CENTER, 576)
-                                    .cutHalfAndFeed(1)
-                                scaledFooter.recycle()
+                                printLargeBitmap(printer, bmp, targetWidth)
+                                printer.cutHalfAndFeed(1)
                             } ?: run {
                                 printer.cutHalfAndFeed(1)
                             }
@@ -413,6 +407,86 @@ class ReportPrint(
                 headerBitmap?.recycle()
                 footerBitmap?.recycle()
             }
+        }
+    }
+
+    private fun getPrinterWidth(): Int {
+        val selectedPrinter = sessionManager.getSelectedPrinter()
+        if (selectedPrinter == PRINTER_FALCON ||
+            selectedPrinter == PRINTER_B200MAX ||
+            selectedPrinter == PRINTER_PINELABS
+        ) {
+            return 384
+        }
+
+        try {
+            val usbManager = appContext.getSystemService(Context.USB_SERVICE) as? UsbManager
+            val devices = usbManager?.deviceList?.values
+            if (!devices.isNullOrEmpty()) {
+                for (device in devices) {
+                    if (device.vendorId == 0x0519 && device.productId == 0x2013) {
+                        return 384
+                    }
+                    val devName = (device.productName.orEmpty() + " " + device.deviceName.orEmpty()).lowercase()
+                    if (devName.contains("58") || devName.contains("ip1000") || devName.contains("ep58")) {
+                        return 384
+                    }
+                    if (devName.contains("80") || devName.contains("ep80")) {
+                        return 576
+                    }
+                }
+            }
+        } catch (_: Exception) {}
+
+        val model = android.os.Build.MODEL.orEmpty()
+        val manufacturer = android.os.Build.MANUFACTURER.orEmpty()
+        if (model.contains("M2", ignoreCase = true) ||
+            model.contains("Falcon", ignoreCase = true) ||
+            manufacturer.contains("iMin", ignoreCase = true) ||
+            manufacturer.contains("Urovo", ignoreCase = true)
+        ) {
+            return 384
+        }
+
+        return if (selectedPrinter == PRINTER_KIOSK) 576 else 384
+    }
+
+    private suspend fun printLargeBitmap(printer: POSPrinter, bitmap: Bitmap, targetWidth: Int = 576) {
+        val scaledBitmap = if (bitmap.width != targetWidth) {
+            val ratio = targetWidth.toFloat() / bitmap.width
+            val targetHeight = (bitmap.height * ratio).toInt()
+            Bitmap.createScaledBitmap(bitmap, targetWidth, targetHeight, true)
+        } else {
+            bitmap
+        }
+
+        val sliceHeight = 120
+        var startY = 0
+
+        printer.sendData(DataForSendToPrinterPos58.selectAlignment(POSConst.ALIGNMENT_CENTER))
+
+        while (startY < scaledBitmap.height) {
+            val chunkHeight = minOf(sliceHeight, scaledBitmap.height - startY)
+            val chunkBitmap = Bitmap.createBitmap(
+                scaledBitmap,
+                0,
+                startY,
+                scaledBitmap.width,
+                chunkHeight
+            )
+
+            val rasterBytes = BitmapToByteData.rasterBmpToSendData(0, chunkBitmap)
+            printer.sendData(rasterBytes)
+            chunkBitmap.recycle()
+
+            startY += chunkHeight
+            delay(60)
+        }
+
+        printer.sendData(DataForSendToPrinterPos58.selectAlignment(0))
+
+        if (scaledBitmap != bitmap) {
+            scaledBitmap.recycle()
         }
     }
 
@@ -496,7 +570,7 @@ class ReportPrint(
 
     @SuppressLint("DefaultLocale")
     private fun generateDailySummaryBitmap(
-            reportTitle: String,
+        reportTitle: String,
         reportStart: String,
         reportEnd: String,
         order: Double,
@@ -506,10 +580,9 @@ class ReportPrint(
         net: Double,
         createdOn: String,
         generatedBy: String,
-        selectedLanguage: String
+        selectedLanguage: String,
+        width: Int = 576
     ): Bitmap {
-
-        val width = 576
         val paint = Paint().apply {
             isAntiAlias = true
             color = Color.BLACK
@@ -538,6 +611,7 @@ class ReportPrint(
 
         val bitmap = createBitmap(width, 1800)
         val canvas = Canvas(bitmap)
+        canvas.drawColor(Color.WHITE)
         var y = 50f
         paint.textAlign = Paint.Align.CENTER
         paint.textSize = 32f
@@ -672,7 +746,9 @@ class ReportPrint(
 
 
         val final = createBitmap(width, y.toInt() + 40)
-        Canvas(final).drawBitmap(bitmap, 0f, 0f, null)
+        val finalCanvas = Canvas(final)
+        finalCanvas.drawColor(Color.WHITE)
+        finalCanvas.drawBitmap(bitmap, 0f, 0f, null)
         bitmap.recycle()
         return final
     }
@@ -699,6 +775,7 @@ class ReportPrint(
 
         val bitmap = createBitmap(width, 2000)
         val canvas = Canvas(bitmap)
+        canvas.drawColor(Color.WHITE)
         var y = 40f
 
         fun draw(text: String, size: Float = 20f, bold: Boolean = false, center: Boolean = false) {
@@ -780,7 +857,9 @@ class ReportPrint(
 
 
         val final = createBitmap(width, y.toInt() + 30)
-        Canvas(final).drawBitmap(bitmap, 0f, 0f, null)
+        val finalCanvas = Canvas(final)
+        finalCanvas.drawColor(Color.WHITE)
+        finalCanvas.drawBitmap(bitmap, 0f, 0f, null)
         bitmap.recycle()
         return final
     }
@@ -792,10 +871,9 @@ class ReportPrint(
         toDate: String,
         generatedBy: String,
         createdOn: String,
-        selectedLanguage: String
+        selectedLanguage: String,
+        width: Int = 576
     ): Bitmap {
-
-        val width = 576
         val paint = Paint().apply {
             isAntiAlias = true
             color = Color.BLACK
@@ -945,7 +1023,9 @@ class ReportPrint(
         canvas.drawText("----------------------------------------------------", 0f, y, paint)
 
         val finalBitmap = createBitmap(width, y.toInt() + 50)
-        Canvas(finalBitmap).drawBitmap(bitmap, 0f, 0f, null)
+        val finalCanvas = Canvas(finalBitmap)
+        finalCanvas.drawColor(Color.WHITE)
+        finalCanvas.drawBitmap(bitmap, 0f, 0f, null)
         bitmap.recycle()
         return finalBitmap
     }

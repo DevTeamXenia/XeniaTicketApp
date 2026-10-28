@@ -59,7 +59,15 @@ import com.xenia.ticket.data.network.model.SeatAllocationDto
 import com.xenia.ticket.data.repository.TicketRepository
 import java.io.ByteArrayOutputStream
 import java.io.File
+import android.content.Context
+import android.hardware.usb.UsbManager
+import com.xenia.ticket.utils.common.Constants.PRINTER_B200MAX
+import com.xenia.ticket.utils.common.Constants.PRINTER_FALCON
+import com.xenia.ticket.utils.common.Constants.PRINTER_KIOSK
+import com.xenia.ticket.utils.common.Constants.PRINTER_PINELABS
 import com.xenia.ticket.utils.pineLab.PlutusConstants
+import net.posprinter.utils.BitmapToByteData
+import net.posprinter.utils.DataForSendToPrinterPos58
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
@@ -149,10 +157,10 @@ class PaymentActivity : AppCompatActivity() {
 
             sendTicketViaWhatsApp()
 
-            if (sessionManager.getSelectedPrinter() == "KIOSK") {
-                configPrinter()
-            } else {
+            if (sessionManager.getSelectedPrinter() == PRINTER_PINELABS) {
                 bindPineLabsService()
+            } else {
+                configPrinter()
             }
 
         } else {
@@ -227,7 +235,7 @@ class PaymentActivity : AppCompatActivity() {
     private fun configPrinter() {
         val selectedPrinter = sessionManager.getSelectedPrinter()
         when (selectedPrinter) {
-            "FALCON", "KIOSK" -> {
+            PRINTER_FALCON, PRINTER_KIOSK, null -> {
                 try {
                     POSConnect.init(applicationContext)
                     val entries = POSConnect.getUsbDevices(applicationContext)
@@ -250,7 +258,7 @@ class PaymentActivity : AppCompatActivity() {
                     redirect()
                 }
             }
-            "PineLabs" -> {
+            PRINTER_PINELABS -> {
                 binding.progressBar.visibility = View.VISIBLE
                 binding.txtPrinting.visibility = View.VISIBLE
                 ProcessLifecycleOwner.get().lifecycleScope.launch(Dispatchers.Main) {
@@ -279,8 +287,8 @@ class PaymentActivity : AppCompatActivity() {
         val selectedPrinter = sessionManager.getSelectedPrinter()
         when (code) {
             POSConnect.CONNECT_SUCCESS -> {
-                if (selectedPrinter == "FALCON" || selectedPrinter == "KIOSK" || selectedPrinter == null) {
-                    GlobalScope.launch {
+                if (selectedPrinter == PRINTER_FALCON || selectedPrinter == PRINTER_KIOSK || selectedPrinter == null) {
+                    lifecycleScope.launch {
                         delay(500.milliseconds)
                         initReceiptPrint()
                     }
@@ -307,6 +315,47 @@ class PaymentActivity : AppCompatActivity() {
         curConnect!!.connect(pathName, connectListener)
     }
 
+    private fun getPrinterWidth(): Int {
+        val selectedPrinter = sessionManager.getSelectedPrinter()
+        if (selectedPrinter == PRINTER_FALCON ||
+            selectedPrinter == PRINTER_B200MAX ||
+            selectedPrinter == PRINTER_PINELABS
+        ) {
+            return 384
+        }
+
+        try {
+            val usbManager = getSystemService(Context.USB_SERVICE) as? UsbManager
+            val devices = usbManager?.deviceList?.values
+            if (!devices.isNullOrEmpty()) {
+                for (device in devices) {
+                    if (device.vendorId == 0x0519 && device.productId == 0x2013) {
+                        return 384
+                    }
+                    val devName = (device.productName.orEmpty() + " " + device.deviceName.orEmpty()).lowercase()
+                    if (devName.contains("58") || devName.contains("ip1000") || devName.contains("ep58")) {
+                        return 384
+                    }
+                    if (devName.contains("80") || devName.contains("ep80")) {
+                        return 576
+                    }
+                }
+            }
+        } catch (_: Exception) {}
+
+        val model = android.os.Build.MODEL.orEmpty()
+        val manufacturer = android.os.Build.MANUFACTURER.orEmpty()
+        if (model.contains("M2", ignoreCase = true) ||
+            model.contains("Falcon", ignoreCase = true) ||
+            manufacturer.contains("iMin", ignoreCase = true) ||
+            manufacturer.contains("Urovo", ignoreCase = true)
+        ) {
+            return 384
+        }
+
+        return if (selectedPrinter == PRINTER_KIOSK) 576 else 384
+    }
+
     @SuppressLint("DefaultLocale")
     private fun initReceiptPrint() {
         lifecycleScope.launch {
@@ -324,6 +373,8 @@ class PaymentActivity : AppCompatActivity() {
                 loadBitmapFromCache(cacheDir, "company_footer.png")
             }
 
+            val printerWidth = getPrinterWidth()
+
             val receiptBitmap: Bitmap =
                 if (companyRepository.getDefaultLanguage() == selectedLanguage) {
                     generateReceiptBitmapDefault(
@@ -332,7 +383,8 @@ class PaymentActivity : AppCompatActivity() {
                         orderID.toString(),
                         ticketItems,
                         selectedLanguage!!,
-                        seatAllocations = seatAllocations
+                        seatAllocations = seatAllocations,
+                        width = printerWidth
                     )
                 } else {
                     generateReceiptBitmap(
@@ -341,7 +393,8 @@ class PaymentActivity : AppCompatActivity() {
                         orderID.toString(),
                         ticketItems,
                         selectedLanguage!!,
-                        seatAllocations = seatAllocations
+                        seatAllocations = seatAllocations,
+                        width = printerWidth
                     )
                 }
 
@@ -349,44 +402,47 @@ class PaymentActivity : AppCompatActivity() {
 
             try {
                 printer.initializePrinter()
+                delay(150.milliseconds)
 
-                headerBitmap?.scale(576, 200)?.let { scaled ->
-                    printer.printBitmap(
-                        scaled,
-                        POSConst.ALIGNMENT_CENTER,
-                        576
-                    )
-                    printer.feedLine(2)
-                    delay(300.milliseconds)
+                headerBitmap?.let { orig ->
+                    val ratio = printerWidth.toFloat() / orig.width
+                    val newHeight = (orig.height * ratio).toInt()
+                    val scaled = Bitmap.createScaledBitmap(orig, printerWidth, newHeight, true)
+                    printLargeBitmap(printer, scaled, printerWidth)
+                    printer.feedLine(1)
+                    delay(100.milliseconds)
                     scaled.recycle()
                 }
 
-                printLargeBitmap(printer, receiptBitmap)
+                printLargeBitmap(printer, receiptBitmap, printerWidth)
                 printer.feedLine(2)
-                delay(300.milliseconds)
+                delay(200.milliseconds)
 
-                footerBitmap?.scale(576, 100)?.let { scaled ->
-                    printer.printBitmap(
-                        scaled,
-                        POSConst.ALIGNMENT_CENTER,
-                        576
-                    )
+                footerBitmap?.let { orig ->
+                    val ratio = printerWidth.toFloat() / orig.width
+                    val newHeight = (orig.height * ratio).toInt()
+                    val scaled = Bitmap.createScaledBitmap(orig, printerWidth, newHeight, true)
+                    printLargeBitmap(printer, scaled, printerWidth)
                     printer.feedLine(3)
-                    delay(400.milliseconds)
-                    printer.cutHalfAndFeed(1)
+                    delay(300.milliseconds)
                     scaled.recycle()
-                } ?: printer.cutHalfAndFeed(1)
+                } ?: run {
+                    printer.feedLine(3)
+                }
+
+                try {
+                    printer.cutHalfAndFeed(1)
+                } catch (_: Exception) {}
 
             } catch (e: Exception) {
                 Log.e("ReceiptPrint", "Printing error: ${e.message}")
-                printer.cutHalfAndFeed(1)
+            } finally {
+                receiptBitmap.recycle()
+                headerBitmap?.recycle()
+                footerBitmap?.recycle()
             }
 
-            receiptBitmap.recycle()
-            headerBitmap?.recycle()
-            footerBitmap?.recycle()
-
-            delay(2000.milliseconds)
+            delay(1500.milliseconds)
 
             redirect()
         }
@@ -400,9 +456,8 @@ class PaymentActivity : AppCompatActivity() {
         ticket: List<Orders>,
         selectedLanguage: String,
         seatAllocations: List<SeatAllocationDto>,
+        width: Int = 576
     ): Bitmap {
-
-        val width = 576
         val paint = Paint().apply {
             isAntiAlias = true
         }
@@ -445,8 +500,9 @@ class PaymentActivity : AppCompatActivity() {
 
         val tempBitmap = createBitmap(width, 10000)
         val tempCanvas = Canvas(tempBitmap)
+        tempCanvas.drawColor(Color.WHITE)
 
-        paint.textSize = 30f
+        paint.textSize = if (width < 500) 24f else 30f
         paint.color = Color.BLACK
         paint.textAlign = Paint.Align.CENTER
 
@@ -861,9 +917,11 @@ class PaymentActivity : AppCompatActivity() {
             }
         }
 
-        val extraPadding = if (companyRepository.getPaymentQr() == "True") 200 else 50
+        val extraPadding = if (companyRepository.getPaymentQr() == "True") 150 else 50
         val finalBitmap = createBitmap(width, (yOffset + extraPadding).toInt())
-        Canvas(finalBitmap).drawBitmap(tempBitmap, 0f, 0f, null)
+        val finalCanvas = Canvas(finalBitmap)
+        finalCanvas.drawColor(Color.WHITE)
+        finalCanvas.drawBitmap(tempBitmap, 0f, 0f, null)
         tempBitmap.recycle()
 
         return finalBitmap
@@ -877,9 +935,15 @@ class PaymentActivity : AppCompatActivity() {
         ticket: List<Orders>,
         selectedLanguage: String,
         seatAllocations: List<SeatAllocationDto>,
+        width: Int = 576
     ): Bitmap {
-        val width = 576
         val paint = Paint().apply { isAntiAlias = true }
+        val indicTypeface = try {
+            Typeface.createFromAsset(this.assets, "fonts/noto_sans_kannada_regular.ttf")
+        } catch (_: Exception) {
+            Typeface.DEFAULT
+        }
+        paint.typeface = indicTypeface
 
         val labelReceiptNo = getLocalizedString("Receipt No", selectedLanguage)
         val labelDate = getLocalizedString("Date", selectedLanguage)
@@ -895,8 +959,9 @@ class PaymentActivity : AppCompatActivity() {
         val labelChild = getLocalizedString("Child", selectedLanguage)
         val tempBitmap = createBitmap(width, 10000)
         val tempCanvas = Canvas(tempBitmap)
+        tempCanvas.drawColor(Color.WHITE)
 
-        paint.textSize = 30f
+        paint.textSize = if (width < 500) 24f else 30f
         paint.color = Color.BLACK
         paint.textAlign = Paint.Align.CENTER
 
@@ -1301,9 +1366,11 @@ class PaymentActivity : AppCompatActivity() {
             }
         }
 
-        val extraPadding = if (companyRepository.getPaymentQr() == "True") 200 else 50
+        val extraPadding = if (companyRepository.getPaymentQr() == "True") 150 else 50
         val finalBitmap = createBitmap(width, (yOffset + extraPadding).toInt())
-        Canvas(finalBitmap).drawBitmap(tempBitmap, 0f, 0f, null)
+        val finalCanvas = Canvas(finalBitmap)
+        finalCanvas.drawColor(Color.WHITE)
+        finalCanvas.drawBitmap(tempBitmap, 0f, 0f, null)
         tempBitmap.recycle()
 
         return finalBitmap
@@ -1346,33 +1413,42 @@ class PaymentActivity : AppCompatActivity() {
         return lines
     }
 
-    private suspend fun printLargeBitmap(printer: POSPrinter, bitmap: Bitmap) {
-        val maxChunkHeight = 700
+    private suspend fun printLargeBitmap(printer: POSPrinter, bitmap: Bitmap, targetWidth: Int = 576) {
+        val scaledBitmap = if (bitmap.width != targetWidth) {
+            val ratio = targetWidth.toFloat() / bitmap.width
+            val targetHeight = (bitmap.height * ratio).toInt()
+            Bitmap.createScaledBitmap(bitmap, targetWidth, targetHeight, true)
+        } else {
+            bitmap
+        }
+
+        val sliceHeight = 120
         var startY = 0
 
-        while (startY < bitmap.height) {
+        printer.sendData(DataForSendToPrinterPos58.selectAlignment(POSConst.ALIGNMENT_CENTER))
 
-            val chunkHeight = minOf(maxChunkHeight, bitmap.height - startY)
-
+        while (startY < scaledBitmap.height) {
+            val chunkHeight = minOf(sliceHeight, scaledBitmap.height - startY)
             val chunkBitmap = Bitmap.createBitmap(
-                bitmap,
+                scaledBitmap,
                 0,
                 startY,
-                bitmap.width,
+                scaledBitmap.width,
                 chunkHeight
             )
 
-            printer.printBitmap(
-                chunkBitmap,
-                POSConst.ALIGNMENT_CENTER,
-                576
-            )
-
+            val rasterBytes = BitmapToByteData.rasterBmpToSendData(0, chunkBitmap)
+            printer.sendData(rasterBytes)
             chunkBitmap.recycle()
 
             startY += chunkHeight
+            delay(60.milliseconds)
+        }
 
-            delay(200.milliseconds)
+        printer.sendData(DataForSendToPrinterPos58.selectAlignment(0))
+
+        if (scaledBitmap != bitmap) {
+            scaledBitmap.recycle()
         }
     }
 
@@ -2049,6 +2125,20 @@ class PaymentActivity : AppCompatActivity() {
             startActivity(intent)
             finish()
         }, 1000)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        try {
+            if (isBound) {
+                unbindService(serviceConnection)
+                isBound = false
+            }
+        } catch (_: Exception) {}
+        try {
+            curConnect?.close()
+            curConnect = null
+        } catch (_: Exception) {}
     }
 
 }

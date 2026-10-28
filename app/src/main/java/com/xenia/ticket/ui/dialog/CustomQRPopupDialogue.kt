@@ -223,93 +223,422 @@
         }
 
 
+//        @SuppressLint("SetTextI18n")
+//        private fun checkPaymentStatus(isManualCheck: Boolean) {
+//            paymentStatusJob = lifecycleScope.launch {
+//                if (!paymentMutex.tryLock()) {
+//                    return@launch
+//                }
+//                try {
+//
+//                    if (isManualCheck && isAdded) {
+//                        showLoader(requireContext(), "Checking status...")
+//                    }
+//
+//                    val response = withContext(Dispatchers.IO) {
+//
+//                        when (paymentGateway) {
+//
+//                            "FederalBank" -> paymentRepository.getFedPaymentStatus(
+//                                transactionReferenceID,
+//                                sessionManager.getToken().toString()
+//                            )
+//                            "CanaraBank" -> paymentRepository.getCanaraPaymentStatus(
+//                                transactionReferenceID,
+//                                sessionManager.getToken().toString()
+//                            )
+//                            else -> paymentRepository.getSibPaymentStatus(
+//                                transactionReferenceID,
+//                                sessionManager.getToken().toString()
+//                            )
+//                        }
+//                    }
+//
+//                    val (rawStatus, rawDesc) = when (response) {
+//                        is PaymentStatusResponse -> Pair(response.status, "")
+//                        is SibPaymentStatusResponse -> Pair(response.Status, response.statusDesc)
+//                        is PaymentCanStatusResponse -> Pair(response.data.respMessage, "")
+//                        else -> Pair("PENDING", null)
+//                    }
+//                    val finalStatus = normalizeStatus(rawStatus, rawDesc)
+//
+//                    lastKnownStatus = finalStatus
+//
+//                    if (isFinalStatusHandled) return@launch
+//
+//                    when (finalStatus) {
+//                        "SUCCESS" -> {
+//                            isFinalStatusHandled = true
+//
+//                            pollingTimer?.cancel()
+//                            stopAutoCheckCountdown()
+//                            withContext(NonCancellable) {
+//                                postTicketPaymentHistory("S", "Payment Success")
+//                            }
+//
+//                            return@launch
+//                        }
+//
+//                        "FAILED" -> {
+//                            isFinalStatusHandled = true
+//
+//                            pollingTimer?.cancel()
+//                            stopAutoCheckCountdown()
+//
+//                            Log.d("PAYMENT_FLOW", "Calling FAILED API")
+//
+//                            withContext(NonCancellable) {
+//                                postTicketPaymentHistory("F", rawDesc ?: "Transaction Failed")
+//                            }
+//
+//                            return@launch
+//                        }
+//                    }
+//
+//                } catch (e: Exception) {
+//                    if (isAdded) {
+//                        timerTextView.text = "Still pending..."
+//                    }
+//
+//                } finally {
+//
+//                    if (isManualCheck && isAdded) {
+//                        btnCheckStatus.isEnabled = true
+//                        dismissLoader()
+//                    }
+//
+//                    if (paymentMutex.isLocked) {
+//                        paymentMutex.unlock()
+//                    }
+//                }
+//            }
+//        }
+
         @SuppressLint("SetTextI18n")
         private fun checkPaymentStatus(isManualCheck: Boolean) {
+
+            Log.d(
+                "PAYMENT_STATUS",
+                "checkPaymentStatus START | " +
+                        "manualCheck=$isManualCheck | " +
+                        "gateway=$paymentGateway | " +
+                        "transactionReferenceID=$transactionReferenceID"
+            )
+
             paymentStatusJob = lifecycleScope.launch {
+
                 if (!paymentMutex.tryLock()) {
+                    Log.d(
+                        "PAYMENT_STATUS",
+                        "Payment status check skipped - another check is already running"
+                    )
                     return@launch
                 }
+
+                Log.d(
+                    "PAYMENT_STATUS",
+                    "Payment mutex locked"
+                )
+
                 try {
 
                     if (isManualCheck && isAdded) {
-                        showLoader(requireContext(), "Checking status...")
+
+                        Log.d(
+                            "PAYMENT_STATUS",
+                            "Showing 'Checking status...' loader"
+                        )
+
+                        showLoader(
+                            requireContext(),
+                            "Checking status..."
+                        )
                     }
+
+                    Log.d(
+                        "PAYMENT_STATUS",
+                        "Calling payment status API | gateway=$paymentGateway"
+                    )
 
                     val response = withContext(Dispatchers.IO) {
 
                         when (paymentGateway) {
 
-                            "FederalBank" -> paymentRepository.getFedPaymentStatus(
-                                transactionReferenceID,
-                                sessionManager.getToken().toString()
+                            "FederalBank" -> {
+                                Log.d(
+                                    "PAYMENT_STATUS",
+                                    "Selected FederalBank payment API"
+                                )
+
+                                paymentRepository.getFedPaymentStatus(
+                                    transactionReferenceID,
+                                    sessionManager.getToken().toString()
+                                )
+                            }
+
+                            "CanaraBank" -> {
+                                Log.d(
+                                    "PAYMENT_STATUS",
+                                    "Selected CanaraBank payment API"
+                                )
+
+                                paymentRepository.getCanaraPaymentStatus(
+                                    transactionReferenceID,
+                                    sessionManager.getToken().toString()
+                                )
+                            }
+
+                            else -> {
+                                Log.d(
+                                    "PAYMENT_STATUS",
+                                    "Selected SIB payment API | gateway=$paymentGateway"
+                                )
+
+                                paymentRepository.getSibPaymentStatus(
+                                    transactionReferenceID,
+                                    sessionManager.getToken().toString()
+                                )
+                            }
+                        }
+                    }
+
+                    Log.d(
+                        "PAYMENT_STATUS",
+                        "Payment status API SUCCESS | response=$response"
+                    )
+
+                    val (rawStatus, rawDesc) = when (response) {
+
+                        is PaymentStatusResponse -> {
+                            Log.d(
+                                "PAYMENT_STATUS",
+                                "Response type = PaymentStatusResponse | status=${response.status}"
                             )
-                            "CanaraBank" -> paymentRepository.getCanaraPaymentStatus(
-                                transactionReferenceID,
-                                sessionManager.getToken().toString()
+
+                            Pair(
+                                response.status,
+                                ""
                             )
-                            else -> paymentRepository.getSibPaymentStatus(
-                                transactionReferenceID,
-                                sessionManager.getToken().toString()
+                        }
+
+                        is SibPaymentStatusResponse -> {
+                            Log.d(
+                                "PAYMENT_STATUS",
+                                "Response type = SibPaymentStatusResponse | " +
+                                        "status=${response.Status} | " +
+                                        "statusDesc=${response.statusDesc}"
+                            )
+
+                            Pair(
+                                response.Status,
+                                response.statusDesc
+                            )
+                        }
+
+                        is PaymentCanStatusResponse -> {
+                            Log.d(
+                                "PAYMENT_STATUS",
+                                "Response type = PaymentCanStatusResponse | " +
+                                        "respMessage=${response.data.respMessage}"
+                            )
+
+                            Pair(
+                                response.data.respMessage,
+                                ""
+                            )
+                        }
+
+                        else -> {
+                            Log.d(
+                                "PAYMENT_STATUS",
+                                "Unknown response type. Setting status=PENDING"
+                            )
+
+                            Pair(
+                                "PENDING",
+                                null
                             )
                         }
                     }
 
-                    val (rawStatus, rawDesc) = when (response) {
-                        is PaymentStatusResponse -> Pair(response.status, "")
-                        is SibPaymentStatusResponse -> Pair(response.Status, response.statusDesc)
-                        is PaymentCanStatusResponse -> Pair(response.data.respMessage, "")
-                        else -> Pair("PENDING", null)
-                    }
-                    val finalStatus = normalizeStatus(rawStatus, rawDesc)
+                    Log.d(
+                        "PAYMENT_STATUS",
+                        "Raw payment status | rawStatus=$rawStatus | rawDesc=$rawDesc"
+                    )
+
+                    val finalStatus = normalizeStatus(
+                        rawStatus,
+                        rawDesc
+                    )
+
+                    Log.d(
+                        "PAYMENT_STATUS",
+                        "Normalized payment status | finalStatus=$finalStatus"
+                    )
 
                     lastKnownStatus = finalStatus
 
-                    if (isFinalStatusHandled) return@launch
+                    Log.d(
+                        "PAYMENT_STATUS",
+                        "lastKnownStatus updated=$lastKnownStatus"
+                    )
+
+                    if (isFinalStatusHandled) {
+
+                        Log.d(
+                            "PAYMENT_STATUS",
+                            "Final status already handled. Ignoring response."
+                        )
+
+                        return@launch
+                    }
 
                     when (finalStatus) {
+
                         "SUCCESS" -> {
+
+                            Log.d(
+                                "PAYMENT_STATUS",
+                                "PAYMENT SUCCESS"
+                            )
+
                             isFinalStatusHandled = true
 
                             pollingTimer?.cancel()
+
+                            Log.d(
+                                "PAYMENT_STATUS",
+                                "Polling timer cancelled"
+                            )
+
                             stopAutoCheckCountdown()
+
+                            Log.d(
+                                "PAYMENT_STATUS",
+                                "Auto check countdown stopped"
+                            )
+
+                            Log.d(
+                                "PAYMENT_STATUS",
+                                "Calling postTicketPaymentHistory SUCCESS"
+                            )
+
                             withContext(NonCancellable) {
-                                postTicketPaymentHistory("S", "Payment Success")
+                                postTicketPaymentHistory(
+                                    "S",
+                                    "Payment Success"
+                                )
                             }
+
+                            Log.d(
+                                "PAYMENT_STATUS",
+                                "postTicketPaymentHistory SUCCESS completed"
+                            )
 
                             return@launch
                         }
 
                         "FAILED" -> {
+
+                            Log.d(
+                                "PAYMENT_STATUS",
+                                "PAYMENT FAILED | rawStatus=$rawStatus | rawDesc=$rawDesc"
+                            )
+
                             isFinalStatusHandled = true
 
                             pollingTimer?.cancel()
+
+                            Log.d(
+                                "PAYMENT_STATUS",
+                                "Polling timer cancelled"
+                            )
+
                             stopAutoCheckCountdown()
 
-                            Log.d("PAYMENT_FLOW", "Calling FAILED API")
+                            Log.d(
+                                "PAYMENT_STATUS",
+                                "Auto check countdown stopped"
+                            )
+
+                            Log.d(
+                                "PAYMENT_FLOW",
+                                "Calling FAILED API"
+                            )
 
                             withContext(NonCancellable) {
-                                postTicketPaymentHistory("F", rawDesc ?: "Transaction Failed")
+                                postTicketPaymentHistory(
+                                    "F",
+                                    rawDesc ?: "Transaction Failed"
+                                )
                             }
 
+                            Log.d(
+                                "PAYMENT_STATUS",
+                                "postTicketPaymentHistory FAILED completed"
+                            )
+
                             return@launch
+                        }
+
+                        else -> {
+
+                            Log.d(
+                                "PAYMENT_STATUS",
+                                "PAYMENT STILL PENDING | finalStatus=$finalStatus"
+                            )
                         }
                     }
 
                 } catch (e: Exception) {
+
+                    Log.e(
+                        "PAYMENT_STATUS",
+                        "Payment status API FAILED | " +
+                                "gateway=$paymentGateway | " +
+                                "transactionReferenceID=$transactionReferenceID | " +
+                                "error=${e.javaClass.simpleName} | " +
+                                "message=${e.message}",
+                        e
+                    )
+
                     if (isAdded) {
+
+                        Log.d(
+                            "PAYMENT_STATUS",
+                            "Showing 'Still pending...' because API failed"
+                        )
+
                         timerTextView.text = "Still pending..."
                     }
 
                 } finally {
 
                     if (isManualCheck && isAdded) {
+
+                        Log.d(
+                            "PAYMENT_STATUS",
+                            "Manual check finished | enabling check button and dismissing loader"
+                        )
+
                         btnCheckStatus.isEnabled = true
                         dismissLoader()
                     }
 
                     if (paymentMutex.isLocked) {
+
                         paymentMutex.unlock()
+
+                        Log.d(
+                            "PAYMENT_STATUS",
+                            "Payment mutex unlocked"
+                        )
                     }
+
+                    Log.d(
+                        "PAYMENT_STATUS",
+                        "checkPaymentStatus END"
+                    )
                 }
             }
         }
